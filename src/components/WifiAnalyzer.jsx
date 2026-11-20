@@ -4,9 +4,8 @@
 // cartes du diagnostic élargi.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";
-import styled from "styled-components";
 import { parseNetsh, diagnose } from "../lib/diagnostic.js";
-import { Lead, Actions, Button, Ghost, SEVERITY } from "../ui/theme.js";
+import { Lead, Actions, Button, Ghost, Textarea, SEVERITY } from "../ui/theme.js";
 import { Verdict, VerdictHead, StatGrid, StatCell, Findings } from "../ui/verdict.jsx";
 
 // Exemple = le cas réel qui a lancé le projet (2,4 GHz, canal 1, signal 89 %).
@@ -18,27 +17,6 @@ const EXAMPLE = `    Nom                   : Wi-Fi
     Réception (Mbits/s)   : 144.4
     Transmission (Mbits/s): 130
     Signal                : 89%`;
-
-const Textarea = styled.textarea`
-  width: 100%;
-  height: 176px;
-  resize: none;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 16px;
-  color: #cbd5e1;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 13px;
-  line-height: 1.5;
-
-  &::placeholder { color: #475569; }
-  &:focus {
-    outline: none;
-    border-color: rgba(34, 211, 238, 0.6);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
-  }
-`;
 
 export default function WifiAnalyzer() {
   const [raw, setRaw] = useState("");

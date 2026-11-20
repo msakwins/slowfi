@@ -118,3 +118,26 @@ export const Ghost = styled.button`
   padding: 10px 8px;
   &:hover { color: #cbd5e1; }
 `;
+
+// Zone de collage partagée par les analyseurs qui prennent la sortie brute
+// d'une commande (netsh pour le Wi-Fi, Get-Volume pour le stockage).
+export const Textarea = styled.textarea`
+  width: 100%;
+  height: 176px;
+  resize: none;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  color: #cbd5e1;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+
+  &::placeholder { color: #475569; }
+  &:focus {
+    outline: none;
+    border-color: rgba(34, 211, 238, 0.6);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+  }
+`;

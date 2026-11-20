@@ -1,16 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Diagnostic élargi : l'utilisateur choisit une zone à explorer.
-// Périmètre actuel : Internet, Wi-Fi, Ethernet, Câble, Composants réseau.
+// Périmètre actuel : Internet, Wi-Fi, Stockage, Ethernet, Câble, Composants réseau.
 // (GPU, carte mère, audio… viendront s'ajouter comme de nouvelles cartes.)
 //
-// Chaque catégorie ouvre soit un outil interactif (speed test, analyseur Wi-Fi),
-// soit une checklist guidée symptôme → piste.
+// Chaque catégorie ouvre soit un outil interactif (speed test, analyseur Wi-Fi,
+// analyseur de stockage), soit une checklist guidée symptôme → piste.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Ghost } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import WifiAnalyzer from "./WifiAnalyzer.jsx";
+import StorageAnalyzer from "./StorageAnalyzer.jsx";
 
 const CATEGORIES = [
   {
@@ -26,6 +27,13 @@ const CATEGORIES = [
     title: "Wi-Fi",
     blurb: "Bande, canal, signal, débit de lien de ta carte sans-fil.",
     render: () => <WifiAnalyzer />,
+  },
+  {
+    id: "storage",
+    icon: "💾",
+    title: "Stockage",
+    blurb: "Espace libre et intégrité de tes disques — la lenteur invisible.",
+    render: () => <StorageAnalyzer />,
   },
   {
     id: "ethernet",
