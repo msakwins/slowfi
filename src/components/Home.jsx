@@ -11,10 +11,12 @@ import SpeedTest from "./SpeedTest.jsx";
 export default function Home({ onStartDiagnostic }) {
   return (
     <>
-      <Title>Ça rame&nbsp;? On trouve pourquoi.</Title>
+      <Title>Diagnostic de connexion et de stockage</Title>
       <Lead>
-        Commence par tester ta connexion. Si elle est saine mais que ça lague quand même, lance le
-        diagnostic complet — Wi-Fi, Ethernet, câble, composants réseau, et bientôt plus.
+        Slowfi mesure ta connexion et analyse la sortie de tes commandes système pour localiser
+        d'où vient la lenteur. Le diagnostic complet couvre le Wi-Fi, l'Ethernet, les câbles, les
+        composants réseau et les disques. Tout s'exécute dans le navigateur&nbsp;: rien n'est
+        envoyé, rien n'est installé.
       </Lead>
 
       <SpeedTest />
