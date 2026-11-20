@@ -59,7 +59,7 @@ export const Title = styled.h1`
   line-height: 1.1;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #f8fafc;
+  color: #22d3ee;
   margin: 0;
 `;
 

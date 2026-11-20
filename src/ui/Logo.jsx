@@ -1,70 +1,51 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// La marque : trois arcs de signal, dont le plus large n'arrive pas jusqu'au
-// bout. C'est l'idée du nom en une image — le signal est là, mais il ne porte
-// pas aussi loin qu'il le devrait.
+// La marque : pas de pictogramme posé à côté du mot, mais dedans. Le « o » de
+// slowfi est un rond — donc déjà la bonne forme pour contenir un signal. On le
+// remplace par un anneau avec une onde et son point d'émission.
+//
+// L'avantage sur un logo séparé : rien à accorder entre deux objets, et le nom
+// reste lisible même si le dessin ne l'est plus, à très petite taille.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import styled from "styled-components";
 
-const Wrap = styled.div`
+const Word = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-`;
-
-const Mark = styled.svg`
-  width: 30px;
-  height: 30px;
-  flex: none;
-  overflow: visible;
-`;
-
-const Word = styled.span`
-  font-size: 15px;
+  margin-bottom: 20px;
+  font-size: 21px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: lowercase;
-  color: #e2e8f0;
+  letter-spacing: 0.09em;
+  color: #22d3ee;
+  line-height: 1;
+  user-select: none;
+`;
 
-  b {
-    color: #22d3ee;
-    font-weight: 700;
-  }
+// Le « o » : même diamètre apparent que la hauteur d'x des autres lettres, et
+// posé sur la même ligne de base.
+const Oh = styled.svg`
+  width: 0.82em;
+  height: 0.82em;
+  margin: 0 0.06em;
+  flex: none;
+  transform: translateY(0.055em);
 `;
 
 export default function Logo() {
   return (
-    <Wrap>
-      <Mark viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        {/* Le point d'émission, net. */}
-        <circle cx="16" cy="23.5" r="2.4" fill="#22d3ee" />
-        {/* Deux arcs pleins : le signal proche passe. */}
+    <Word aria-label="slowfi">
+      <span aria-hidden="true">sl</span>
+      <Oh viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.6" stroke="currentColor" strokeWidth="2.7" />
         <path
-          d="M11.76 19.76 A6 6 0 0 1 20.24 19.76"
-          stroke="#22d3ee"
-          strokeWidth="2.6"
+          d="M8.1 13.1 A5.3 5.3 0 0 1 15.9 13.1"
+          stroke="currentColor"
+          strokeWidth="2.1"
           strokeLinecap="round"
         />
-        <path
-          d="M8.93 16.93 A10 10 0 0 1 23.07 16.93"
-          stroke="#22d3ee"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          opacity="0.75"
-        />
-        {/* Le troisième décroche : pointillé, éteint. */}
-        <path
-          d="M6.1 14.1 A14 14 0 0 1 25.9 14.1"
-          stroke="#475569"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          strokeDasharray="3 5"
-        />
-      </Mark>
-      <Word>
-        slow<b>fi</b>
-      </Word>
-    </Wrap>
+        <circle cx="12" cy="15.7" r="1.5" fill="currentColor" />
+      </Oh>
+      <span aria-hidden="true">wfi</span>
+    </Word>
   );
 }

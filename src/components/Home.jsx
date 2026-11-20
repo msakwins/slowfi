@@ -30,8 +30,9 @@ export default function Home({ onOpen }) {
     <>
       <Title>Diagnostic de connexion et de matériel</Title>
       <Lead>
-        Un test de débit pour commencer, puis des pistes à explorer selon ce que tu cherches. Tout
-        s'exécute dans le navigateur&nbsp;: rien n'est envoyé, rien n'est installé.
+        Le test dure une vingtaine de secondes. S'il ne révèle rien, le coupable est ailleurs. Un
+        disque plein ou une mémoire mal réglée pèsent autant qu'une mauvaise connexion, et ça ne se
+        voit nulle part. Rien ne sort de ton navigateur.
       </Lead>
 
       <SpeedTest />

@@ -3,7 +3,7 @@
 // la mesure, puis verdict interprété par gradeConnection().
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useRef, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { runSpeedTest } from "../lib/speedtest.js";
 import { gradeConnection } from "../lib/connection.js";
 import { Button, SEVERITY } from "../ui/theme.js";
@@ -75,20 +75,11 @@ const Track = styled.div`
   }
 `;
 
-// Au repos, une lueur balaie les pistes : le panneau reste vivant sans
-// prétendre afficher une mesure.
-const sweep = keyframes`
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(300%); }
-`;
-
-const Sheen = styled.span`
-  position: absolute;
-  inset: 0;
-  width: 33%;
-  background: linear-gradient(90deg, transparent, #22d3ee55, transparent);
-  animation: ${sweep} 2.6s ease-in-out infinite;
-  animation-delay: ${(p) => p.$delay}s;
+const Intro = styled.p`
+  margin: 4px 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #94a3b8;
 `;
 
 const Status = styled.p`
@@ -195,20 +186,27 @@ export default function SpeedTest() {
 
   return (
     <Panel>
-      <Gauges>
-        {GAUGES.map((g, i) => (
-          <Gauge key={g.k} $active={g.active} $filled={g.filled}>
-            <div className="k">{g.k}</div>
-            <div className="v">
-              {g.text}
-              <span className="u">{g.unit}</span>
-            </div>
-            <Track $pct={g.pct} $active={g.active}>
-              {idle && <Sheen $delay={i * 0.18} />}
-            </Track>
-          </Gauge>
-        ))}
-      </Gauges>
+      {idle ? (
+        // Avant la première mesure, afficher quatre jauges vides ne montre
+        // rien : autant dire ce que le test va faire et combien de temps il
+        // prend. Les jauges apparaissent quand elles ont une valeur.
+        <Intro>
+          Descendant, montant, latence, gigue. Compte une vingtaine de secondes.
+        </Intro>
+      ) : (
+        <Gauges>
+          {GAUGES.map((g) => (
+            <Gauge key={g.k} $active={g.active} $filled={g.filled}>
+              <div className="k">{g.k}</div>
+              <div className="v">
+                {g.text}
+                <span className="u">{g.unit}</span>
+              </div>
+              <Track $pct={g.pct} $active={g.active} />
+            </Gauge>
+          ))}
+        </Gauges>
+      )}
 
       <Status>
         {PHASE_LABEL[phase]}
