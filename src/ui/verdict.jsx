@@ -6,6 +6,8 @@
 import React from "react";
 import styled, { keyframes, css } from "styled-components";
 import Arrow from "./Arrow.jsx";
+import { useLang } from "./i18n.jsx";
+import { localize } from "../lib/en.js";
 
 // Le verdict arrive en deux temps, parce qu'un bloc qui surgit d'un coup est
 // brutal à double titre : son contenu apparaît d'un seul tenant, et tout ce
@@ -52,12 +54,13 @@ const Reveal = styled.div`
      à marquer qu'on passe de la mesure à son interprétation. La marge est à
      l'intérieur pour s'ouvrir avec le reste. */
   /* Le débord masqué rognerait le halo des boutons : on lui laisse 24 px de
-     jeu de chaque côté, repris par une marge négative. */
+     jeu sur les côtés (20 px, soit la marge de la page : au-delà, la page
+     défilerait en largeur), repris par une marge négative. */
   .inner {
     min-height: 0;
     overflow: hidden;
-    padding: var(--gap, 40px) 24px 24px;
-    margin: 0 -24px -24px;
+    padding: var(--gap, 40px) 20px 24px;
+    margin: 0 -20px -24px;
   }
 
   .inner > * {
@@ -69,7 +72,9 @@ const Reveal = styled.div`
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
-    .inner > * { animation: none; }
+    .inner > * {
+      animation: none;
+    }
   }
 `;
 
@@ -101,7 +106,12 @@ const Head = styled.div`
   gap: 10px;
   margin-bottom: 16px;
 
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: ${(p) => p.$color}; }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: ${(p) => p.$color};
+  }
   .label {
     font-size: 12px;
     letter-spacing: 0.12em;
@@ -133,9 +143,23 @@ const Stat = styled.div`
   flex-direction: column;
   gap: 4px;
 
-  .k { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; font-weight: 500; }
-  .v { font-family: ui-monospace, monospace; font-size: 20px; color: #f1f5f9; }
-  .u { font-size: 14px; color: #94a3b8; margin-left: 4px; }
+  .k {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .v {
+    font-family: ui-monospace, monospace;
+    font-size: 20px;
+    color: #f1f5f9;
+  }
+  .u {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-left: 4px;
+  }
 `;
 
 // Ni cadre ni filet : l'espacement et le titre suffisent à séparer deux
@@ -143,10 +167,28 @@ const Stat = styled.div`
 const FindingCard = styled.div`
   margin-top: 26px;
 
-  h3 { margin: 0; font-size: 15px; color: #f1f5f9; }
-  .detail { font-size: 14px; color: #94a3b8; line-height: 1.6; margin: 6px 0 0; }
-  .fix { font-size: 14px; line-height: 1.6; margin: 10px 0 0; color: #e2e8f0; }
-  .fix .arrow { color: #22d3ee; vertical-align: -0.15em; margin-right: 8px; }
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #f1f5f9;
+  }
+  .detail {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin: 6px 0 0;
+  }
+  .fix {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 10px 0 0;
+    color: #e2e8f0;
+  }
+  .fix .arrow {
+    color: var(--accent);
+    vertical-align: -0.15em;
+    margin-right: 8px;
+  }
 `;
 
 export function StatCell({ k, value, unit }) {
@@ -171,19 +213,24 @@ export function VerdictHead({ color, tag, children }) {
   );
 }
 
-export function Findings({ findings }) {
-  return findings.map((f) => (
-    <FindingCard key={f.id}>
-      <h3>{f.title}</h3>
-      <p className="detail">{f.detail}</p>
-      {/* Certains constats n'appellent pas de correctif écrit — la suite est
+// `engine` dit de quel moteur viennent les constats, pour trouver leur
+// traduction anglaise (lib/en.js).
+export function Findings({ findings, engine }) {
+  const { lang } = useLang();
+  return findings
+    .map((raw) => localize(raw, lang, engine))
+    .map((f) => (
+      <FindingCard key={f.id}>
+        <h3>{f.title}</h3>
+        <p className="detail">{f.detail}</p>
+        {/* Certains constats n'appellent pas de correctif écrit — la suite est
           alors un bouton, pas une phrase. */}
-      {f.fix && (
-        <p className="fix">
-          <Arrow />
-          {f.fix}
-        </p>
-      )}
-    </FindingCard>
-  ));
+        {f.fix && (
+          <p className="fix">
+            <Arrow />
+            {f.fix}
+          </p>
+        )}
+      </FindingCard>
+    ));
 }

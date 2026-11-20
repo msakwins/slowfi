@@ -4,14 +4,50 @@
 //
 // Le Wi-Fi s'analyse à partir de `netsh wlan show interfaces` (bande, canal,
 // signal, débit de lien). Les câbles et la box ne se lisent pas depuis une
-// commande : ils restent en vérifications manuelles, repliées sous le résultat.
+// commande : ils ont leur page à part, « Vérifications manuelles ».
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef } from "react";
 import { parseNetsh, diagnose } from "../lib/diagnostic.js";
 import { Subtitle, SEVERITY } from "../ui/theme.js";
-import { Unfold, Verdict, VerdictHead, StatGrid, StatCell, Findings } from "../ui/verdict.jsx";
+import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
+
+const TEXT = {
+  fr: {
+    title: "Analyse du réseau local",
+    placeholder: "Coller ici la sortie de netsh wlan show interfaces…",
+    empty: "Aucune interface Wi-Fi reconnue dans le texte collé",
+    about:
+      "Cette commande affiche l'état du Wi-Fi. Elle ne modifie rien, et aucune donnée n'est collectée",
+    band: "Bande",
+    radio: "Norme",
+    signal: "Signal",
+    channel: "Canal",
+    link: "Débit de lien",
+    real: "Débit réel estimé",
+  },
+  en: {
+    title: "Local network analysis",
+    placeholder: "Paste the output of netsh wlan show interfaces here…",
+    empty: "No Wi-Fi interface found in the pasted text",
+    about:
+      "This command displays the Wi-Fi status. It changes nothing, and no data is collected",
+    band: "Band",
+    radio: "Standard",
+    signal: "Signal",
+    channel: "Channel",
+    link: "Link rate",
+    real: "Estimated real speed",
+  },
+};
+import {
+  Unfold,
+  Verdict,
+  VerdictHead,
+  StatGrid,
+  StatCell,
+  Findings,
+} from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
-import ManualChecks from "./ManualChecks.jsx";
 
 const COMMAND = "netsh wlan show interfaces";
 
@@ -35,51 +71,59 @@ function analyzeWifi(raw) {
 
 export default function NetworkAnalysis() {
   const anchor = useRef(null);
+  const { lang } = useLang();
+  const t = TEXT[lang];
 
   // La section s'ouvre sous le résultat du test : on l'amène à l'écran.
   useEffect(() => {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    anchor.current?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    anchor.current?.scrollIntoView({
+      behavior: still ? "auto" : "smooth",
+      block: "start",
+    });
   }, []);
 
   return (
     <div ref={anchor} style={{ scrollMarginTop: 24 }}>
       <Unfold gap={48} first={0.15}>
-        <Subtitle>Analyse du réseau local</Subtitle>
+        <Subtitle>{t.title}</Subtitle>
 
         <PasteStep
           command={COMMAND}
-          placeholder="Coller ici la sortie de netsh wlan show interfaces…"
+          placeholder={t.placeholder}
           example={EXAMPLE}
           analyze={analyzeWifi}
-          empty="Aucune interface Wi-Fi reconnue dans le texte collé"
+          empty={t.empty}
+          about={t.about}
         >
           {(result) => {
             const sev = SEVERITY[result.severity];
             return (
               <Verdict $color={sev.color} gap={32} first={0}>
                 <VerdictHead color={sev.color} tag={result.ssid}>
-                  {sev.label}
+                  {SEVERITY_LABEL[lang][result.severity]}
                 </VerdictHead>
                 <StatGrid $cols={4} $border>
-                  <StatCell k="Bande" value={result.band} />
-                  <StatCell k="Norme" value={result.radio} />
-                  <StatCell k="Signal" value={result.signal} unit="%" />
-                  <StatCell k="Canal" value={result.channel} />
+                  <StatCell k={t.band} value={result.band} />
+                  <StatCell k={t.radio} value={result.radio} />
+                  <StatCell k={t.signal} value={result.signal} unit="%" />
+                  <StatCell k={t.channel} value={result.channel} />
                 </StatGrid>
                 <StatGrid $cols={2}>
-                  <StatCell k="Débit de lien" value={result.linkRate} unit="Mb/s" />
-                  <StatCell k="Débit réel estimé" value={result.estimatedReal} unit="Mb/s" />
+                  <StatCell k={t.link} value={result.linkRate} unit="Mb/s" />
+                  <StatCell
+                    k={t.real}
+                    value={result.estimatedReal}
+                    unit="Mb/s"
+                  />
                 </StatGrid>
                 <div style={{ paddingTop: 4 }}>
-                  <Findings findings={result.findings} />
+                  <Findings findings={result.findings} engine="wifi" />
                 </div>
               </Verdict>
             );
           }}
         </PasteStep>
-
-        <ManualChecks />
       </Unfold>
     </div>
   );

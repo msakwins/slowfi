@@ -89,6 +89,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
     bump("warning");
     findings.push({
       id: "ram-underclocked",
+      vars: { configured, rated, loss },
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
       detail: `Mémoire utilisée sous sa fréquence nominale, soit environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
       fix: "Activer le profil XMP (Intel) ou EXPO/DOCP (AMD) dans le BIOS, puis relancer l'analyse pour vérifier la fréquence. Gratuit et réversible",
@@ -116,6 +117,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       bump("warning");
       findings.push({
         id: `gpu-driver-stale-${gpu.name || "gpu"}`,
+        key: "gpu-driver-stale",
+        vars: { year: gpu.driverYear, name: gpu.name },
         title: `Pilote graphique de ${gpu.driverYear}${gpu.name ? ` (${gpu.name})` : ""}`,
         detail:
           "Les optimisations et correctifs publiés depuis ne sont pas appliqués. Performances graphiques potentiellement réduites",
@@ -132,6 +135,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       bump("problem");
       findings.push({
         id: "bios-ancient",
+        vars: { year: c.bios.year, age },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Les mises à jour de microcode processeur et les correctifs de stabilité publiés depuis ne sont pas appliqués. Impact possible sur les performances",
@@ -141,6 +145,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       bump("warning");
       findings.push({
         id: "bios-stale",
+        vars: { year: c.bios.year, age },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Des mises à jour de firmware, dont du microcode processeur, ont probablement été publiées depuis",

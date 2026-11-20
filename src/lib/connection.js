@@ -30,6 +30,7 @@ export function gradeConnection(m) {
       bump("problem");
       findings.push({
         id: "down-very-low",
+        vars: { v: m.download },
         title: `Débit descendant très faible (${m.download} Mb/s)`,
         detail:
           "Sous 10 Mb/s, le streaming HD et les visioconférences sont instables. Causes possibles : la ligne, le Wi-Fi ou un appareil qui sature le réseau",
@@ -39,6 +40,7 @@ export function gradeConnection(m) {
       bump("warning");
       findings.push({
         id: "down-low",
+        vars: { v: m.download },
         title: `Débit descendant modeste (${m.download} Mb/s)`,
         detail: "Suffisant pour la navigation, limité lorsque plusieurs appareils partagent la ligne",
         fix: "Vérifier l'offre souscrite auprès du FAI, et privilégier le 5 GHz ou l'Ethernet pour les gros usages",
@@ -52,6 +54,7 @@ export function gradeConnection(m) {
     bump(m.latency > 200 ? "problem" : "warning");
     findings.push({
       id: "high-latency",
+      vars: { v: m.latency },
       title: `Latence élevée (${m.latency} ms)`,
       detail:
         "Au-delà de 100 ms, les délais deviennent perceptibles en jeu en ligne et en visioconférence, quel que soit le débit. Causes fréquentes : Wi-Fi, routeur saturé ou ligne bridée",
@@ -65,6 +68,7 @@ export function gradeConnection(m) {
     bump("warning");
     findings.push({
       id: "high-jitter",
+      vars: { v: m.jitter },
       title: `Connexion instable (variation ${m.jitter} ms)`,
       detail: "Latence irrégulière, caractéristique d'interférences Wi-Fi ou d'un réseau encombré",
       fix: "Changer de canal Wi-Fi, s'écarter des sources d'interférence (micro-ondes, box voisines), ou passer en filaire",
@@ -87,11 +91,13 @@ export function gradeConnection(m) {
       excellent
         ? {
             id: "healthy",
+            key: "healthy-excellent",
             title: "Connexion excellente",
             detail: "Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",
           }
         : {
             id: "healthy",
+            key: "healthy-good",
             title: "Bonne connexion",
             detail:
               "Suffisante pour les usages courants. Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",

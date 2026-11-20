@@ -14,7 +14,15 @@ export const SEVERITY = {
 export const GlobalStyle = createGlobalStyle`
   * { box-sizing: border-box; }
   /* Page sombre : barres de défilement et contrôles natifs en sombre aussi. */
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    /* Couleur d'accent : le cyan de la marque par défaut. Une section peut
+       la redéfinir (l'analyse du matériel passe en orange) ; titres,
+       boutons et étapes de collage la suivent. */
+    --accent: #22d3ee;
+    --accent-light: #67e8f9;
+    --accent-rgb: 34 211 238;
+  }
   body {
     margin: 0;
     background: #020617;
@@ -35,7 +43,7 @@ export const Title = styled.h1`
   line-height: 1.1;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #22d3ee;
+  color: var(--accent);
   margin: 0;
 `;
 
@@ -57,16 +65,22 @@ export const Lead = styled.div`
   max-width: 62ch;
   text-wrap: pretty; /* évite un mot seul en fin de paragraphe */
 
-  p { margin: 0; }
-  p + p { margin-top: 8px; }
+  p {
+    margin: 0;
+  }
+  p + p {
+    margin-top: 8px;
+  }
 
   /* Deuxième temps d'un même paragraphe : à la ligne. */
-  .then { display: block; }
+  .then {
+    display: block;
+  }
 
   code {
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     font-size: 0.85em;
-    color: #67e8f9;
+    color: var(--accent-light);
     background: #0f172a;
     padding: 2px 6px;
     border-radius: 5px;
@@ -81,29 +95,37 @@ export const Button = styled.button`
   cursor: pointer;
   background: transparent;
   border: 1px solid;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
   display: inline-flex;
   align-items: center;
   gap: 8px;
 
   /* La flèche avance d'un cran au survol : elle indique où mène le bouton. */
-  .arrow { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
-  &:hover:not(:disabled) .arrow { transform: translateX(3px); }
+  .arrow {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover:not(:disabled) .arrow {
+    transform: translateX(3px);
+  }
 
   /* Style « ghost » : contour fin, fond transparent. Le bouton principal se
      distingue par la couleur, pas par un aplat. */
-  color: ${(p) => (p.$primary ? "#22d3ee" : "#94a3b8")};
-  border-color: ${(p) => (p.$primary ? "rgba(34, 211, 238, 0.45)" : "#1e293b")};
+  color: ${(p) => (p.$primary ? "var(--accent)" : "#94a3b8")};
+  border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.45)" : "#1e293b")};
 
   &:hover:not(:disabled) {
-    color: ${(p) => (p.$primary ? "#67e8f9" : "#e2e8f0")};
-    background: ${(p) => (p.$primary ? "rgba(34, 211, 238, 0.08)" : "rgba(148, 163, 184, 0.06)")};
-    border-color: ${(p) => (p.$primary ? "rgba(34, 211, 238, 0.8)" : "#475569")};
-    box-shadow: ${(p) => (p.$primary ? "0 0 18px rgba(34, 211, 238, 0.18)" : "none")};
+    color: ${(p) => (p.$primary ? "var(--accent-light)" : "#e2e8f0")};
+    background: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.08)" : "rgba(148, 163, 184, 0.06)")};
+    border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.8)" : "#475569")};
+    box-shadow: ${(p) => (p.$primary ? "0 0 18px rgb(var(--accent-rgb) / 0.18)" : "none")};
   }
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
+    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.25);
   }
   &:disabled {
     color: #475569;
@@ -122,10 +144,16 @@ export const Ghost = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  &:hover { color: #cbd5e1; }
+  &:hover {
+    color: #cbd5e1;
+  }
 
-  .arrow { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
-  &:hover .arrow.back { transform: translateX(-3px); }
+  .arrow {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover .arrow.back {
+    transform: translateX(-3px);
+  }
 `;
 
 // Zone de collage des analyses approfondies (voir PasteStep).
@@ -142,11 +170,13 @@ export const Textarea = styled.textarea`
   font-size: 13px;
   line-height: 1.5;
 
-  &::placeholder { color: #475569; }
+  &::placeholder {
+    color: #475569;
+  }
   &:focus {
     outline: none;
-    border-color: rgba(34, 211, 238, 0.6);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    border-color: rgb(var(--accent-rgb) / 0.6);
+    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.15);
   }
 `;
 
@@ -161,5 +191,5 @@ export const Command = styled.pre`
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 12px;
   line-height: 1.7;
-  color: #67e8f9;
+  color: var(--accent-light);
 `;

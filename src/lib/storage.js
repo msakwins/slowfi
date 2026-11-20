@@ -77,6 +77,7 @@ export function gradeVolume(v, { system = false } = {}) {
       bump("problem");
       findings.push({
         id: "disk-critical",
+        vars: { where, freeGB, pct },
         title: `${where} saturé (${freeGB} Go libres, ${pct} %)`,
         detail:
           "Espace insuffisant pour le fonctionnement de Windows : échec des mises à jour, fichier d'échange bloqué, risque de corruption du système de fichiers",
@@ -86,6 +87,7 @@ export function gradeVolume(v, { system = false } = {}) {
       bump("warning");
       findings.push({
         id: "disk-low",
+        vars: { where, freeGB, pct },
         title: `${where} presque plein (${freeGB} Go libres, ${pct} %)`,
         detail:
           "Sous 15 % d'espace libre, un SSD perd en vitesse d'écriture et s'use plus rapidement",
@@ -100,6 +102,7 @@ export function gradeVolume(v, { system = false } = {}) {
     bump("warning");
     findings.push({
       id: "no-update-headroom",
+      vars: { freeGB },
       title: `Marge insuffisante pour les mises à jour (${freeGB} Go)`,
       detail:
         "Les mises à jour de fonctionnalités Windows nécessitent environ 20 Go d'espace temporaire. En dessous, elles peuvent échouer sans message explicite",
@@ -116,6 +119,7 @@ export function gradeVolume(v, { system = false } = {}) {
     bump("problem");
     findings.push({
       id: "fs-damaged",
+      vars: { where, state: v.operational || v.health },
       title: `Système de fichiers endommagé sur ${where}`,
       detail: `État signalé par Windows : « ${v.operational || v.health} ». Une erreur dans la table des fichiers (MFT) ne se corrige pas d'elle-même et peut rester sans symptôme visible pendant des mois`,
       fix: `Sauvegarder d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres › Récupération › Démarrage avancé › Invite de commandes)`,
@@ -125,6 +129,7 @@ export function gradeVolume(v, { system = false } = {}) {
   if (findings.length === 0) {
     findings.push({
       id: "healthy",
+      vars: { where, freeGB, pct },
       title: `${where} en bonne santé`,
       detail: `${freeGB} Go libres (${pct} %), intégrité vérifiée`,
       fix: "Rien à corriger de ce côté",

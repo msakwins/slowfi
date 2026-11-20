@@ -1,26 +1,66 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Le speed test de la home : bouton "Tester la connexion", jauges live pendant
-// la mesure, puis verdict interprété par gradeConnection().
+// Le speed test de la home : au repos, un seul bouton. Au lancement, un cadre
+// s'ouvre avec les jauges en direct ; le verdict (gradeConnection) apparaît
+// ensuite dans le même cadre, sous les jauges qui gardent les chiffres finaux.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { runSpeedTest } from "../lib/speedtest.js";
 import { gradeConnection } from "../lib/connection.js";
 import { Button, SEVERITY } from "../ui/theme.js";
-import { Verdict, VerdictHead, StatGrid, StatCell, Findings } from "../ui/verdict.jsx";
+import { Unfold, Verdict, VerdictHead, Findings } from "../ui/verdict.jsx";
 import { useCountUp } from "../ui/useCountUp.js";
 import Arrow from "../ui/Arrow.jsx";
+import { useText } from "../ui/i18n.jsx";
 
-const PHASE_LABEL = {
-  idle: null,
-  latency: "Mesure de la latence…",
-  download: "Test du débit descendant…",
-  upload: "Test du débit montant…",
-  done: null,
-  error: null,
+// Les mentions de la note s'accordent avec « connexion » : elles sont
+// propres au speed test, les autres analyses nomment leurs niveaux elles-mêmes.
+const TEXT = {
+  fr: {
+    phase: {
+      latency: "Mesure de la latence…",
+      download: "Test du débit descendant…",
+      upload: "Test du débit montant…",
+    },
+    error:
+      "Impossible de joindre le serveur de test. Vérifier la connexion, puis relancer",
+    stop: "Arrêter",
+    start: "Tester la connexion",
+    again: "Relancer le test",
+    next: "Lancer l'analyse du réseau local",
+    down: "Descendant",
+    up: "Montant",
+    latency: "Latence",
+    jitter: "Variation",
+    grade: {
+      excellent: "Excellente",
+      good: "Bonne",
+      fair: "Correcte",
+      poor: "Faible",
+    },
+  },
+  en: {
+    phase: {
+      latency: "Measuring latency…",
+      download: "Testing download speed…",
+      upload: "Testing upload speed…",
+    },
+    error:
+      "Unable to reach the test server. Check the connection, then try again",
+    stop: "Stop",
+    start: "Test the connection",
+    again: "Run the test again",
+    next: "Run the local network analysis",
+    down: "Download",
+    up: "Upload",
+    latency: "Latency",
+    jitter: "Jitter",
+    grade: { excellent: "Excellent", good: "Good", fair: "Fair", poor: "Poor" },
+  },
 };
 
-const Panel = styled.div`
+// Le cadre de la mesure, ouvert seulement une fois le test lancé.
+const Box = styled.div`
   border: 1px solid #1e293b;
   border-radius: 16px;
   padding: 24px;
@@ -100,22 +140,10 @@ const Readout = styled.div`
     color: ${(p) => (p.$active ? "#22d3ee" : p.$filled ? "#f1f5f9" : "#334155")};
     transition: color 0.3s;
   }
-  .u { font-size: 10px; color: #64748b; }
-`;
-
-
-// Les mentions du speed test s'accordent avec « connexion », donc elles ne
-// peuvent pas servir au stockage ou aux composants. Chaque analyseur garde les
-// couleurs communes de SEVERITY et nomme ses niveaux lui-même.
-const GRADE = {
-  excellent: "Excellente",
-  good: "Bonne",
-  fair: "Correcte",
-  poor: "Faible",
-};
-
-const Next = styled.div`
-  margin-top: 26px;
+  .u {
+    font-size: 10px;
+    color: #64748b;
+  }
 `;
 
 const Status = styled.p`
@@ -125,13 +153,13 @@ const Status = styled.p`
   color: #67e8f9;
 `;
 
-const fmt = (n) => (n == null ? "—" : Math.round(n * 10) / 10);
 const round = (n) => (n == null ? "—" : Math.round(n));
 
 // Pendant la mesure, on affiche des entiers : la décimale change à chaque
 // rafraîchissement et c'est elle qui donne l'impression de clignotement. Le
 // résultat final, lui, garde son dixième.
-const live1 = (n, running) => (n == null ? "—" : running ? Math.round(n) : Math.round(n * 10) / 10);
+const live1 = (n, running) =>
+  n == null ? "—" : running ? Math.round(n) : Math.round(n * 10) / 10;
 
 // Le moteur rapporte des dizaines de fois par seconde. On ne pousse dans React
 // que toutes les 160 ms : l'anneau comble les intervalles tout seul grâce à sa
@@ -162,21 +190,35 @@ const fillDown = (v) => fillLog(v, 5, 2000);
 const fillUp = (v) => fillLog(v, 2, 1000);
 
 // Latence et variation : échelle inversée et linéaire, c'est bas qui est bon.
-const fillInverse = (v, worst) => (v == null ? 0 : Math.max(0, 100 - (v / worst) * 100));
+const fillInverse = (v, worst) =>
+  v == null ? 0 : Math.max(0, 100 - (v / worst) * 100);
 
 export default function SpeedTest({ onDiagnostic }) {
   const [phase, setPhase] = useState("idle");
-  const [live, setLive] = useState({ download: null, upload: null, latency: null, jitter: null });
-  const [result, setResult] = useState(null);
+  const [live, setLive] = useState({
+    download: null,
+    upload: null,
+    latency: null,
+    jitter: null,
+  });
+  // Les mesures brutes sont gardées, le verdict s'en déduit à l'affichage :
+  // il suit ainsi un changement de langue.
+  const [measures, setMeasures] = useState(null);
+  const result = useMemo(
+    () => (measures ? gradeConnection(measures) : null),
+    [measures],
+  );
+  const t = useText(TEXT);
   const abortRef = useRef(null);
   const lastPush = useRef(0);
 
-  const running = phase === "latency" || phase === "download" || phase === "upload";
+  const running =
+    phase === "latency" || phase === "download" || phase === "upload";
 
   const start = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
-    setResult(null);
+    setMeasures(null);
     setLive({ download: null, upload: null, latency: null, jitter: null });
     setPhase("download");
     lastPush.current = 0;
@@ -202,7 +244,7 @@ export default function SpeedTest({ onDiagnostic }) {
         },
       });
       setLive(final);
-      setResult(gradeConnection(final));
+      setMeasures(final);
       setPhase("done");
     } catch (err) {
       if (err.name !== "AbortError") setPhase("error");
@@ -224,7 +266,7 @@ export default function SpeedTest({ onDiagnostic }) {
 
   const GAUGES = [
     {
-      k: "Descendant",
+      k: t.down,
       unit: "Mb/s",
       text: live1(upDown, running),
       filled: live.download != null,
@@ -232,7 +274,7 @@ export default function SpeedTest({ onDiagnostic }) {
       pct: fillDown(upDown),
     },
     {
-      k: "Montant",
+      k: t.up,
       unit: "Mb/s",
       text: live1(upUp, running),
       filled: live.upload != null,
@@ -240,7 +282,7 @@ export default function SpeedTest({ onDiagnostic }) {
       pct: fillUp(upUp),
     },
     {
-      k: "Latence",
+      k: t.latency,
       unit: "ms",
       text: round(upLatency),
       filled: live.latency != null,
@@ -248,7 +290,7 @@ export default function SpeedTest({ onDiagnostic }) {
       pct: fillInverse(upLatency, 200),
     },
     {
-      k: "Variation",
+      k: t.jitter,
       unit: "ms",
       text: round(upJitter),
       filled: live.jitter != null,
@@ -257,76 +299,88 @@ export default function SpeedTest({ onDiagnostic }) {
     },
   ];
 
+  // Le cadre reste ouvert dès qu'il y a quelque chose à montrer : mesure en
+  // cours, résultat ou erreur. Un arrêt en cours de route le referme.
+  const open = running || result != null || phase === "error";
+
   return (
-    <Panel>
-      <Gauges>
-        {GAUGES.map((g) => (
-          <Gauge key={g.k} $active={g.active}>
-            <div className="k">{g.k}</div>
-            <Dial>
-              <Ring viewBox="0 0 100 100" $pct={g.pct} $active={g.active}>
-                <circle className="track" cx="50" cy="50" r={RING_R} fill="none" strokeWidth="7" />
-                <circle
-                  className="fill"
-                  cx="50"
-                  cy="50"
-                  r={RING_R}
-                  fill="none"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                />
-              </Ring>
-              <Readout $active={g.active} $filled={g.filled}>
-                <span className="v">{g.text}</span>
-                <span className="u">{g.unit}</span>
-              </Readout>
-            </Dial>
-          </Gauge>
-        ))}
-      </Gauges>
-
-      <Status>
-        {PHASE_LABEL[phase]}
-        {phase === "error" && (
-          <span style={{ color: "#fb7185" }}>
-            Impossible de joindre le serveur de test. Vérifier la connexion, puis relancer
-          </span>
-        )}
-      </Status>
-
+    <div>
       {running ? (
-        <Button onClick={stop}>Arrêter</Button>
+        <Button onClick={stop}>{t.stop}</Button>
       ) : (
         <Button $primary={!result} onClick={start}>
-          {result ? "Relancer le test" : "Tester la connexion"}
+          {result ? t.again : t.start}
         </Button>
       )}
 
-      {result && (
-        <Verdict $color={sev.color}>
-          <VerdictHead color={sev.color} tag={`${fmt(result.download)} / ${fmt(result.upload)} Mb/s`}>
-            {GRADE[result.grade]}
-          </VerdictHead>
-          <StatGrid $cols={4} $border>
-            <StatCell k="Descendant" value={fmt(result.download)} unit="Mb/s" />
-            <StatCell k="Montant" value={fmt(result.upload)} unit="Mb/s" />
-            <StatCell k="Latence" value={result.latency} unit="ms" />
-            <StatCell k="Variation" value={result.jitter} unit="ms" />
-          </StatGrid>
-          <div style={{ paddingTop: 4 }}>
-            <Findings findings={result.findings} />
-          </div>
-          {onDiagnostic && (
-            <Next>
-              {/* Ligne saine : c'est la seule suite possible, donc le bouton principal. */}
-              <Button $primary={result.severity === "ok"} onClick={onDiagnostic}>
-                Lancer l'analyse du réseau local
-                <Arrow />
-              </Button>
-            </Next>
-          )}
-        </Verdict>
+      {open && (
+        <Unfold gap={24} first={0}>
+          <Box>
+            <Gauges>
+              {GAUGES.map((g) => (
+                <Gauge key={g.k} $active={g.active}>
+                  <div className="k">{g.k}</div>
+                  <Dial>
+                    <Ring viewBox="0 0 100 100" $pct={g.pct} $active={g.active}>
+                      <circle
+                        className="track"
+                        cx="50"
+                        cy="50"
+                        r={RING_R}
+                        fill="none"
+                        strokeWidth="7"
+                      />
+                      <circle
+                        className="fill"
+                        cx="50"
+                        cy="50"
+                        r={RING_R}
+                        fill="none"
+                        strokeWidth="7"
+                        strokeLinecap="round"
+                      />
+                    </Ring>
+                    <Readout $active={g.active} $filled={g.filled}>
+                      <span className="v">{g.text}</span>
+                      <span className="u">{g.unit}</span>
+                    </Readout>
+                  </Dial>
+                </Gauge>
+              ))}
+            </Gauges>
+
+            {(running || phase === "error") && (
+              <Status>
+                {t.phase[phase]}
+                {phase === "error" && (
+                  <span style={{ color: "#fb7185" }}>{t.error}</span>
+                )}
+              </Status>
+            )}
+
+            {/* Les jauges portent déjà les chiffres finaux : le verdict n'y
+                ajoute que la note et les constats. */}
+            {result && (
+              <Verdict $color={sev.color} gap={8}>
+                <VerdictHead color={sev.color}>
+                  {t.grade[result.grade]}
+                </VerdictHead>
+                <Findings findings={result.findings} engine="connection" />
+              </Verdict>
+            )}
+          </Box>
+        </Unfold>
       )}
-    </Panel>
+
+      {result && onDiagnostic && (
+        <Unfold gap={24} first={0.6}>
+          {/* Ligne saine : c'est la seule suite possible, donc le bouton principal. */}
+          <Button $primary={result.severity === "ok"} onClick={onDiagnostic}>
+            {t.next}
+            <Arrow />
+          </Button>
+        </Unfold>
+      )}
+    </div>
   );
 }

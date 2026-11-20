@@ -101,6 +101,7 @@ export function diagnose(d) {
     bump("warning");
     findings.push({
       id: "weak-signal",
+      vars: { v: d.signal },
       title: `Signal faible (${d.signal} %)`,
       detail: "Distance ou obstacles entre l'appareil et la box. Le débit diminue avec le signal",
       fix: "Réduire la distance à la box, la sortir d'un meuble fermé, ou ajouter un répéteur ou un point d'accès",

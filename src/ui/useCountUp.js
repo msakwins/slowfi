@@ -35,7 +35,8 @@ export function useCountUp(target, factor = 0.22) {
     const tick = () => {
       const gap = target - current.current;
       // Sous un demi-point l'écart ne se voit plus une fois arrondi.
-      current.current = Math.abs(gap) < 0.5 ? target : current.current + gap * factor;
+      current.current =
+        Math.abs(gap) < 0.5 ? target : current.current + gap * factor;
       setShown(current.current);
       if (current.current !== target) raf.current = requestAnimationFrame(tick);
     };

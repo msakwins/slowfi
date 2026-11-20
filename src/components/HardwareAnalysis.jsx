@@ -11,7 +11,53 @@ import React, { useEffect, useRef } from "react";
 import { diagnoseStorage } from "../lib/storage.js";
 import { analyzeComponents } from "../lib/components.js";
 import { SEVERITY } from "../ui/theme.js";
-import { Unfold, Verdict, VerdictHead, StatGrid, StatCell, Findings } from "../ui/verdict.jsx";
+import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
+
+const TEXT = {
+  fr: {
+    placeholder: "Coller ici la sortie des commandes…",
+    empty: "Aucun disque ni composant reconnu dans le texte collé",
+    about:
+      "Cette commande affiche l'état des disques, de la mémoire, de la carte graphique et du BIOS. Elle ne modifie rien, et aucune donnée n'est collectée",
+    components: "Composants",
+    memory: "Mémoire",
+    sticks: "Barrettes",
+    freq: "Fréquence",
+    gb: "Go",
+    drive: "Disque",
+    size: "Taille",
+    free: "Libre",
+    freePct: "Part libre",
+  },
+  en: {
+    placeholder: "Paste the output of the commands here…",
+    empty: "No drive or component found in the pasted text",
+    about:
+      "This command displays the state of the drives, memory, graphics card and BIOS. It changes nothing, and no data is collected",
+    components: "Components",
+    memory: "Memory",
+    sticks: "Sticks",
+    freq: "Frequency",
+    gb: "GB",
+    drive: "Drive",
+    size: "Size",
+    free: "Free",
+    freePct: "Free share",
+  },
+};
+
+function useT() {
+  const { lang } = useLang();
+  return { t: TEXT[lang], label: SEVERITY_LABEL[lang] };
+}
+import {
+  Unfold,
+  Verdict,
+  VerdictHead,
+  StatGrid,
+  StatCell,
+  Findings,
+} from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
 
 // Get-Volume et Get-CimInstance n'existent que dans PowerShell. Collées dans
@@ -71,10 +117,14 @@ function analyzeHardware(raw) {
 
 export default function HardwareAnalysis() {
   const anchor = useRef(null);
+  const { t } = useT();
 
   useEffect(() => {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    anchor.current?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    anchor.current?.scrollIntoView({
+      behavior: still ? "auto" : "smooth",
+      block: "start",
+    });
   }, []);
 
   return (
@@ -82,10 +132,11 @@ export default function HardwareAnalysis() {
       <Unfold gap={8} first={0.1}>
         <PasteStep
           command={COMMAND}
-          placeholder="Coller ici la sortie des commandes…"
+          placeholder={t.placeholder}
           example={EXAMPLE}
           analyze={analyzeHardware}
-          empty="Aucun disque ni composant reconnu dans le texte collé"
+          empty={t.empty}
+          about={t.about}
         >
           {({ volumes, components }) => (
             <>
@@ -103,19 +154,24 @@ export default function HardwareAnalysis() {
 
 function ComponentsVerdict({ c }) {
   const sev = SEVERITY[c.severity];
+  const { t, label } = useT();
   return (
     <Verdict $color={sev.color} gap={32} first={0}>
       <VerdictHead color={sev.color} tag={c.gpus[0]?.name}>
-        {`Composants — ${sev.label}`}
+        {`${t.components} — ${label[c.severity]}`}
       </VerdictHead>
       <StatGrid $cols={4} $border>
-        <StatCell k="Mémoire" value={c.totalGB} unit="Go" />
-        <StatCell k="Barrettes" value={c.memory.length || null} />
-        <StatCell k="Fréquence" value={c.memory[0]?.configured ?? null} unit="MHz" />
+        <StatCell k={t.memory} value={c.totalGB} unit={t.gb} />
+        <StatCell k={t.sticks} value={c.memory.length || null} />
+        <StatCell
+          k={t.freq}
+          value={c.memory[0]?.configured ?? null}
+          unit="MHz"
+        />
         <StatCell k="BIOS" value={c.bios?.year} />
       </StatGrid>
       <div style={{ paddingTop: 4 }}>
-        <Findings findings={c.findings} />
+        <Findings findings={c.findings} engine="components" />
       </div>
     </Verdict>
   );
@@ -123,18 +179,22 @@ function ComponentsVerdict({ c }) {
 
 function VolumeVerdict({ v }) {
   const sev = SEVERITY[v.severity];
+  const { t, label } = useT();
   return (
     <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color} tag={v.label || `Disque ${v.driveLetter}`}>
-        {`${v.driveLetter}: — ${sev.label}`}
+      <VerdictHead
+        color={sev.color}
+        tag={v.label || `${t.drive} ${v.driveLetter}`}
+      >
+        {`${v.driveLetter}: — ${label[v.severity]}`}
       </VerdictHead>
       <StatGrid $cols={3} $border>
-        <StatCell k="Taille" value={v.sizeGB} unit="Go" />
-        <StatCell k="Libre" value={v.freeGB} unit="Go" />
-        <StatCell k="Part libre" value={v.pct} unit="%" />
+        <StatCell k={t.size} value={v.sizeGB} unit={t.gb} />
+        <StatCell k={t.free} value={v.freeGB} unit={t.gb} />
+        <StatCell k={t.freePct} value={v.pct} unit="%" />
       </StatGrid>
       <div style={{ paddingTop: 4 }}>
-        <Findings findings={v.findings} />
+        <Findings findings={v.findings} engine="storage" />
       </div>
     </Verdict>
   );

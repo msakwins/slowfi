@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Le tracé du logo (le w en électrocardiogramme), seul, sur fond sombre. -->
+  <defs>
+    <filter id="glow" x="-20%" y="-40%" width="140%" height="180%">
+      <feGaussianBlur stdDeviation="1.6" />
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#020617" />
+  <g transform="translate(5 15) scale(1.42)" fill="none" stroke="#22d3ee" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1.5 14H5l3.8 7 4.6-15 4.6 15 3.6-10 2.6 3H36" stroke-width="3.4" opacity="0.7" filter="url(#glow)" />
+    <path d="M1.5 14H5l3.8 7 4.6-15 4.6 15 3.6-10 2.6 3H36" stroke-width="2.7" />
+  </g>
+</svg>
