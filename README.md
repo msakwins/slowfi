@@ -1,18 +1,27 @@
 # Slowfi
 
-Un diagnostiqueur de connexion Wi-Fi qui ne se contente pas de mesurer le débit :
+Un diagnostiqueur de connexion et de matériel qui ne se contente pas de mesurer :
 il dit **quel composant coince** et **comment le réparer**.
 
-L'utilisateur colle la sortie de `netsh wlan show interfaces` (Windows), l'app la
-parse et produit un verdict lisible — bande, norme, signal, canal, débit réel
-estimé, et la liste des problèmes avec leur correctif.
+Deux enquêtes, séparées parce qu'elles n'ont rien à voir :
+
+- **Connexion** — un test de débit lancé depuis le navigateur (débit descendant,
+  montant, latence, variation), puis l'analyse du Wi-Fi à partir de la sortie de
+  `netsh wlan show interfaces` : bande, norme, signal, canal, débit réel estimé.
+- **Matériel** — l'analyse des disques (espace libre, intégrité des volumes via
+  `Get-Volume`) et des composants (mémoire, carte graphique, âge du BIOS).
+
+Chaque problème détecté arrive avec son explication et son correctif. Les
+commandes à coller sont en lecture seule, et leur sortie ne quitte pas le
+navigateur.
 
 ## Pourquoi
 
-Les speed tests classiques (Speedtest, Fast.com) répondent à « combien ai-je de
-débit ? ». Ils ne répondent pas à « pourquoi c'est lent et que faire ? ». C'est ce
-trou que comble ce projet. Cas fondateur : un Wi-Fi coincé en 2,4 GHz qui plafonne
-à ~55 Mbit/s au lieu de 355 en 5 GHz.
+Les speed tests classiques répondent à « combien ai-je de débit ? ». Ils ne
+répondent pas à « pourquoi c'est lent, et que faire ? ». Cas fondateur : un Wi-Fi
+coincé en 2,4 GHz qui plafonne à ~55 Mb/s au lieu de 355 en 5 GHz. Et quand la
+ligne va bien, la lenteur vient souvent d'ailleurs : un disque plein ou un
+firmware ancien pèsent autant qu'une mauvaise connexion.
 
 ## Démarrer
 
@@ -21,36 +30,59 @@ npm install
 npm run dev        # serveur de dev
 npm run test       # tests en watch
 npm run test:run   # tests une fois (CI)
+npm run lint       # oxlint
 npm run build      # build de production
 ```
 
 ## Architecture
 
-Le projet sépare volontairement deux choses :
+Le projet sépare volontairement le moteur de l'interface.
 
-- `src/lib/diagnostic.js` — **le moteur**. Fonctions pures, zéro dépendance, zéro
-  React, zéro réseau : `parseNetsh()`, `bandFromChannel()`, `diagnose()`. C'est là
-  que vit l'expertise, sous forme de règles symptôme -> coupable -> correctif.
-  C'est aussi la partie couverte par les tests.
-- `src/components/DiagnoReseau.jsx` — **l'interface** (styled-components). Un simple
-  habillage autour du moteur, remplaçable sans toucher à la logique.
+**`src/lib/` — le moteur.** Fonctions pures, sans React ; chaque domaine a son
+fichier et ses tests. C'est là que vit l'expertise, sous forme de règles
+symptôme → coupable → correctif.
 
-Ajouter un cas de diagnostic = ajouter une règle dans `diagnose()` + un test dans
-`src/lib/diagnostic.test.js`. Rien d'autre à modifier.
+| Fichier | Rôle |
+| --- | --- |
+| `speedtest.js` | Mesure du débit et de la latence contre `speed.cloudflare.com` (seul module qui touche au réseau) |
+| `connection.js` | Verdict sur les chiffres du test de débit |
+| `diagnostic.js` | Lecture de `netsh wlan show interfaces` et règles Wi-Fi |
+| `storage.js` | Lecture de `Get-Volume` et règles de stockage |
+| `components.js` | Mémoire, carte graphique, firmware |
+| `powershell.js` | Lecture commune des sorties `Format-List` de PowerShell |
+
+**`src/components/` — l'interface** (styled-components). L'application tient
+sur une page (`Home.jsx`) : le test de débit, puis les analyses approfondies
+qui s'ouvrent sur place — `NetworkAnalysis.jsx` (Wi-Fi, suivi des
+vérifications manuelles de `ManualChecks.jsx`) et `HardwareAnalysis.jsx`
+(disques et composants, en une seule commande). Les éléments partagés (thème,
+logo, verdicts, étape copier-coller `PasteStep.jsx`, flèche, compteur animé)
+sont dans `src/ui/`.
+
+Ajouter un cas de diagnostic = ajouter une règle dans le module concerné + un
+test à côté. Rien d'autre à modifier.
+
+## Ton des textes
+
+Les textes ne tutoient pas l'utilisateur : infinitif ou impératif
+(« Tester en filaire… », « Analyser le matériel »).
 
 ## Feuille de route
 
-- [ ] Cas filaire : parser `Get-NetAdapter` et détecter un lien negocie a 100 Mbps
-      (cable ou connecteur defaillant).
-- [ ] Support macOS / Linux (les commandes systeme different).
-- [ ] Test de debit reel via un petit backend Node (mesure de temps de
-      telechargement) — ne se fait pas proprement en pur front.
-- [ ] Version desktop (Tauri) capable de lancer `netsh` automatiquement, sans
-      copier-coller manuel.
+- [ ] Cas filaire : lire `Get-NetAdapter` et détecter un lien négocié à 100 Mbps
+      (câble ou connecteur défaillant).
+- [ ] Support macOS / Linux (les commandes système diffèrent).
+- [ ] Version desktop (Tauri) capable de lancer les commandes automatiquement,
+      sans copier-coller manuel.
+
+## Déploiement
+
+Vercel (`vercel.json`) : build Vite, sortie dans `dist/`. La CI GitHub Actions
+lance les tests et le build à chaque push sur `main`.
 
 ## Stack
 
-React 19 · Vite · styled-components · Vitest
+React 19 · Vite · styled-components · Vitest · oxlint
 
 ## Licence
 

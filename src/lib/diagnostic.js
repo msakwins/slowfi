@@ -91,8 +91,8 @@ export function diagnose(d) {
       id: "band-2ghz",
       title: "Connexion en bande 2,4 GHz",
       detail:
-        "C'est la bande la plus lente. La carte est souvent capable de 5 GHz mais s'est accrochée au mauvais réseau (band steering de la box).",
-      fix: "Sépare les SSID 2,4 / 5 GHz dans la box, puis connecte-toi explicitement au réseau 5 GHz.",
+        "Bande la plus lente et la plus encombrée. La plupart des cartes Wi-Fi récentes prennent en charge le 5 GHz",
+      fix: "Séparer les SSID 2,4 et 5 GHz dans la box, puis se connecter explicitement au réseau 5 GHz",
     });
   }
 
@@ -102,8 +102,8 @@ export function diagnose(d) {
     findings.push({
       id: "weak-signal",
       title: `Signal faible (${d.signal} %)`,
-      detail: "Trop loin de la box ou obstacles. Le débit s'effondre quand le signal baisse.",
-      fix: "Rapproche-toi de la box, sors-la d'un meuble fermé, ou ajoute un répéteur / point d'accès.",
+      detail: "Distance ou obstacles entre l'appareil et la box. Le débit diminue avec le signal",
+      fix: "Réduire la distance à la box, la sortir d'un meuble fermé, ou ajouter un répéteur ou un point d'accès",
     });
   }
 
@@ -113,8 +113,8 @@ export function diagnose(d) {
     findings.push({
       id: "low-link-5ghz",
       title: "Débit de lien bas malgré un bon signal en 5 GHz",
-      detail: "Largeur de canal réduite (20 MHz), canal encombré, ou pilote Wi-Fi obsolète.",
-      fix: "Mets à jour le pilote de la carte Wi-Fi et vérifie la largeur de canal (80 MHz) dans la box.",
+      detail: "Causes possibles : largeur de canal réduite (20 MHz), canal encombré ou pilote Wi-Fi obsolète",
+      fix: "Mettre à jour le pilote de la carte Wi-Fi, et vérifier la largeur de canal (80 MHz) dans la box",
     });
   }
 
@@ -123,9 +123,8 @@ export function diagnose(d) {
     findings.push({
       id: "healthy",
       title: "Configuration Wi-Fi saine",
-      detail:
-        "Aucun goulot d'étranglement évident côté Wi-Fi. Pour le débit maximum, le câble Ethernet reste devant.",
-      fix: "Rien à corriger. Passe en filaire si tu veux pousser au-delà.",
+      detail: "Aucun goulot d'étranglement côté Wi-Fi",
+      fix: "Pour le débit maximum, passer en filaire (Ethernet)",
     });
   }
 

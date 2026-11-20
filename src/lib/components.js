@@ -82,13 +82,16 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
   );
   if (underclocked.length > 0) {
     const { rated, configured } = underclocked[0];
-    const loss = Math.round(((rated - configured) / configured) * 100);
+    // Perte rapportée à la fréquence nominale : c'est ce qui manque par
+    // rapport à ce que les barrettes devraient fournir. (Rapportée à la
+    // fréquence appliquée, on obtiendrait le gain possible, plus grand.)
+    const loss = Math.round(((rated - configured) / rated) * 100);
     bump("warning");
     findings.push({
       id: "ram-underclocked",
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
-      detail: `Les barrettes tournent sous leur fréquence nominale : environ ${loss} % de bande passante mémoire laissée de côté. Sans profil activé, la carte mère applique la fréquence de base et non celle inscrite sur les modules.`,
-      fix: "Le profil XMP (Intel) ou EXPO/DOCP (AMD) s'active dans le BIOS, en une case à cocher. C'est gratuit, réversible, et la fréquence appliquée se revérifie ici ensuite.",
+      detail: `Mémoire utilisée sous sa fréquence nominale, soit environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
+      fix: "Activer le profil XMP (Intel) ou EXPO/DOCP (AMD) dans le BIOS, puis relancer l'analyse pour vérifier la fréquence. Gratuit et réversible",
     });
   }
 
@@ -101,8 +104,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       id: "ram-single-channel",
       title: "Une seule barrette de mémoire",
       detail:
-        "En simple canal, la bande passante mémoire est divisée par deux. L'effet est net sur les jeux et sur tout ce qui s'appuie sur une carte graphique intégrée.",
-      fix: "Une seconde barrette identique, placée dans l'emplacement indiqué par la notice de la carte mère, fait passer en double canal.",
+        "En simple canal, la bande passante mémoire est divisée par deux. Impact sensible en jeu et avec une carte graphique intégrée",
+      fix: "Ajouter une seconde barrette identique dans l'emplacement indiqué par la notice de la carte mère, pour passer en double canal",
     });
   }
 
@@ -115,8 +118,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         id: `gpu-driver-stale-${gpu.name || "gpu"}`,
         title: `Pilote graphique de ${gpu.driverYear}${gpu.name ? ` (${gpu.name})` : ""}`,
         detail:
-          "Un pilote qui a plusieurs années laisse de côté les gains de performance et les correctifs publiés depuis. Rien ne plante, mais la carte rend moins que ce qu'elle peut.",
-        fix: "La mise à jour passe par l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control) plutôt que par Windows Update, souvent en retard sur les pilotes graphiques.",
+          "Les optimisations et correctifs publiés depuis ne sont pas appliqués. Performances graphiques potentiellement réduites",
+        fix: "Mettre à jour le pilote depuis l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control). Windows Update est souvent en retard sur les pilotes graphiques",
       });
     }
   }
@@ -131,8 +134,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         id: "bios-ancient",
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
-          "Un firmware aussi ancien n'a reçu aucune des mises à jour de microcode processeur ni des correctifs de stabilité publiés depuis. Sur certaines machines, cela coûte aussi des performances.",
-        fix: "Le dernier BIOS se trouve sur la page support de ta carte mère. Il s'applique depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32, jamais depuis un outil Windows.",
+          "Les mises à jour de microcode processeur et les correctifs de stabilité publiés depuis ne sont pas appliqués. Impact possible sur les performances",
+        fix: "Télécharger le dernier BIOS sur la page support de la carte mère, et l'appliquer depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32. Jamais depuis un outil Windows",
       });
     } else if (age >= BIOS_STALE_YEARS) {
       bump("warning");
@@ -140,8 +143,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         id: "bios-stale",
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
-          "Plusieurs mises à jour de firmware ont probablement été publiées depuis, dont du microcode processeur.",
-        fix: "La page support de ta carte mère dira si une version plus récente existe. Rien d'urgent, mais c'est en retard.",
+          "Des mises à jour de firmware, dont du microcode processeur, ont probablement été publiées depuis",
+        fix: "Vérifier sur la page support de la carte mère si une version plus récente existe. Mise à jour non urgente",
       });
     }
   }
@@ -151,8 +154,8 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       id: "healthy",
       title: "Composants bien réglés",
       detail:
-        "Mémoire à sa fréquence nominale, pilotes récents, firmware à jour. Rien à récupérer de ce côté.",
-      fix: "Rien à corriger. Si la machine rame quand même, le coupable est ailleurs.",
+        "Mémoire à sa fréquence nominale, pilotes récents, firmware à jour",
+      fix: "Rien à corriger de ce côté",
     });
   }
 

@@ -79,8 +79,8 @@ export function gradeVolume(v, { system = false } = {}) {
         id: "disk-critical",
         title: `${where} saturé (${freeGB} Go libres, ${pct} %)`,
         detail:
-          "À ce niveau Windows n'a plus de quoi travailler : les mises à jour échouent, le fichier d'échange ne peut plus grandir, et un volume plein finit par abîmer le système de fichiers lui-même.",
-        fix: "Il y a de la place à récupérer : les gros dossiers (jeux, téléchargements, documents) se déplacent vers un autre disque, et la corbeille se vide.",
+          "Espace insuffisant pour le fonctionnement de Windows : échec des mises à jour, fichier d'échange bloqué, risque de corruption du système de fichiers",
+        fix: "Déplacer les gros dossiers (jeux, téléchargements, documents) vers un autre disque, puis vider la corbeille",
       });
     } else if (pct < LOW_PCT) {
       bump("warning");
@@ -88,8 +88,8 @@ export function gradeVolume(v, { system = false } = {}) {
         id: "disk-low",
         title: `${where} presque plein (${freeGB} Go libres, ${pct} %)`,
         detail:
-          "Un SSD a besoin de blocs libres pour répartir l'usure et garder ses performances d'écriture. En dessous de 15 %, il ralentit et s'use plus vite.",
-        fix: "Vingt pour cent d'espace libre est un objectif confortable. Les bibliothèques de jeux et les caches d'applications sont les premiers candidats au déménagement.",
+          "Sous 15 % d'espace libre, un SSD perd en vitesse d'écriture et s'use plus rapidement",
+        fix: "Viser 20 % d'espace libre. Déplacer en priorité les bibliothèques de jeux et les caches d'applications",
       });
     }
   }
@@ -102,8 +102,8 @@ export function gradeVolume(v, { system = false } = {}) {
       id: "no-update-headroom",
       title: `Marge insuffisante pour les mises à jour (${freeGB} Go)`,
       detail:
-        "Une mise à jour de fonctionnalité Windows réclame une vingtaine de gigaoctets de travail temporaire. En dessous, elle échoue sans toujours dire pourquoi.",
-      fix: "Vingt gigaoctets libres en permanence sur le disque système suffisent, indépendamment du pourcentage.",
+        "Les mises à jour de fonctionnalités Windows nécessitent environ 20 Go d'espace temporaire. En dessous, elles peuvent échouer sans message explicite",
+      fix: "Garder 20 Go libres en permanence sur le disque système",
     });
   }
 
@@ -117,8 +117,8 @@ export function gradeVolume(v, { system = false } = {}) {
     findings.push({
       id: "fs-damaged",
       title: `Système de fichiers endommagé sur ${where}`,
-      detail: `Windows signale « ${v.operational || v.health} ». Une entrée abîmée dans la table de fichiers (MFT) ne se répare pas toute seule et reste signalée à chaque accès, souvent pendant des mois sans symptôme visible.`,
-      fix: `Sauvegarde d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres → Récupération → Démarrage avancé → Invite de commandes).`,
+      detail: `État signalé par Windows : « ${v.operational || v.health} ». Une erreur dans la table des fichiers (MFT) ne se corrige pas d'elle-même et peut rester sans symptôme visible pendant des mois`,
+      fix: `Sauvegarder d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres › Récupération › Démarrage avancé › Invite de commandes)`,
     });
   }
 
@@ -126,8 +126,8 @@ export function gradeVolume(v, { system = false } = {}) {
     findings.push({
       id: "healthy",
       title: `${where} en bonne santé`,
-      detail: `${freeGB} Go libres (${pct} %), intégrité vérifiée. Rien à signaler côté stockage.`,
-      fix: "Rien à corriger. Si la machine rame quand même, le coupable est ailleurs.",
+      detail: `${freeGB} Go libres (${pct} %), intégrité vérifiée`,
+      fix: "Rien à corriger de ce côté",
     });
   }
 

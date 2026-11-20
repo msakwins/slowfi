@@ -1,51 +1,53 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// La marque : pas de pictogramme posé à côté du mot, mais dedans. Le « o » de
-// slowfi est un rond — donc déjà la bonne forme pour contenir un signal. On le
-// remplace par un anneau avec une onde et son point d'émission.
+// La marque : le w de slowfi devient un tracé d'électrocardiogramme. La lettre
+// est déjà un zigzag, donc le dessin ne force rien — et un électro dit
+// « diagnostic » sans dire « panne ».
 //
-// L'avantage sur un logo séparé : rien à accorder entre deux objets, et le nom
-// reste lisible même si le dessin ne l'est plus, à très petite taille.
+// Texte blanc, tracé bleu avec un halo : le contraste met le tracé en avant,
+// c'est lui qu'on regarde en premier. Le halo ne tient que sur fond sombre,
+// à revoir si un thème clair apparaît un jour.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import styled from "styled-components";
 
+const ACCENT = "#22d3ee";
+
 const Word = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  font-size: 21px;
+  margin-bottom: 44px;
+  font-size: clamp(34px, 5.6vw, 44px);
   font-weight: 700;
   letter-spacing: 0.09em;
-  color: #22d3ee;
   line-height: 1;
+  color: #f1f5f9;
   user-select: none;
 `;
 
-// Le « o » : même diamètre apparent que la hauteur d'x des autres lettres, et
-// posé sur la même ligne de base.
-const Oh = styled.svg`
-  width: 0.82em;
-  height: 0.82em;
-  margin: 0 0.06em;
+const Trace = styled.svg`
+  width: 1.5em;
+  height: 0.9em;
+  margin: 0 0.05em;
   flex: none;
-  transform: translateY(0.055em);
+  color: ${ACCENT};
+  filter: drop-shadow(0 0 5px ${ACCENT}) drop-shadow(0 0 13px ${ACCENT});
 `;
 
 export default function Logo() {
   return (
     <Word aria-label="slowfi">
-      <span aria-hidden="true">sl</span>
-      <Oh viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="9.6" stroke="currentColor" strokeWidth="2.7" />
+      <span aria-hidden="true">slo</span>
+      <Trace viewBox="0 0 38 24" fill="none" aria-hidden="true">
         <path
-          d="M8.1 13.1 A5.3 5.3 0 0 1 15.9 13.1"
+          d="M1.5 14H5l3.8 7 4.6-15 4.6 15 3.6-10 2.6 3H36"
           stroke="currentColor"
-          strokeWidth="2.1"
+          strokeWidth="2.7"
+          fill="none"
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
-        <circle cx="12" cy="15.7" r="1.5" fill="currentColor" />
-      </Oh>
-      <span aria-hidden="true">wfi</span>
+      </Trace>
+      <span aria-hidden="true">fi</span>
     </Word>
   );
 }

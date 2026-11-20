@@ -1,53 +1,58 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// L'accueil : un test de débit disponible tout de suite, puis deux portes —
-// la connexion d'un côté, le matériel de l'autre.
+// L'application tient sur une page, en deux sections : la connexion d'abord,
+// avec le test de débit disponible immédiatement, puis le matériel.
 //
-// La séparation existe parce que les deux enquêtes n'ont rien à voir : l'une
-// regarde ce qui sort de la machine, l'autre ce qu'il y a dedans. Les mélanger
-// dans une seule grille obligeait à trier mentalement avant de commencer.
+// Les analyses approfondies s'ouvrent sur place, sous le bouton qui les lance,
+// plutôt que sur une page à part : on garde sous les yeux le résultat qu'elles
+// viennent compléter.
 // ─────────────────────────────────────────────────────────────────────────────
-import React from "react";
-import { Title, Lead, Grid, Card, Hint } from "../ui/theme.js";
+import React, { useState } from "react";
+import styled from "styled-components";
+import { Title, Lead, Button } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
+import NetworkAnalysis from "./NetworkAnalysis.jsx";
+import HardwareAnalysis from "./HardwareAnalysis.jsx";
+import Arrow from "../ui/Arrow.jsx";
 
-const DOORS = [
-  {
-    family: "reseau",
-    icon: "📡",
-    title: "Connexion",
-    blurb: "Internet, Wi-Fi, Ethernet, câbles, box.",
-  },
-  {
-    family: "materiel",
-    icon: "🧩",
-    title: "Matériel",
-    blurb: "Disques, mémoire, carte graphique, firmware.",
-  },
-];
+const Section = styled.section`
+  margin-top: 56px;
+`;
 
-export default function Home({ onOpen }) {
+export default function Home() {
+  const [network, setNetwork] = useState(false);
+  const [hardware, setHardware] = useState(false);
+
   return (
     <>
-      <Title>Diagnostic de connexion et de matériel</Title>
+      <Title>Analyse de la connexion</Title>
       <Lead>
-        Le test dure une vingtaine de secondes. S'il ne révèle rien, le coupable est ailleurs. Un
-        disque plein ou une mémoire mal réglée pèsent autant qu'une mauvaise connexion, et ça ne se
-        voit nulle part. Rien ne sort de ton navigateur.
+        L'analyse de connexion teste le débit descendant et montant, la latence et la stabilité de
+        la ligne.
+        <span className="then">
+          Une analyse approfondie du Wi-Fi, de la box et du câblage permet ensuite de comparer ce
+          résultat au débit maximal atteignable
+        </span>
       </Lead>
 
-      <SpeedTest />
+      {/* Une fois l'analyse ouverte, le bouton qui la lance disparaît. */}
+      <SpeedTest onDiagnostic={network ? undefined : () => setNetwork(true)} />
+      {network && <NetworkAnalysis />}
 
-      <Hint>Pour aller plus loin&nbsp;:</Hint>
-
-      <Grid>
-        {DOORS.map((d) => (
-          <Card key={d.family} onClick={() => onOpen(d.family)}>
-            <div className="icon">{d.icon}</div>
-            <p className="t">{d.title}</p>
-            <p className="b">{d.blurb}</p>
-          </Card>
-        ))}
-      </Grid>
+      <Section>
+        <Title as="h2">Analyse du matériel</Title>
+        <Lead>
+          Contrôle des disques, de la mémoire, de la carte graphique et du firmware, avec un
+          correctif pour chaque problème détecté
+        </Lead>
+        {hardware ? (
+          <HardwareAnalysis />
+        ) : (
+          <Button $primary onClick={() => setHardware(true)}>
+            Lancer l'analyse du matériel
+            <Arrow />
+          </Button>
+        )}
+      </Section>
     </>
   );
 }

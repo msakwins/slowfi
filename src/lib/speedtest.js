@@ -187,10 +187,10 @@ export async function measureUpload({ signal: external, onProgress } = {}) {
  * onProgress({ phase, ... }). Renvoie l'objet de résultat complet.
  */
 export async function runSpeedTest({ signal, onProgress } = {}) {
-  onProgress?.({ phase: "latency" });
-  const { latency, jitter } = await measureLatency(12, { signal });
-  onProgress?.({ phase: "latency", latency, jitter });
-
+  // Le débit descendant passe en premier : c'est le chiffre que l'utilisateur
+  // attend, et le voir monter tout de suite rend l'attente lisible. La latence
+  // ferme la marche, une fois la ligne redevenue calme — la mesurer pendant ou
+  // juste après une saturation donnerait une valeur gonflée.
   onProgress?.({ phase: "download", download: 0 });
   const download = await measureDownload({
     signal,
@@ -202,6 +202,10 @@ export async function runSpeedTest({ signal, onProgress } = {}) {
     signal,
     onProgress: (mbps) => onProgress?.({ phase: "upload", upload: mbps }),
   });
+
+  onProgress?.({ phase: "latency" });
+  const { latency, jitter } = await measureLatency(12, { signal });
+  onProgress?.({ phase: "latency", latency, jitter });
 
   onProgress?.({ phase: "done" });
   return {

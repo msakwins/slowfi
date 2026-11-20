@@ -6,10 +6,14 @@
 // symptôme → coupable → correctif, une par cas, faciles à tester et à enrichir.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Seuils du palier « excellente » : débit confortable dans les deux sens,
+// latence et variation basses.
+const EXCELLENT = { download: 100, upload: 20, latency: 40, jitter: 30 };
+
 /**
  * Note une connexion à partir des mesures du speed test.
  * @param {{download:number, upload:number, latency:number, jitter:number}} m
- * @returns {{severity:"ok"|"warning"|"problem", findings:Array}}
+ * @returns {{severity:"ok"|"warning"|"problem", grade:"excellent"|"good"|"fair"|"poor", findings:Array}}
  */
 export function gradeConnection(m) {
   const findings = [];
@@ -28,16 +32,16 @@ export function gradeConnection(m) {
         id: "down-very-low",
         title: `Débit descendant très faible (${m.download} Mb/s)`,
         detail:
-          "En dessous de 10 Mb/s, le streaming HD et les visios saccadent. Le problème vient de la ligne, du Wi-Fi, ou d'un appareil qui sature le réseau.",
-        fix: "Teste en filaire (Ethernet) pour isoler le Wi-Fi, ferme les téléchargements en cours, puis relance le test.",
+          "Sous 10 Mb/s, le streaming HD et les visioconférences sont instables. Causes possibles : la ligne, le Wi-Fi ou un appareil qui sature le réseau",
+        fix: "Tester en filaire (Ethernet) pour isoler le Wi-Fi, fermer les téléchargements en cours, puis relancer le test",
       });
     } else if (m.download < 25) {
       bump("warning");
       findings.push({
         id: "down-low",
         title: `Débit descendant modeste (${m.download} Mb/s)`,
-        detail: "Suffisant pour naviguer, mais juste dès que plusieurs appareils partagent la ligne.",
-        fix: "Vérifie l'offre souscrite auprès du FAI et privilégie le 5 GHz ou l'Ethernet pour les gros usages.",
+        detail: "Suffisant pour la navigation, limité lorsque plusieurs appareils partagent la ligne",
+        fix: "Vérifier l'offre souscrite auprès du FAI, et privilégier le 5 GHz ou l'Ethernet pour les gros usages",
       });
     }
   }
@@ -50,8 +54,8 @@ export function gradeConnection(m) {
       id: "high-latency",
       title: `Latence élevée (${m.latency} ms)`,
       detail:
-        "Une latence haute provoque du lag en jeu et des coupures en visio, même avec un bon débit. Souvent liée au Wi-Fi, à un routeur saturé ou à une ligne bridée.",
-      fix: "Passe en Ethernet, rapproche-toi de la box, et vérifie qu'aucun appareil ne sature la connexion (mises à jour, torrents).",
+        "Au-delà de 100 ms, les délais deviennent perceptibles en jeu en ligne et en visioconférence, quel que soit le débit. Causes fréquentes : Wi-Fi, routeur saturé ou ligne bridée",
+      fix: "Passer en Ethernet, réduire la distance à la box, et vérifier qu'aucun appareil ne sature la ligne (mises à jour, torrents)",
     });
   }
 
@@ -61,20 +65,41 @@ export function gradeConnection(m) {
     bump("warning");
     findings.push({
       id: "high-jitter",
-      title: `Connexion instable (gigue ${m.jitter} ms)`,
-      detail: "La latence varie beaucoup : signe d'interférences Wi-Fi ou d'un réseau encombré.",
-      fix: "Change de canal Wi-Fi, éloigne-toi des sources d'interférence (micro-ondes, autres box), ou passe en filaire.",
+      title: `Connexion instable (variation ${m.jitter} ms)`,
+      detail: "Latence irrégulière, caractéristique d'interférences Wi-Fi ou d'un réseau encombré",
+      fix: "Changer de canal Wi-Fi, s'écarter des sources d'interférence (micro-ondes, box voisines), ou passer en filaire",
     });
   }
+
+  // Une ligne sans défaut n'est pas forcément excellente : 30 Mb/s et 90 ms
+  // passent tous les seuils d'alerte, mais n'ont rien d'exceptionnel. Le palier
+  // « excellente » demande donc de la marge sur tous les chiffres à la fois.
+  const excellent =
+    severity === "ok" &&
+    m.download != null &&
+    m.download >= EXCELLENT.download &&
+    (m.upload == null || m.upload >= EXCELLENT.upload) &&
+    (m.latency == null || m.latency <= EXCELLENT.latency) &&
+    (m.jitter == null || m.jitter <= EXCELLENT.jitter);
 
   if (findings.length === 0) {
-    findings.push({
-      id: "healthy",
-      title: "Connexion en bonne santé",
-      detail: "Débit et latence corrects. Si tu ressens quand même du lag, le coupable est probablement ailleurs (Wi-Fi local, câble, ou composant de la machine).",
-      fix: "Lance le diagnostic pour explorer les autres pistes.",
-    });
+    findings.push(
+      excellent
+        ? {
+            id: "healthy",
+            title: "Connexion excellente",
+            detail: "Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",
+          }
+        : {
+            id: "healthy",
+            title: "Bonne connexion",
+            detail:
+              "Suffisante pour les usages courants. Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",
+          },
+    );
   }
 
-  return { ...m, severity, findings };
+  const grade = { ok: excellent ? "excellent" : "good", warning: "fair", problem: "poor" }[severity];
+
+  return { ...m, severity, grade, findings };
 }
