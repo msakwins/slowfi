@@ -14,9 +14,9 @@ export default function Home({ onStartDiagnostic }) {
       <Title>Diagnostic de connexion et de stockage</Title>
       <Lead>
         Slowfi mesure ta connexion et cherche ce qui la ralentit&nbsp;: Wi-Fi, Ethernet, câbles,
-        disques. Il regarde aussi la mémoire, la carte graphique et le firmware, qui ne plantent
-        jamais et qu'on ne soupçonne donc pas de rendre moins qu'ils ne pourraient. Tout
-        s'exécute dans le navigateur&nbsp;: rien n'est envoyé, rien n'est installé.
+        disques. Même chose pour la mémoire, la carte graphique et le firmware&nbsp;: ils ne
+        plantent jamais, donc personne ne les soupçonne de rendre moins qu'ils ne pourraient.
+        Tout s'exécute dans le navigateur&nbsp;: rien n'est envoyé, rien n'est installé.
       </Lead>
 
       <SpeedTest />
