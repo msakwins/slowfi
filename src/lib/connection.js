@@ -8,6 +8,9 @@
 
 // Seuils du palier « excellente » : débit confortable dans les deux sens,
 // latence et variation basses.
+/** Nombre écrit à la française (virgule décimale). */
+const fr = (n) => String(n).replace(".", ",");
+
 const EXCELLENT = { download: 100, upload: 20, latency: 40, jitter: 30 };
 
 /**
@@ -31,7 +34,7 @@ export function gradeConnection(m) {
       findings.push({
         id: "down-very-low",
         vars: { v: m.download },
-        title: `Débit descendant très faible (${m.download} Mb/s)`,
+        title: `Débit descendant très faible (${fr(m.download)} Mb/s)`,
         detail:
           "Sous 10 Mb/s, le streaming HD et les visioconférences sont instables. Causes possibles : la ligne, le Wi-Fi ou un appareil qui sature le réseau",
         fix: "Tester en filaire (Ethernet) pour isoler le Wi-Fi, fermer les téléchargements en cours, puis relancer le test",
@@ -41,7 +44,7 @@ export function gradeConnection(m) {
       findings.push({
         id: "down-low",
         vars: { v: m.download },
-        title: `Débit descendant modeste (${m.download} Mb/s)`,
+        title: `Débit descendant modeste (${fr(m.download)} Mb/s)`,
         detail:
           "Suffisant pour la navigation, limité lorsque plusieurs appareils partagent la ligne",
         fix: "Vérifier l'offre souscrite auprès du FAI, et privilégier le 5 GHz ou l'Ethernet pour les gros usages",

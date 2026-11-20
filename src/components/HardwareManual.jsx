@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { hardwareFromForm } from "../lib/manual.js";
 import { useLang } from "../ui/i18n.jsx";
 import { Ghost } from "../ui/theme.js";
-import { GuideStep, Fields, Field, NumberInput } from "../ui/Form.jsx";
+import { GuideStep, Fields, Field, NumberInput, Select } from "../ui/Form.jsx";
 
 const TEXT = {
   fr: {
@@ -28,7 +28,11 @@ const TEXT = {
       gpu: (
         <>
           Dans le même onglet, <span className="path">Performances › GPU</span>{" "}
-          : ligne « Date du pilote »
+          : ligne « Date du pilote ». Puis clic droit sur le menu Démarrer ›{" "}
+          <span className="path">
+            Gestionnaire de périphériques › Cartes graphiques
+          </span>{" "}
+          : une icône sur la carte signale un problème
         </>
       ),
       bios: (
@@ -36,6 +40,16 @@ const TEXT = {
           Menu Démarrer › taper{" "}
           <span className="path">Informations système</span> › ligne « Version
           du BIOS/Date »
+        </>
+      ),
+      system: (
+        <>
+          Dans le{" "}
+          <span className="path">Gestionnaire des tâches › Performances</span> :
+          le type du disque (C:) s'affiche en haut à droite de « Disque 0 » ou «
+          Disque 1 », le « Temps d'activité » sous « Processeur ». Puis{" "}
+          <span className="path">Paramètres › Système › Alimentation</span> : «
+          Mode d'alimentation »
         </>
       ),
     },
@@ -55,6 +69,12 @@ const TEXT = {
           ligne « Mémoire »
         </>
       ),
+      system: (
+        <>
+          Ouvrir <span className="path">Réglages Système › Batterie</span> :
+          ligne « Mode économie d'énergie »
+        </>
+      ),
     },
     letter: "Lettre",
     free: "Libre",
@@ -70,6 +90,64 @@ const TEXT = {
     rated: "Fréquence annoncée",
     ratedHint: "facultatif, sur la fiche produit",
     year: "Année",
+    gpuDate: "Date du pilote",
+    gpuState: "Icône sur la carte",
+    gpuStates: [
+      ["ok", "Aucune icône"],
+      ["error", "Triangle jaune"],
+      ["disabled", "Flèche vers le bas"],
+    ],
+    diskType: "Type du disque système",
+    uptime: "Temps d'activité",
+    uptimeHint: "le 1er nombre, en jours",
+    power: "Mode d'alimentation",
+    powerOptions: [
+      ["saver", "Efficacité énergétique optimale"],
+      ["normal", "Équilibré ou Performances optimales"],
+    ],
+    lowPower: "Mode économie d'énergie",
+    lowPowerOptions: [
+      ["saver", "Toujours"],
+      ["normal", "Jamais ou Sur batterie uniquement"],
+    ],
+    pick: "Choisir…",
+    boardMaker: "Fabricant de la carte mère",
+    boardModel: "Produit de la carte mère",
+    osWhere: {
+      windows: (
+        <>
+          Ouvrir{" "}
+          <span className="path">
+            Paramètres › Système › Informations système
+          </span>{" "}
+          : lignes « Édition » et « Version ». Puis, dans le{" "}
+          <span className="path">Gestionnaire des tâches › Processus</span>, les
+          pourcentages en tête des colonnes « Processeur » et « Mémoire », et
+          dans <span className="path">Applications de démarrage</span>, le
+          nombre d'applications « Activé »
+        </>
+      ),
+      mac: (
+        <>
+          Ouvrir <span className="path">Menu Pomme › À propos de ce Mac</span> :
+          version de macOS. Puis{" "}
+          <span className="path">Réglages Système › Batterie</span>, bouton ⓘ à
+          côté de « État de la batterie » : capacité maximale
+        </>
+      ),
+    },
+    os: "Édition",
+    osOptions: [
+      ["w11-home", "Windows 11 Famille ou Professionnel"],
+      ["w11-ent", "Windows 11 Entreprise ou Éducation"],
+      ["w10", "Windows 10"],
+    ],
+    osVersion: "Version",
+    macVersion: "Version de macOS",
+    cpuLoad: "Processeur",
+    memoryPct: "Mémoire",
+    startupCount: "Applications « Activé »",
+    batteryPct: "Capacité maximale",
   },
   en: {
     windows: {
@@ -88,13 +166,23 @@ const TEXT = {
       gpu: (
         <>
           In the same tab, <span className="path">Performance › GPU</span>:
-          “Driver date” line
+          “Driver date” line. Then right-click the Start menu ›{" "}
+          <span className="path">Device Manager › Display adapters</span>: an
+          icon on the card signals a problem
         </>
       ),
       bios: (
         <>
           Start menu › type <span className="path">System Information</span> ›
           “BIOS Version/Date” line
+        </>
+      ),
+      system: (
+        <>
+          In <span className="path">Task Manager › Performance</span>: the drive
+          type (C:) shows at the top right of “Disk 0” or “Disk 1”, and “Up
+          time” under “CPU”. Then{" "}
+          <span className="path">Settings › System › Power</span>: “Power mode”
         </>
       ),
     },
@@ -114,6 +202,12 @@ const TEXT = {
           “Memory” line
         </>
       ),
+      system: (
+        <>
+          Open <span className="path">System Settings › Battery</span>: “Low
+          Power Mode” line
+        </>
+      ),
     },
     letter: "Letter",
     free: "Free",
@@ -129,6 +223,60 @@ const TEXT = {
     rated: "Rated frequency",
     ratedHint: "optional, on the product sheet",
     year: "Year",
+    gpuDate: "Driver date",
+    gpuState: "Icon on the card",
+    gpuStates: [
+      ["ok", "No icon"],
+      ["error", "Yellow triangle"],
+      ["disabled", "Down arrow"],
+    ],
+    diskType: "System drive type",
+    uptime: "Up time",
+    uptimeHint: "the first number, in days",
+    power: "Power mode",
+    powerOptions: [
+      ["saver", "Best power efficiency"],
+      ["normal", "Balanced or Best performance"],
+    ],
+    lowPower: "Low Power Mode",
+    lowPowerOptions: [
+      ["saver", "Always"],
+      ["normal", "Never or Only on Battery"],
+    ],
+    pick: "Choose…",
+    boardMaker: "BaseBoard Manufacturer",
+    boardModel: "BaseBoard Product",
+    osWhere: {
+      windows: (
+        <>
+          Open <span className="path">Settings › System › About</span>:
+          “Edition” and “Version” lines. Then, in{" "}
+          <span className="path">Task Manager › Processes</span>, the
+          percentages at the top of the “CPU” and “Memory” columns, and in{" "}
+          <span className="path">Startup apps</span>, the number of “Enabled”
+          apps
+        </>
+      ),
+      mac: (
+        <>
+          Open <span className="path">Apple menu › About This Mac</span>: macOS
+          version. Then <span className="path">System Settings › Battery</span>,
+          ⓘ button next to “Battery Health”: maximum capacity
+        </>
+      ),
+    },
+    os: "Edition",
+    osOptions: [
+      ["w11-home", "Windows 11 Home or Pro"],
+      ["w11-ent", "Windows 11 Enterprise or Education"],
+      ["w10", "Windows 10"],
+    ],
+    osVersion: "Version",
+    macVersion: "macOS version",
+    cpuLoad: "CPU",
+    memoryPct: "Memory",
+    startupCount: "“Enabled” apps",
+    batteryPct: "Maximum capacity",
   },
 };
 
@@ -168,7 +316,14 @@ export default function HardwareManual({ system, onResult }) {
       hardwareFromForm({
         platform: system,
         disks: mac ? disks.slice(0, 1) : disks,
-        ...(mac ? { memory: f.memory } : f),
+        ...(mac
+          ? {
+              memory: f.memory,
+              power: f.power,
+              osVersion: f.osVersion,
+              batteryPct: f.batteryPct,
+            }
+          : f),
       }),
     );
   }, [disks, f, system, mac, onResult]);
@@ -274,11 +429,19 @@ export default function HardwareManual({ system, onResult }) {
         <>
           <GuideStep n="3" where={w.gpu}>
             <Fields>
-              <Field label={t.year}>
+              <Field label={t.gpuDate}>
                 <NumberInput
                   value={f.gpuYear}
                   onChange={set("gpuYear")}
-                  placeholder="2025"
+                  placeholder="07/11/2026"
+                />
+              </Field>
+              <Field label={t.gpuState}>
+                <Select
+                  value={f.gpuState}
+                  onChange={set("gpuState")}
+                  options={t.gpuStates}
+                  placeholder={t.pick}
                 />
               </Field>
             </Fields>
@@ -292,10 +455,132 @@ export default function HardwareManual({ system, onResult }) {
                   placeholder="2023"
                 />
               </Field>
+              <Field label={t.boardMaker}>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  value={f.boardMaker ?? ""}
+                  onChange={(e) => set("boardMaker")(e.target.value)}
+                />
+              </Field>
+              <Field label={t.boardModel}>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  value={f.boardModel ?? ""}
+                  onChange={(e) => set("boardModel")(e.target.value)}
+                />
+              </Field>
             </Fields>
           </GuideStep>
         </>
       )}
+      <GuideStep n={mac ? "3" : "5"} where={w.system}>
+        <Fields>
+          {mac ? (
+            <Field label={t.lowPower}>
+              <Select
+                value={f.power}
+                onChange={set("power")}
+                options={t.lowPowerOptions}
+                placeholder={t.pick}
+              />
+            </Field>
+          ) : (
+            <>
+              <Field label={t.diskType}>
+                <Select
+                  value={f.diskType}
+                  onChange={set("diskType")}
+                  options={[
+                    ["SSD", "SSD"],
+                    ["HDD", "HDD"],
+                  ]}
+                  placeholder={t.pick}
+                />
+              </Field>
+              <Field label={t.uptime} hint={t.uptimeHint}>
+                <NumberInput
+                  value={f.uptime}
+                  onChange={set("uptime")}
+                  placeholder="3"
+                />
+              </Field>
+              <Field label={t.power}>
+                <Select
+                  value={f.power}
+                  onChange={set("power")}
+                  options={t.powerOptions}
+                  placeholder={t.pick}
+                />
+              </Field>
+            </>
+          )}
+        </Fields>
+      </GuideStep>
+      <GuideStep n={mac ? "4" : "6"} where={t.osWhere[system]}>
+        <Fields>
+          {mac ? (
+            <>
+              <Field label={t.macVersion}>
+                <NumberInput
+                  value={f.osVersion}
+                  onChange={set("osVersion")}
+                  placeholder="15.6"
+                />
+              </Field>
+              <Field label={t.batteryPct} hint="%">
+                <NumberInput
+                  value={f.batteryPct}
+                  onChange={set("batteryPct")}
+                  placeholder="88"
+                />
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field label={t.os}>
+                <Select
+                  value={f.os}
+                  onChange={set("os")}
+                  options={t.osOptions}
+                  placeholder={t.pick}
+                />
+              </Field>
+              <Field label={t.osVersion}>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  placeholder={lang === "fr" ? "ex. 24H2" : "e.g. 24H2"}
+                  value={f.osVersion ?? ""}
+                  onChange={(e) => set("osVersion")(e.target.value)}
+                />
+              </Field>
+              <Field label={t.cpuLoad} hint="%">
+                <NumberInput
+                  value={f.cpuLoad}
+                  onChange={set("cpuLoad")}
+                  placeholder="12"
+                />
+              </Field>
+              <Field label={t.memoryPct} hint="%">
+                <NumberInput
+                  value={f.memoryPct}
+                  onChange={set("memoryPct")}
+                  placeholder="45"
+                />
+              </Field>
+              <Field label={t.startupCount}>
+                <NumberInput
+                  value={f.startupCount}
+                  onChange={set("startupCount")}
+                  placeholder="8"
+                />
+              </Field>
+            </>
+          )}
+        </Fields>
+      </GuideStep>
     </>
   );
 }

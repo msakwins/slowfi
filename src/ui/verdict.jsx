@@ -7,7 +7,7 @@ import React from "react";
 import styled, { keyframes, css } from "styled-components";
 import Arrow from "./Arrow.jsx";
 import { useLang } from "./i18n.jsx";
-import { localize } from "../lib/en.js";
+import { localize, passedLabel } from "../lib/en.js";
 
 // Le verdict arrive en deux temps, parce qu'un bloc qui surgit d'un coup est
 // brutal à double titre : son contenu apparaît d'un seul tenant, et tout ce
@@ -160,6 +160,14 @@ const Stat = styled.div`
     color: #94a3b8;
     margin-left: 4px;
   }
+  /* Valeur en toutes lettres (un nom de carte graphique) : plus petite, pour
+     tenir sur une ou deux lignes. */
+  .v.text {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
 `;
 
 // Ni cadre ni filet : l'espacement et le titre suffisent à séparer deux
@@ -191,12 +199,22 @@ const FindingCard = styled.div`
   }
 `;
 
-export function StatCell({ k, value, unit }) {
+// Nombres écrits selon la langue (« 232,3 » en français), sans séparateur
+// de milliers pour que les années restent lisibles (« 2019 »).
+export function StatCell({ k, value, unit, text }) {
+  const { lang } = useLang();
+  const shown =
+    typeof value === "number"
+      ? value.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", {
+          useGrouping: false,
+          maximumFractionDigits: 1,
+        })
+      : value;
   return (
     <Stat>
       <span className="k">{k}</span>
-      <span className="v">
-        {value ?? "—"}
+      <span className={text ? "v text" : "v"}>
+        {shown ?? "—"}
         {value != null && unit ? <span className="u">{unit}</span> : null}
       </span>
     </Stat>
@@ -222,7 +240,7 @@ export function Findings({ findings, engine }) {
     .map((f) => (
       <FindingCard key={f.id}>
         <h3>{f.title}</h3>
-        <p className="detail">{f.detail}</p>
+        {f.detail && <p className="detail">{f.detail}</p>}
         {/* Certains constats n'appellent pas de correctif écrit — la suite est
           alors un bouton, pas une phrase. */}
         {f.fix && (
@@ -233,4 +251,71 @@ export function Findings({ findings, engine }) {
         )}
       </FindingCard>
     ));
+}
+
+// Contrôles passés sans anomalie : une ligne courte chacun, sous les constats.
+// Ce qui va bien reste ainsi visible, même quand un autre point pose problème.
+const PassedList = styled.div`
+  margin-top: 18px;
+
+  .head {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #64748b;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    gap: 10px;
+    padding: 3px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #94a3b8;
+  }
+  svg {
+    flex: none;
+    margin-top: 5px;
+    color: #34d399;
+  }
+`;
+
+export function Passed({ items }) {
+  const { lang } = useLang();
+  if (!items || items.length === 0) return null;
+  return (
+    <PassedList>
+      <p className="head">
+        {lang === "fr" ? "Vérifié, sans anomalie" : "Checked, no issue"}
+      </p>
+      <ul>
+        {items.map((p) => (
+          <li key={p.id + (p.label ?? "")}>
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M3 8.5l3.2 3L13 4.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {passedLabel(p, lang)}
+          </li>
+        ))}
+      </ul>
+    </PassedList>
+  );
 }

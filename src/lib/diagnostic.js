@@ -134,7 +134,7 @@ export function diagnose(d) {
     findings.push({
       id: "healthy",
       title: "Configuration Wi-Fi saine",
-      detail: "Aucun goulot d'étranglement côté Wi-Fi",
+      detail: "Bande, signal et débit de lien sans anomalie",
       fix: "Pour le débit maximum, passer en filaire (Ethernet)",
     });
   }

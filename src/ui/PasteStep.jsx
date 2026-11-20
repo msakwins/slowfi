@@ -184,6 +184,7 @@ const Empty = styled.p`
  *   empty: React.ReactNode,          message quand rien n'est reconnu
  *   manual?: React.ComponentType<{ system: string, onResult: (r: any) => void }>,
  *                                     saisie guidée, sans commande
+ *   manualProps?: object,           props supplémentaires de la saisie guidée
  *   children: (result: any) => React.ReactNode,
  * }} props
  */
@@ -193,6 +194,7 @@ export default function PasteStep({
   analyze,
   empty,
   manual: Manual,
+  manualProps,
   children,
 }) {
   const [system, setSystem] = useState(detectSystem);
@@ -269,7 +271,12 @@ export default function PasteStep({
         <>
           <Intro>{t.manualIntro}</Intro>
           {/* Une saisie par système : changer de système repart de zéro. */}
-          <Manual key={system} system={system} onResult={setManualResult} />
+          <Manual
+            key={system}
+            system={system}
+            onResult={setManualResult}
+            {...manualProps}
+          />
         </>
       ) : (
         <>

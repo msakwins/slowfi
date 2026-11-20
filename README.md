@@ -74,12 +74,25 @@ Les textes ne tutoient pas l'utilisateur : infinitif ou impératif
 
 ## Feuille de route
 
-- [ ] Cas filaire : lire `Get-NetAdapter` et détecter un lien négocié à 100 Mbps
-      (câble ou connecteur défaillant).
+- [x] Cas filaire : vitesse de la liaison Ethernet (`Get-NetAdapter`, `ifconfig`).
 - [x] Support macOS (Wi-Fi, disque, mémoire).
 - [ ] Support Linux.
 - [ ] Version desktop (Tauri) capable de lancer les commandes automatiquement,
       sans copier-coller manuel.
+
+### Réservé à l'application desktop
+
+Ce qu'un site ne peut pas obtenir, même par copier-coller : ces mesures
+demandent des droits administrateur ou un accès direct au matériel, et
+attendront l'application.
+
+- [ ] Températures du processeur, de la carte graphique et des disques.
+- [ ] Usure des SSD (pourcentage d'endurance consommé, données SMART
+      détaillées) : `Get-StorageReliabilityCounter` exige les droits
+      administrateur.
+- [ ] Vitesse des ventilateurs et état de l'alimentation.
+- [ ] Suivi dans le temps : charge du processeur et de la mémoire sur
+      plusieurs minutes, plutôt qu'un instantané.
 
 ## Déploiement
 

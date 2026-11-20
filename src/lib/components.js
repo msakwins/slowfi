@@ -8,7 +8,7 @@
 // pourrait. C'est exactement le type de lenteur qu'un diagnostic doit nommer,
 // parce que l'utilisateur ne peut pas la voir.
 // ─────────────────────────────────────────────────────────────────────────────
-import { parseBlocks, field, number, yearOf } from "./powershell.js";
+import { parseBlocks, field, number, yearOf, monthOf } from "./powershell.js";
 
 const GIB = 1024 ** 3;
 
@@ -21,10 +21,41 @@ const GIB = 1024 ** 3;
 export function parseComponents(raw) {
   const memory = [];
   const gpus = [];
+  const netDrivers = [];
   let bios = null;
+  let cpu = null;
+  let computer = null;
+  let board = null;
+  let cpuLimit = null;
 
   for (const f of parseBlocks(raw)) {
-    if ("Capacity" in f || "DeviceLocator" in f) {
+    if ("DeviceName" in f && "DriverDate" in f) {
+      // Pilote réseau (Win32_PnPSignedDriver) : à tester avant les cartes
+      // graphiques, qui ont aussi un champ DriverVersion.
+      netDrivers.push({
+        name: field(f, "DeviceName"),
+        version: field(f, "DriverVersion"),
+        year: yearOf(field(f, "DriverDate")),
+        month: monthOf(field(f, "DriverDate"))?.month ?? null,
+      });
+    } else if ("NumberOfCores" in f) {
+      cpu = {
+        name: field(f, "Name")?.replace(/\s+/g, " ") ?? null,
+        cores: number(f, "NumberOfCores"),
+        threads: number(f, "NumberOfLogicalProcessors"),
+        maxMHz: number(f, "MaxClockSpeed"),
+      };
+    } else if ("PercentPerformanceLimit" in f) {
+      cpuLimit = number(f, "PercentPerformanceLimit");
+    } else if ("PCSystemType" in f) {
+      computer = {
+        maker: field(f, "Manufacturer"),
+        model: field(f, "Model"),
+        laptop: number(f, "PCSystemType") === 2,
+      };
+    } else if ("Product" in f && !("SMBIOSBIOSVersion" in f)) {
+      board = { maker: field(f, "Manufacturer"), model: field(f, "Product") };
+    } else if ("Capacity" in f || "DeviceLocator" in f) {
       memory.push({
         slot: field(f, "DeviceLocator"),
         capacity: number(f, "Capacity"),
@@ -36,6 +67,9 @@ export function parseComponents(raw) {
         name: field(f, "Name"),
         driverVersion: field(f, "DriverVersion"),
         driverYear: yearOf(field(f, "DriverDate")),
+        driverMonth: monthOf(field(f, "DriverDate"))?.month ?? null,
+        status: field(f, "Status"),
+        errorCode: number(f, "ConfigManagerErrorCode"),
       });
     } else if ("SMBIOSBIOSVersion" in f) {
       bios = {
@@ -46,13 +80,53 @@ export function parseComponents(raw) {
     }
   }
 
+  if (cpu) cpu.limit = cpuLimit;
+
+  // Le modèle de l'ordinateur, sauf s'il est générique (PC monté à la main) :
+  // c'est alors la carte mère qui compte, pour trouver son BIOS.
+  const generic =
+    /system manufacturer|system product name|to be filled|default string|o\.e\.m|not applicable/i;
+  const machine =
+    computer &&
+    computer.model &&
+    !generic.test(`${computer.maker} ${computer.model}`)
+      ? {
+          kind: "computer",
+          maker: shortMaker(computer.maker),
+          model: computer.model,
+          laptop: computer.laptop,
+        }
+      : board?.model
+        ? {
+            kind: "board",
+            maker: shortMaker(board.maker),
+            model: board.model,
+            laptop: computer?.laptop ?? false,
+          }
+        : null;
+
+  const network = netDrivers.filter(
+    (d) => d.name && d.year && d.year !== 2006 && !NET_NOISE.test(d.name),
+  );
+
   // Rien en Format-List : peut-être la sortie d'un Mac.
   if (memory.length === 0) {
     const mac = parseMacMemory(raw);
-    if (mac.length > 0) return { memory: mac, gpus, bios, platform: "mac" };
+    const macCpu = parseMacCpu(raw);
+    if (mac.length > 0 || macCpu) {
+      return {
+        memory: mac,
+        gpus,
+        bios,
+        cpu: macCpu,
+        machine: null,
+        network: [],
+        platform: "mac",
+      };
+    }
   }
 
-  return { memory, gpus, bios, platform: "windows" };
+  return { memory, gpus, bios, cpu, machine, network, platform: "windows" };
 }
 
 /** Total de mémoire installée, en Go. */
@@ -62,6 +136,87 @@ export function totalMemoryGB(memory) {
 }
 
 const GPU_DRIVER_STALE_YEARS = 2;
+const NET_DRIVER_STALE_YEARS = 3;
+const CPU_LIMIT_PCT = 90;
+
+// Cartes réseau virtuelles ou techniques de Windows, sans pilote à mettre à
+// jour côté utilisateur.
+const NET_NOISE =
+  /wan miniport|virtual|hyper-v|bluetooth|kernel debug|tap-|vpn|loopback|wi-fi direct|teredo|isatap|6to4|vmware|virtualbox|microsoft/i;
+
+/**
+ * Processeur d'un Mac : `sysctl machdep.cpu.brand_string hw.physicalcpu hw.ncpu`
+ * et la limite de vitesse de `pmset -g therm` (Mac Intel).
+ */
+function parseMacCpu(raw) {
+  const name = raw.match(/machdep\.cpu\.brand_string:\s*(.+)/i)?.[1]?.trim();
+  if (!name) return null;
+  const limit = raw.match(/CPU_Speed_Limit\s*=\s*(\d+)/i);
+  return {
+    name,
+    cores: Number(raw.match(/hw\.physicalcpu:\s*(\d+)/i)?.[1]) || null,
+    threads: Number(raw.match(/hw\.ncpu:\s*(\d+)/i)?.[1]) || null,
+    maxMHz: null,
+    limit: limit ? Number(limit[1]) : null,
+  };
+}
+const GPU_DRIVER_OLD_MONTHS = 6;
+
+// Pilote d'affichage générique de Windows : aucune accélération graphique.
+const BASIC_DISPLAY =
+  /microsoft basic (display|render)|carte graphique de base microsoft|pilote d'affichage de base/i;
+
+const MONTHS = [
+  "janvier",
+  "février",
+  "mars",
+  "avril",
+  "mai",
+  "juin",
+  "juillet",
+  "août",
+  "septembre",
+  "octobre",
+  "novembre",
+  "décembre",
+];
+
+// Noms de fabricants tels qu'on les connaît, au lieu de la raison sociale
+// (« ASUSTeK COMPUTER INC. » → « ASUS »).
+const MAKERS = [
+  [/asus/i, "ASUS"],
+  [/micro-star|msi/i, "MSI"],
+  [/gigabyte/i, "Gigabyte"],
+  [/asrock/i, "ASRock"],
+  [/hewlett|^hp/i, "HP"],
+  [/dell/i, "Dell"],
+  [/lenovo/i, "Lenovo"],
+  [/acer/i, "Acer"],
+  [/microsoft/i, "Microsoft"],
+  [/apple/i, "Apple"],
+];
+
+export function shortMaker(maker) {
+  if (!maker) return null;
+  return (
+    MAKERS.find(([re]) => re.test(maker))?.[1] ??
+    maker.replace(/[s,]*(inc|corp|corporation|co|ltd|gmbh).?s*$/gi, "").trim()
+  );
+}
+
+/** « la page support de la carte mère ASUS TUF B360-PRO », selon ce qui est connu. */
+function supportPage(machine) {
+  if (!machine) return "la page support de la carte mère";
+  const name = [machine.maker, machine.model].filter(Boolean).join(" ");
+  return machine.kind === "board"
+    ? `la page support de la carte mère (${name})`
+    : `la page support du fabricant de l'ordinateur (${name})`;
+}
+
+/** « juillet 2026 », ou l'année seule si le mois est inconnu. */
+function monthLabel(year, month) {
+  return month ? `${MONTHS[month - 1]} ${year}` : String(year);
+}
 const BIOS_STALE_YEARS = 4;
 const BIOS_ANCIENT_YEARS = 6;
 
@@ -73,7 +228,7 @@ const BIOS_ANCIENT_YEARS = 6;
  */
 export function diagnoseComponents(
   c,
-  { year = new Date().getFullYear() } = {},
+  { year = new Date().getFullYear(), month } = {},
 ) {
   const findings = [];
   let severity = "ok";
@@ -105,6 +260,25 @@ export function diagnoseComponents(
     });
   }
 
+  // Règle A2 — trop peu de mémoire. Sous 8 Go, un système récent et un
+  // navigateur la remplissent : Windows (ou macOS) écrit alors sur le disque.
+  const total = totalMemoryGB(c.memory);
+  if (total != null && total < 8) {
+    bump(total < 4 ? "problem" : "warning");
+    const fixed = c.memory[0]?.unified;
+    findings.push({
+      id: "ram-low",
+      key: fixed ? "ram-low-unified" : "ram-low",
+      vars: { total },
+      title: `Mémoire limitée (${total} Go)`,
+      detail:
+        "Avec moins de 8 Go, le système et un navigateur ouvert remplissent la mémoire : l'ordinateur bascule alors sur le disque et ralentit nettement",
+      fix: fixed
+        ? "La mémoire de ce Mac ne s'étend pas : limiter les onglets et applications ouverts, et fermer celles qui restent en arrière-plan"
+        : "Ajouter une barrette si un emplacement est libre (voir la notice de l'ordinateur), sinon limiter les onglets et applications ouverts",
+    });
+  }
+
   // Règle B — une seule barrette. Deux modules travaillent en double canal et
   // doublent la bande passante ; une seule divise par deux, ce qui se voit
   // surtout sur les machines à carte graphique intégrée.
@@ -121,12 +295,88 @@ export function diagnoseComponents(
     });
   }
 
-  // Règle C — pilote graphique figé. Un pilote ancien coûte des performances
-  // et des corrections de bugs, sans jamais le signaler.
+  // Mois courant : celui du jour, sauf quand les tests fixent l'année.
+  const nowMonth =
+    month ?? (arguments[1]?.year != null ? 12 : new Date().getMonth() + 1);
+
+  // Règle C0 — carte graphique en panne ou sans vrai pilote. Windows le sait
+  // (code d'erreur du Gestionnaire de périphériques) mais ne l'affiche pas.
+  for (const gpu of c.gpus) {
+    const name = gpu.name ? ` (${gpu.name})` : "";
+    if (gpu.name && BASIC_DISPLAY.test(gpu.name)) {
+      bump("problem");
+      findings.push({
+        id: `gpu-no-driver-${gpu.name}`,
+        key: "gpu-no-driver",
+        title: "Carte graphique sans pilote",
+        detail:
+          "Windows utilise son pilote d'affichage de base : pas d'accélération graphique, vidéos et jeux saccadés, résolution parfois limitée",
+        fix: "Installer le pilote depuis le site du constructeur de la carte graphique (ou de l'ordinateur pour un portable)",
+      });
+    } else if (gpu.errorCode === 22) {
+      bump("problem");
+      findings.push({
+        id: `gpu-disabled-${gpu.name}`,
+        key: "gpu-disabled",
+        vars: { name: gpu.name },
+        title: `Carte graphique désactivée${name}`,
+        detail:
+          "Le périphérique est désactivé dans Windows (code 22) : la carte n'est pas utilisée",
+        fix: "Clic droit sur le menu Démarrer › Gestionnaire de périphériques › Cartes graphiques › clic droit sur la carte › Activer le périphérique",
+      });
+    } else if (gpu.errorCode) {
+      bump("problem");
+      findings.push({
+        id: `gpu-error-${gpu.name}`,
+        key: "gpu-error",
+        vars: { code: gpu.errorCode, name: gpu.name },
+        title: `Carte graphique en erreur (code ${gpu.errorCode})${name}`,
+        detail:
+          gpu.errorCode === 43
+            ? "Windows a arrêté la carte après un problème signalé (code 43) : le plus souvent un pilote corrompu, parfois une panne matérielle"
+            : `Windows signale l'erreur ${gpu.errorCode} sur ce périphérique : la carte ne fonctionne pas normalement`,
+        fix: "Désinstaller le pilote, puis installer la dernière version depuis le site du constructeur. Si l'erreur persiste, faire tester la carte",
+      });
+    } else if (gpu.status && !/^ok$/i.test(gpu.status)) {
+      bump("problem");
+      findings.push({
+        id: `gpu-status-${gpu.name}`,
+        key: "gpu-status",
+        vars: { status: gpu.status, name: gpu.name },
+        title: `État anormal de la carte graphique${name}`,
+        detail: `État signalé par Windows : « ${gpu.status} »`,
+        fix: "Ouvrir le Gestionnaire de périphériques › Cartes graphiques, puis réinstaller le pilote depuis le site du constructeur",
+      });
+    }
+  }
+
+  // Règle C — pilote graphique à mettre à jour. Les constructeurs publient
+  // un pilote environ chaque mois : passé 6 mois, une version plus récente
+  // existe presque sûrement ; passé 2 ans, le retard coûte des performances.
+  // Sans le mois (saisie guidée), on compte en années.
+  const ageMonths = (gpu) =>
+    (year - gpu.driverYear) * 12 + (nowMonth - (gpu.driverMonth ?? nowMonth));
   for (const gpu of c.gpus) {
     if (
       gpu.driverYear != null &&
-      year - gpu.driverYear >= GPU_DRIVER_STALE_YEARS
+      ageMonths(gpu) >= GPU_DRIVER_OLD_MONTHS &&
+      ageMonths(gpu) < GPU_DRIVER_STALE_YEARS * 12
+    ) {
+      bump("warning");
+      const when = monthLabel(gpu.driverYear, gpu.driverMonth);
+      findings.push({
+        id: `gpu-driver-old-${gpu.name || "gpu"}`,
+        key: "gpu-driver-old",
+        vars: { year: gpu.driverYear, month: gpu.driverMonth, name: gpu.name },
+        title: `Pilote graphique de ${when}, plus de 6 mois`,
+        detail:
+          "NVIDIA, AMD et Intel publient un nouveau pilote environ une fois par mois : une version plus récente existe très probablement, avec des corrections et des optimisations",
+        fix: "Mettre à jour le pilote depuis l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control) ou sa page de téléchargement",
+      });
+    }
+    if (
+      gpu.driverYear != null &&
+      ageMonths(gpu) >= GPU_DRIVER_STALE_YEARS * 12
     ) {
       bump("warning");
       findings.push({
@@ -149,21 +399,21 @@ export function diagnoseComponents(
       bump("problem");
       findings.push({
         id: "bios-ancient",
-        vars: { year: c.bios.year, age },
+        vars: { year: c.bios.year, age, machine: c.machine },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Les mises à jour de microcode processeur et les correctifs de stabilité publiés depuis ne sont pas appliqués. Impact possible sur les performances",
-        fix: "Télécharger le dernier BIOS sur la page support de la carte mère, et l'appliquer depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32. Jamais depuis un outil Windows",
+        fix: `Télécharger le dernier BIOS sur ${supportPage(c.machine)}, et l'appliquer depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32. Jamais depuis un outil Windows`,
       });
     } else if (age >= BIOS_STALE_YEARS) {
       bump("warning");
       findings.push({
         id: "bios-stale",
-        vars: { year: c.bios.year, age },
+        vars: { year: c.bios.year, age, machine: c.machine },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Des mises à jour de firmware, dont du microcode processeur, ont probablement été publiées depuis",
-        fix: "Vérifier sur la page support de la carte mère si une version plus récente existe. Mise à jour non urgente",
+        fix: `Vérifier sur ${supportPage(c.machine)} si une version plus récente existe. Mise à jour non urgente`,
       });
     }
   }
@@ -182,14 +432,123 @@ export function diagnoseComponents(
   if (findings.length === 0) {
     findings.push({
       id: "healthy",
-      title: "Composants bien réglés",
-      detail:
-        "Mémoire à sa fréquence nominale, pilotes récents, firmware à jour",
-      fix: "Rien à corriger de ce côté",
+      title: "Aucune anomalie détectée",
     });
   }
 
-  return { ...c, totalGB: totalMemoryGB(c.memory), severity, findings };
+  // Règle E — processeur bridé : le firmware limite sa vitesse (alimentation,
+  // chauffe, batterie). Windows le mesure en continu, sans rien afficher.
+  if (c.cpu?.limit != null && c.cpu.limit < CPU_LIMIT_PCT) {
+    bump("warning");
+    findings.push({
+      id: "cpu-limited",
+      key: c.platform === "mac" ? "cpu-limited-mac" : "cpu-limited",
+      vars: { pct: c.cpu.limit, name: c.cpu.name },
+      title: `Processeur bridé à ${c.cpu.limit} % de sa vitesse`,
+      detail:
+        "Le processeur ne peut pas atteindre sa pleine vitesse : limite imposée par l'alimentation, la chauffe ou la batterie",
+      fix:
+        c.platform === "mac"
+          ? "Brancher le Mac sur secteur, le poser sur une surface dure et dégagée, et fermer les applications gourmandes"
+          : "Brancher le portable sur secteur, choisir « Équilibré » ou « Performances optimales » dans Paramètres › Système › Alimentation, et dépoussiérer les aérations si le bridage persiste",
+    });
+  }
+
+  // Règle F — pilote réseau ancien : coupures et débits réduits, surtout en
+  // Wi-Fi. Ces pilotes évoluent moins vite que ceux des cartes graphiques.
+  for (const d of c.network ?? []) {
+    if (year - d.year >= NET_DRIVER_STALE_YEARS) {
+      bump("warning");
+      findings.push({
+        id: `net-driver-old-${d.name}`,
+        key: "net-driver-old",
+        vars: { year: d.year, name: d.name },
+        title: `Pilote réseau de ${d.year} (${d.name})`,
+        detail:
+          "Un pilote réseau ancien peut provoquer des coupures et brider le débit, surtout en Wi-Fi",
+        fix: "Installer la dernière version depuis le site du fabricant de la carte réseau, de la carte mère ou de l'ordinateur, ou via Paramètres › Windows Update › Options avancées › Mises à jour facultatives",
+      });
+    }
+  }
+
+  // Contrôles passés sans anomalie : affichés à part, pour que ce qui va
+  // bien reste visible même quand un autre point pose problème.
+  const passed = [];
+  const ids = new Set(findings.map((f) => f.key ?? f.id));
+  const first = c.memory[0];
+  if (
+    first?.rated != null &&
+    first?.configured != null &&
+    !ids.has("ram-underclocked")
+  ) {
+    passed.push({
+      id: "ram-speed",
+      vars: { mhz: first.configured },
+      label: `Mémoire à sa fréquence nominale (${first.configured} MHz)`,
+    });
+  }
+  if (c.memory.length >= 2 && !first?.unified) {
+    passed.push({
+      id: "ram-dual",
+      vars: { n: c.memory.length },
+      label: `Double canal (${c.memory.length} barrettes)`,
+    });
+  }
+  if (total != null && total >= 8) {
+    passed.push({
+      id: "ram-amount",
+      vars: { total },
+      label: `${total} Go de mémoire`,
+    });
+  }
+  for (const gpu of c.gpus) {
+    const name = gpu.name ? ` (${gpu.name})` : "";
+    if (gpu.driverYear != null && ageMonths(gpu) < GPU_DRIVER_OLD_MONTHS) {
+      passed.push({
+        id: "gpu-driver",
+        vars: { year: gpu.driverYear, month: gpu.driverMonth, name: gpu.name },
+        label: `Pilote graphique récent, de ${monthLabel(gpu.driverYear, gpu.driverMonth)}${name}`,
+      });
+    }
+    if (
+      (gpu.status || gpu.errorCode != null) &&
+      /^ok$/i.test(gpu.status ?? "OK") &&
+      !gpu.errorCode &&
+      !BASIC_DISPLAY.test(gpu.name ?? "")
+    ) {
+      passed.push({
+        id: "gpu-ok",
+        vars: { name: gpu.name },
+        label: `Carte graphique en état de marche, sans erreur signalée par Windows${name}`,
+      });
+    }
+  }
+  if (c.bios?.year != null && year - c.bios.year < BIOS_STALE_YEARS) {
+    passed.push({
+      id: "bios-recent",
+      vars: { year: c.bios.year },
+      label: `BIOS de ${c.bios.year}`,
+    });
+  }
+
+  if (c.cpu?.limit != null && c.cpu.limit >= CPU_LIMIT_PCT) {
+    passed.push({
+      id: "cpu-full-speed",
+      vars: { name: c.cpu.name },
+      label: `Processeur sans bridage${c.cpu.name ? ` (${c.cpu.name})` : ""}`,
+    });
+  }
+  for (const d of c.network ?? []) {
+    if (year - d.year < NET_DRIVER_STALE_YEARS) {
+      passed.push({
+        id: "net-driver-ok",
+        vars: { year: d.year, month: d.month, name: d.name },
+        label: `Pilote réseau de ${monthLabel(d.year, d.month)} (${d.name})`,
+      });
+    }
+  }
+
+  return { ...c, totalGB: total, severity, findings, passed };
 }
 
 /** Raccourci : texte brut → verdict. */

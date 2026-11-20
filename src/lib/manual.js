@@ -8,6 +8,21 @@
 import { diagnose } from "./diagnostic.js";
 import { gradeVolume } from "./storage.js";
 import { diagnoseComponents } from "./components.js";
+import { diagnoseSystem } from "./system.js";
+import { monthOf } from "./powershell.js";
+import { diagnoseDevices } from "./devices.js";
+import { diagnoseActivity } from "./activity.js";
+import { shortMaker } from "./components.js";
+
+// Numéro de build de chaque version de Windows 11, pour retrouver la date de
+// fin de support à partir du nom affiché dans les Paramètres (« 24H2 »).
+const BUILDS = {
+  "21H2": 22000,
+  "22H2": 22621,
+  "23H2": 22631,
+  "24H2": 26100,
+  "25H2": 26200,
+};
 
 const GIB = 1024 ** 3;
 
@@ -58,8 +73,12 @@ export function wifiFromForm(f) {
  *   speed?: string,      fréquence appliquée (Gestionnaire des tâches), MHz
  *   rated?: string,      fréquence annoncée des barrettes, MHz
  *   slots?: string,      emplacements utilisés
- *   gpuYear?: string,    année de la date du pilote graphique
+ *   gpuYear?: string,    date du pilote graphique (« 07/11/2026 ») ou son année
+ *   gpuState?: "ok"|"error"|"disabled"|"",  icône dans le Gestionnaire de périphériques
  *   biosYear?: string,   année de la date du BIOS
+ *   diskType?: "SSD"|"HDD"|"",  type du disque système
+ *   uptime?: string,     jours depuis le démarrage (1er nombre de « 3:04:12:55 »)
+ *   power?: "saver"|"normal"|"",
  * }} f
  * @param {{ year?: number }} [opts]
  */
@@ -116,21 +135,157 @@ export function hardwareFromForm(f, opts) {
       }
     }
   }
-  const gpuYear = num(f.gpuYear);
+  // Date complète si elle est saisie telle quelle, sinon l'année seule.
+  const gpuDate = monthOf(f.gpuYear || "");
+  const gpuYear = gpuDate?.year ?? num(f.gpuYear);
+  const gpuState = {
+    ok: { status: "OK", errorCode: 0 },
+    error: { status: "Error", errorCode: null },
+    disabled: { status: "Error", errorCode: 22 },
+  }[f.gpuState];
   const biosYear = num(f.biosYear);
   const c = {
     memory,
-    gpus: gpuYear
-      ? [{ name: null, driverVersion: null, driverYear: gpuYear }]
-      : [],
+    gpus:
+      gpuYear || gpuState
+        ? [
+            {
+              name: null,
+              driverVersion: null,
+              driverYear: gpuYear,
+              driverMonth: gpuDate?.month ?? null,
+              status: gpuState?.status ?? null,
+              errorCode: gpuState?.errorCode ?? null,
+            },
+          ]
+        : [],
     bios: biosYear ? { vendor: null, version: null, year: biosYear } : null,
     platform: f.platform,
   };
   const hasComponents = memory.length > 0 || c.gpus.length > 0 || c.bios;
 
-  if (volumes.length === 0 && !hasComponents) return null;
+  if (f.boardMaker || f.boardModel) {
+    c.machine = {
+      kind: "board",
+      maker: shortMaker(f.boardMaker),
+      model: f.boardModel || null,
+      laptop: false,
+    };
+  }
+  const hasMachine = Boolean(c.machine);
+
+  // Version du système, batterie, programmes au démarrage.
+  const version = (f.osVersion || "").trim().toUpperCase();
+  let os = null;
+  if (f.platform === "mac" && version) {
+    const m = version.match(/(\d+)(?:\.(\d+))?/);
+    if (m)
+      os = {
+        kind: "mac",
+        major: Number(m[1]),
+        version: m[2] ? `${m[1]}.${m[2]}` : m[1],
+      };
+  } else if (f.os) {
+    os = {
+      kind: "windows",
+      caption: {
+        w10: "Windows 10",
+        "w11-home": "Windows 11 Famille",
+        "w11-ent": "Windows 11 Entreprise",
+      }[f.os],
+      build: f.os === "w10" ? 19045 : (BUILDS[version] ?? null),
+      displayVersion: version || null,
+    };
+  }
+  const batteryPct = num(f.batteryPct);
+  const startupCount = num(f.startupCount);
+  const env = {
+    os,
+    battery:
+      batteryPct != null
+        ? { pct: batteryPct, cycles: null, condition: null }
+        : null,
+    startup: startupCount ? Array(Math.round(startupCount)).fill(null) : null,
+  };
+
+  const uptimeDays = num(f.uptime);
+  const hasSystem =
+    Boolean(f.diskType) ||
+    uptimeDays != null ||
+    Boolean(f.power) ||
+    Boolean(os) ||
+    Boolean(env.battery) ||
+    Boolean(env.startup);
+  const system = hasSystem
+    ? diagnoseSystem(
+        {
+          platform: f.platform,
+          disks: [],
+          systemDisk: f.diskType
+            ? { mediaType: f.diskType, busType: null, name: null }
+            : null,
+          uptimeDays: uptimeDays == null ? null : Math.floor(uptimeDays),
+          powerSaver: f.power ? f.power === "saver" : null,
+          env,
+        },
+        opts?.today ? { today: opts.today } : undefined,
+      )
+    : null;
+
+  // Activité : les deux pourcentages en tête du Gestionnaire des tâches.
+  const cpuLoad = num(f.cpuLoad);
+  const memoryPct = num(f.memoryPct);
+  const activity =
+    cpuLoad != null || memoryPct != null
+      ? diagnoseActivity({ platform: f.platform, cpuLoad, memoryPct, top: [] })
+      : null;
+
+  const anyComponents = hasComponents || hasMachine;
+  if (volumes.length === 0 && !anyComponents && !system && !activity)
+    return null;
   return {
     volumes,
-    components: hasComponents ? diagnoseComponents(c, opts) : null,
+    components: anyComponents ? diagnoseComponents(c, opts) : null,
+    system,
+    activity,
   };
+}
+
+/**
+ * Périphériques relevés à la main.
+ *   Windows : appareils marqués d'un triangle jaune ou d'une flèche vers le
+ *   bas dans le Gestionnaire de périphériques, séparés par des virgules.
+ *   macOS : appareils absents ou défaillants dans les Réglages Système.
+ * @param {{ platform: "windows"|"mac", state?: "none"|"some"|"", errors?: string, disabled?: string, missing?: string }} f
+ */
+export function devicesFromForm(f) {
+  const names = (v) =>
+    (v || "")
+      .split(/[,;\n]/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+  const devices =
+    f.platform === "mac"
+      ? names(f.missing).map((name) => ({
+          name,
+          group: null,
+          code: null,
+          status: "Error",
+        }))
+      : [
+          ...names(f.errors).map((name) => ({
+            name,
+            group: null,
+            code: null,
+            status: "Error",
+          })),
+          ...names(f.disabled).map((name) => ({
+            name,
+            group: null,
+            code: 22,
+            status: "Error",
+          })),
+        ];
+  if (devices.length === 0 && f.state !== "none") return null;
+  return diagnoseDevices({ platform: f.platform, devices });
 }

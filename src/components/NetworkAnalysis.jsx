@@ -32,6 +32,7 @@ import {
   Findings,
 } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import EthernetCheck from "./EthernetCheck.jsx";
 import WifiManual from "./WifiManual.jsx";
 
 const TEXT = {
@@ -53,7 +54,7 @@ const TEXT = {
       id: "wired",
       title: "Aucune connexion Wi-Fi active",
       detail:
-        "L'appareil est relié par câble Ethernet : le débit mesuré par le test correspond directement à la ligne, sans perte liée au Wi-Fi",
+        "L'appareil est relié par câble Ethernet : pas de perte liée au Wi-Fi. Reste à vérifier la vitesse de la liaison, ci-dessous",
     },
     wiredLink: "Consulter les vérifications Ethernet et câblage",
   },
@@ -75,7 +76,7 @@ const TEXT = {
       id: "wired",
       title: "No active Wi-Fi connection",
       detail:
-        "The device is connected by Ethernet cable: the speed measured by the test reflects the line directly, with no Wi-Fi loss",
+        "The device is connected by Ethernet cable: no Wi-Fi loss. The link speed remains to be checked, below",
     },
     wiredLink: "See the Ethernet and cabling checks",
   },
@@ -152,14 +153,18 @@ export default function NetworkAnalysis({ download }) {
             if (parsed.wired) {
               const sev = SEVERITY.ok;
               return (
-                <Verdict $color={sev.color} gap={32} first={0}>
-                  <VerdictHead color={sev.color}>{t.wiredHead}</VerdictHead>
-                  <Findings findings={[t.wired]} />
-                  <More to="/verifications">
-                    {t.wiredLink}
-                    <Arrow />
-                  </More>
-                </Verdict>
+                <>
+                  <Verdict $color={sev.color} gap={32} first={0}>
+                    <VerdictHead color={sev.color}>{t.wiredHead}</VerdictHead>
+                    <Findings findings={[t.wired]} />
+                    <More to="/verifications">
+                      {t.wiredLink}
+                      <Arrow />
+                    </More>
+                  </Verdict>
+                  {/* En filaire, c'est la liaison Ethernet qui compte. */}
+                  <EthernetCheck download={download} />
+                </>
               );
             }
 
@@ -171,7 +176,14 @@ export default function NetworkAnalysis({ download }) {
                   {SEVERITY_LABEL[lang][result.severity]}
                 </VerdictHead>
                 <StatGrid $cols={4} $border>
-                  <StatCell k={t.band} value={result.band} />
+                  <StatCell
+                    k={t.band}
+                    value={
+                      lang === "fr"
+                        ? result.band?.replace(".", ",")
+                        : result.band
+                    }
+                  />
                   <StatCell k={t.radio} value={result.radio} />
                   <StatCell k={t.signal} value={result.signal} unit="%" />
                   <StatCell k={t.channel} value={result.channel} />

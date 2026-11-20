@@ -389,7 +389,16 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
                       />
                     </Ring>
                     <Readout $active={g.active} $filled={g.filled}>
-                      <span className="v">{g.text}</span>
+                      <span className="v">
+                        {typeof g.text === "number"
+                          ? g.text.toLocaleString(
+                              lang === "fr" ? "fr-FR" : "en-GB",
+                              {
+                                useGrouping: false,
+                              },
+                            )
+                          : g.text}
+                      </span>
                       <span className="u">{g.unit}</span>
                     </Readout>
                   </Dial>

@@ -61,3 +61,23 @@ export function yearOf(value) {
   const m = value.match(/(19|20)\d{2}/);
   return m ? parseInt(m[0], 10) : null;
 }
+
+/**
+ * Mois et année d'une date écrite par PowerShell. Jour et mois s'inversent
+ * selon la langue : « 14/08/2024 » (français), « 8/14/2024 2:00:00 AM »
+ * (anglais, repérable à AM/PM). Un nombre au-delà de 12 lève l'ambiguïté.
+ * @returns {{year:number, month:number}|null}
+ */
+export function monthOf(value) {
+  if (!value) return null;
+  const m = value.match(/(\d{1,2})[/.-](\d{1,2})[/.-]((?:19|20)\d{2})/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    const us = /\b[AP]M\b/i.test(value);
+    const month = a > 12 ? b : b > 12 ? a : us ? a : b;
+    return { year: Number(m[3]), month };
+  }
+  const iso = value.match(/((?:19|20)\d{2})-(\d{2})-\d{2}/);
+  return iso ? { year: Number(iso[1]), month: Number(iso[2]) } : null;
+}

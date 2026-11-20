@@ -163,3 +163,58 @@ describe("diagnoseComponents", () => {
     expect(analyzeComponents(RAW, { year: 2026 }).totalGB).toBe(32);
   });
 });
+
+describe("carte graphique : état et pilote", () => {
+  const gpu = (date, extra = "") =>
+    analyzeComponents(
+      `Name                   : NVIDIA GeForce GTX 1660 Ti\nDriverVersion          : 32.0.16.2124\nDriverDate             : ${date}\n${extra}`,
+      { year: 2026, month: 11 },
+    );
+
+  it("lit le mois du pilote, en français comme en anglais", () => {
+    expect(gpu("07/11/2026 01:00:00").gpus[0].driverMonth).toBe(11);
+    expect(gpu("11/7/2026 1:00:00 AM").gpus[0].driverMonth).toBe(11);
+    expect(gpu("14/08/2024 02:00:00").gpus[0].driverMonth).toBe(8);
+  });
+
+  it("valide un pilote récent et une carte sans erreur", () => {
+    const c = gpu(
+      "07/11/2026 01:00:00",
+      "Status : OK\nConfigManagerErrorCode : 0",
+    );
+    expect(c.findings.map((f) => f.id)).toEqual(["healthy"]);
+    expect(c.passed.map((p) => p.id)).toEqual(["gpu-driver", "gpu-ok"]);
+  });
+
+  it("signale un pilote de plus de 6 mois", () => {
+    const c = gpu("10/03/2026 01:00:00");
+    expect(c.findings[0].key).toBe("gpu-driver-old");
+    expect(c.findings[0].title).toBe(
+      "Pilote graphique de mars 2026, plus de 6 mois",
+    );
+  });
+
+  it("garde l'alerte des 2 ans", () => {
+    expect(gpu("10/03/2024 01:00:00").findings[0].key).toBe("gpu-driver-stale");
+  });
+
+  it("signale le code 43 et la carte désactivée", () => {
+    expect(
+      gpu("07/11/2026", "Status : Error\nConfigManagerErrorCode : 43")
+        .findings[0].key,
+    ).toBe("gpu-error");
+    expect(
+      gpu("07/11/2026", "Status : Error\nConfigManagerErrorCode : 22")
+        .findings[0].key,
+    ).toBe("gpu-disabled");
+  });
+
+  it("signale le pilote d'affichage de base de Windows", () => {
+    const c = analyzeComponents(
+      "Name                   : Microsoft Basic Display Adapter\nDriverVersion          : 10.0.22621.1\nDriverDate             : 21/06/2006\nStatus                 : OK\nConfigManagerErrorCode : 0",
+      { year: 2026 },
+    );
+    expect(c.findings[0].key).toBe("gpu-no-driver");
+    expect(c.passed.map((p) => p.id)).not.toContain("gpu-ok");
+  });
+});

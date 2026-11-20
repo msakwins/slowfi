@@ -13,6 +13,9 @@ import { parseBlocks, field, number } from "./powershell.js";
 
 const GIB = 1024 ** 3;
 
+/** Nombre écrit à la française (virgule décimale). */
+const fr = (n) => String(n).replace(".", ",");
+
 /** Octets → Go, arrondi à une décimale. */
 export function toGB(bytes) {
   return bytes == null ? null : Math.round((bytes / GIB) * 10) / 10;
@@ -79,7 +82,7 @@ export function gradeVolume(v, { system = false } = {}) {
       findings.push({
         id: "disk-critical",
         vars: { where, freeGB, pct },
-        title: `${where} saturé (${freeGB} Go libres, ${pct} %)`,
+        title: `${where} saturé (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
         detail:
           "Espace insuffisant pour le fonctionnement de Windows : échec des mises à jour, fichier d'échange bloqué, risque de corruption du système de fichiers",
         fix: "Déplacer les gros dossiers (jeux, téléchargements, documents) vers un autre disque, puis vider la corbeille",
@@ -89,7 +92,7 @@ export function gradeVolume(v, { system = false } = {}) {
       findings.push({
         id: "disk-low",
         vars: { where, freeGB, pct },
-        title: `${where} presque plein (${freeGB} Go libres, ${pct} %)`,
+        title: `${where} presque plein (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
         detail:
           "Sous 15 % d'espace libre, un SSD perd en vitesse d'écriture et s'use plus rapidement",
         fix: "Viser 20 % d'espace libre. Déplacer en priorité les bibliothèques de jeux et les caches d'applications",
@@ -109,7 +112,7 @@ export function gradeVolume(v, { system = false } = {}) {
     findings.push({
       id: "no-update-headroom",
       vars: { freeGB },
-      title: `Marge insuffisante pour les mises à jour (${freeGB} Go)`,
+      title: `Marge insuffisante pour les mises à jour (${fr(freeGB)} Go)`,
       detail:
         "Les mises à jour de fonctionnalités Windows nécessitent environ 20 Go d'espace temporaire. En dessous, elles peuvent échouer sans message explicite",
       fix: "Garder 20 Go libres en permanence sur le disque système",
@@ -151,12 +154,34 @@ export function gradeVolume(v, { system = false } = {}) {
       id: "healthy",
       vars: { where, freeGB, pct },
       title: `${where} en bonne santé`,
-      detail: `${freeGB} Go libres (${pct} %), intégrité vérifiée`,
-      fix: "Rien à corriger de ce côté",
+      detail: `${fr(freeGB)} Go libres (${fr(pct)} %), intégrité vérifiée`,
     });
   }
 
-  return { ...v, pct, freeGB, sizeGB: toGB(v.size), severity, findings };
+  // Quand un point pose problème, ce qui reste sain est listé à part.
+  const passed = [];
+  if (findings[0].id !== "healthy") {
+    if (pct != null && pct >= LOW_PCT) {
+      passed.push({
+        id: "space-ok",
+        vars: { freeGB, pct },
+        label: `${fr(freeGB)} Go libres (${fr(pct)} %)`,
+      });
+    }
+    if ((v.health || v.operational) && !healthBad && !repairNeeded) {
+      passed.push({ id: "fs-ok", label: "Système de fichiers sain" });
+    }
+  }
+
+  return {
+    ...v,
+    pct,
+    freeGB,
+    sizeGB: toGB(v.size),
+    severity,
+    findings,
+    passed,
+  };
 }
 
 /**
