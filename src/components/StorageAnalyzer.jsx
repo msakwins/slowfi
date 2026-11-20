@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { diagnoseStorage } from "../lib/storage.js";
-import { Lead, Actions, Button, Ghost, Textarea, SEVERITY } from "../ui/theme.js";
+import { Lead, Actions, Button, Ghost, Textarea, Command, SEVERITY } from "../ui/theme.js";
 import { Verdict, VerdictHead, StatGrid, StatCell, Findings } from "../ui/verdict.jsx";
 
 const COMMAND =
@@ -27,19 +27,6 @@ Size              : 966367641600
 SizeRemaining     : 45969080320
 HealthStatus      : Healthy
 OperationalStatus : OK`;
-
-const Command = styled.pre`
-  margin: 0 0 20px;
-  padding: 14px 16px;
-  overflow-x: auto;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 12px;
-  line-height: 1.6;
-  color: #67e8f9;
-`;
 
 const Empty = styled.p`
   margin-top: 24px;

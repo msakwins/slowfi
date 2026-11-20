@@ -141,3 +141,17 @@ export const Textarea = styled.textarea`
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
   }
 `;
+
+// Bloc de commande à copier, au-dessus des zones de collage.
+export const Command = styled.pre`
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #67e8f9;
+`;

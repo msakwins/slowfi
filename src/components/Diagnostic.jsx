@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Diagnostic élargi : l'utilisateur choisit une zone à explorer.
-// Périmètre actuel : Internet, Wi-Fi, Stockage, Ethernet, Câble, Composants réseau.
-// (GPU, carte mère, audio… viendront s'ajouter comme de nouvelles cartes.)
+// Périmètre actuel : Internet, Wi-Fi, Stockage, Composants, Ethernet, Câble,
+// composants réseau. (Audio, alimentation… viendront comme de nouvelles cartes.)
 //
 // Chaque catégorie ouvre soit un outil interactif (speed test, analyseur Wi-Fi,
 // analyseur de stockage), soit une checklist guidée symptôme → piste.
@@ -12,6 +12,7 @@ import { Ghost } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import WifiAnalyzer from "./WifiAnalyzer.jsx";
 import StorageAnalyzer from "./StorageAnalyzer.jsx";
+import ComponentsAnalyzer from "./ComponentsAnalyzer.jsx";
 
 const CATEGORIES = [
   {
@@ -34,6 +35,13 @@ const CATEGORIES = [
     title: "Stockage",
     blurb: "Espace libre et intégrité de tes disques — la lenteur invisible.",
     render: () => <StorageAnalyzer />,
+  },
+  {
+    id: "components",
+    icon: "🧠",
+    title: "Composants",
+    blurb: "Mémoire, carte graphique, firmware : ce qui marche mais rend moins.",
+    render: () => <ComponentsAnalyzer />,
   },
   {
     id: "ethernet",

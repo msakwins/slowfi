@@ -9,6 +9,7 @@
 // recycler), et une table de fichiers abîmée passe inaperçue pendant des mois.
 // Deux pannes invisibles qui se manifestent comme « l'ordi est lent ».
 // ─────────────────────────────────────────────────────────────────────────────
+import { parseBlocks, field, number } from "./powershell.js";
 
 const GIB = 1024 ** 3;
 
@@ -22,44 +23,20 @@ export function toGB(bytes) {
  *   Get-Volume | Where-Object DriveLetter |
  *     Format-List DriveLetter,FileSystemLabel,Size,SizeRemaining,HealthStatus,OperationalStatus
  *
- * Format-List sépare chaque volume par une ligne vide, et chaque champ est un
- * simple `Clé : valeur`. Les noms de propriétés restent anglais même sur un
- * Windows français (ce sont des propriétés .NET), les valeurs aussi.
+ * Les noms de propriétés restent anglais même sur un Windows français (ce sont
+ * des propriétés .NET), les valeurs aussi.
  * @param {string} raw
  */
 export function parseVolumes(raw) {
-  if (!raw || !raw.trim()) return [];
-
-  return raw
-    .split(/\n\s*\n/) // un bloc par volume
-    .map((block) => {
-      // Lecture ligne à ligne plutôt qu'au motif : un `Clé : valeur` se coupe
-      // au premier deux-points. Pas de motif à échapper, et aucune clé ne peut
-      // en préfixer une autre (`Size` contre `SizeRemaining`).
-      const fields = {};
-      for (const line of block.split(/\r?\n/)) {
-        const sep = line.indexOf(":");
-        if (sep === -1) continue;
-        fields[line.slice(0, sep).trim()] = line.slice(sep + 1).trim();
-      }
-
-      const grab = (key) => fields[key] || null;
-      const num = (key) => {
-        const v = grab(key);
-        if (v == null) return null;
-        const n = Number(v.replace(/[\s ]/g, "").replace(",", "."));
-        return Number.isFinite(n) ? n : null;
-      };
-
-      return {
-        driveLetter: grab("DriveLetter"),
-        label: grab("FileSystemLabel"),
-        size: num("Size"),
-        free: num("SizeRemaining"),
-        health: grab("HealthStatus"),
-        operational: grab("OperationalStatus"),
-      };
-    })
+  return parseBlocks(raw)
+    .map((f) => ({
+      driveLetter: field(f, "DriveLetter"),
+      label: field(f, "FileSystemLabel"),
+      size: number(f, "Size"),
+      free: number(f, "SizeRemaining"),
+      health: field(f, "HealthStatus"),
+      operational: field(f, "OperationalStatus"),
+    }))
     .filter((v) => v.driveLetter && v.size);
 }
 
