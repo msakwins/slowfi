@@ -6,9 +6,9 @@ import styled, { keyframes, createGlobalStyle } from "styled-components";
 
 // Niveaux de gravité partagés par tous les verdicts (couleur + libellé).
 export const SEVERITY = {
-  ok: { label: "Tout est sain", color: "#34d399" },
+  ok: { label: "Rien à signaler", color: "#34d399" },
   warning: { label: "À surveiller", color: "#fbbf24" },
-  problem: { label: "Goulot détecté", color: "#fb7185" },
+  problem: { label: "À corriger", color: "#fb7185" },
 };
 
 export const GlobalStyle = createGlobalStyle`

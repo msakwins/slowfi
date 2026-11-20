@@ -35,7 +35,7 @@ const CATEGORIES = [
     family: "materiel",
     icon: "💾",
     title: "Stockage",
-    blurb: "Espace libre et intégrité de tes disques — la lenteur invisible.",
+    blurb: "Espace libre et intégrité de tes disques.",
     render: () => <StorageAnalyzer />,
   },
   {
@@ -43,7 +43,7 @@ const CATEGORIES = [
     family: "materiel",
     icon: "🧠",
     title: "Composants",
-    blurb: "Mémoire, carte graphique, firmware : ce qui marche mais rend moins.",
+    blurb: "Mémoire, carte graphique, firmware.",
     render: () => <ComponentsAnalyzer />,
   },
   {

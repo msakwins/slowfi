@@ -88,7 +88,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       id: "ram-underclocked",
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
       detail: `Les barrettes tournent sous leur fréquence nominale : environ ${loss} % de bande passante mémoire laissée de côté. Sans profil activé, la carte mère applique la fréquence de base et non celle inscrite sur les modules.`,
-      fix: "Active le profil XMP (Intel) ou EXPO/DOCP (AMD) dans le BIOS, puis vérifie la fréquence appliquée. C'est gratuit et réversible.",
+      fix: "Le profil XMP (Intel) ou EXPO/DOCP (AMD) s'active dans le BIOS, en une case à cocher. C'est gratuit, réversible, et la fréquence appliquée se revérifie ici ensuite.",
     });
   }
 
@@ -102,7 +102,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
       title: "Une seule barrette de mémoire",
       detail:
         "En simple canal, la bande passante mémoire est divisée par deux. L'effet est net sur les jeux et sur tout ce qui s'appuie sur une carte graphique intégrée.",
-      fix: "Ajoute une barrette identique dans le bon emplacement (la notice de la carte mère indique lequel) pour passer en double canal.",
+      fix: "Une seconde barrette identique, placée dans l'emplacement indiqué par la notice de la carte mère, fait passer en double canal.",
     });
   }
 
@@ -116,7 +116,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         title: `Pilote graphique de ${gpu.driverYear}${gpu.name ? ` (${gpu.name})` : ""}`,
         detail:
           "Un pilote qui a plusieurs années laisse de côté les gains de performance et les correctifs publiés depuis. Rien ne plante, mais la carte rend moins que ce qu'elle peut.",
-        fix: "Mets à jour via l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control) plutôt que par Windows Update, qui reste souvent en retard.",
+        fix: "La mise à jour passe par l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control) plutôt que par Windows Update, souvent en retard sur les pilotes graphiques.",
       });
     }
   }
@@ -132,7 +132,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Un firmware aussi ancien n'a reçu aucune des mises à jour de microcode processeur ni des correctifs de stabilité publiés depuis. Sur certaines machines, cela coûte aussi des performances.",
-        fix: "Récupère le dernier BIOS sur la page support de ta carte mère et applique-le depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32 — jamais depuis un outil Windows.",
+        fix: "Le dernier BIOS se trouve sur la page support de ta carte mère. Il s'applique depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32, jamais depuis un outil Windows.",
       });
     } else if (age >= BIOS_STALE_YEARS) {
       bump("warning");
@@ -141,7 +141,7 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
         detail:
           "Plusieurs mises à jour de firmware ont probablement été publiées depuis, dont du microcode processeur.",
-        fix: "Vérifie la page support de ta carte mère. La mise à jour n'est pas urgente, mais elle est en retard.",
+        fix: "La page support de ta carte mère dira si une version plus récente existe. Rien d'urgent, mais c'est en retard.",
       });
     }
   }

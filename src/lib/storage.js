@@ -80,7 +80,7 @@ export function gradeVolume(v, { system = false } = {}) {
         title: `${where} saturé (${freeGB} Go libres, ${pct} %)`,
         detail:
           "À ce niveau Windows n'a plus de quoi travailler : les mises à jour échouent, le fichier d'échange ne peut plus grandir, et un volume plein finit par abîmer le système de fichiers lui-même.",
-        fix: "Libère de la place immédiatement : déplace les gros dossiers (jeux, téléchargements, documents) vers un autre disque, et vide la corbeille.",
+        fix: "Il y a de la place à récupérer : les gros dossiers (jeux, téléchargements, documents) se déplacent vers un autre disque, et la corbeille se vide.",
       });
     } else if (pct < LOW_PCT) {
       bump("warning");
@@ -89,7 +89,7 @@ export function gradeVolume(v, { system = false } = {}) {
         title: `${where} presque plein (${freeGB} Go libres, ${pct} %)`,
         detail:
           "Un SSD a besoin de blocs libres pour répartir l'usure et garder ses performances d'écriture. En dessous de 15 %, il ralentit et s'use plus vite.",
-        fix: "Vise au moins 20 % d'espace libre. Les bibliothèques de jeux et les caches d'applications sont les premiers candidats au déménagement.",
+        fix: "Vingt pour cent d'espace libre est un objectif confortable. Les bibliothèques de jeux et les caches d'applications sont les premiers candidats au déménagement.",
       });
     }
   }
@@ -103,7 +103,7 @@ export function gradeVolume(v, { system = false } = {}) {
       title: `Marge insuffisante pour les mises à jour (${freeGB} Go)`,
       detail:
         "Une mise à jour de fonctionnalité Windows réclame une vingtaine de gigaoctets de travail temporaire. En dessous, elle échoue sans toujours dire pourquoi.",
-      fix: "Garde 20 Go libres en permanence sur le disque système, indépendamment du pourcentage.",
+      fix: "Vingt gigaoctets libres en permanence sur le disque système suffisent, indépendamment du pourcentage.",
     });
   }
 
@@ -118,7 +118,7 @@ export function gradeVolume(v, { system = false } = {}) {
       id: "fs-damaged",
       title: `Système de fichiers endommagé sur ${where}`,
       detail: `Windows signale « ${v.operational || v.health} ». Une entrée abîmée dans la table de fichiers (MFT) ne se répare pas toute seule et reste signalée à chaque accès, souvent pendant des mois sans symptôme visible.`,
-      fix: `Sauvegarde d'abord, puis lance chkdsk ${where} /f. Si la commande refuse de s'exécuter, passe par l'environnement de récupération (Paramètres → Récupération → Démarrage avancé → Invite de commandes).`,
+      fix: `Sauvegarde d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres → Récupération → Démarrage avancé → Invite de commandes).`,
     });
   }
 
