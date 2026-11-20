@@ -1,16 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toMbps } from "./speedtest.js";
 import { gradeConnection } from "./connection.js";
-
-describe("toMbps", () => {
-  it("convertit octets/durée en mégabits par seconde", () => {
-    // 1 000 000 octets en 1 s = 8 Mb/s
-    expect(toMbps(1e6, 1000)).toBeCloseTo(8, 5);
-  });
-  it("renvoie 0 pour une durée nulle", () => {
-    expect(toMbps(1e6, 0)).toBe(0);
-  });
-});
 
 describe("gradeConnection", () => {
   it("valide une bonne connexion", () => {

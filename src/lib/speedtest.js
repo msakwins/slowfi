@@ -69,7 +69,7 @@ const UL_CHUNK = 3e6; // taille envoyée par requête montante (petit = jalons f
  * toute la mesure. On expose `timedOut()` pour distinguer la fin normale (temps
  * écoulé) d'une vraie annulation utilisateur.
  */
-function deadline(ms, external) {
+export function deadline(ms, external) {
   const ctrl = new AbortController();
   let expired = false;
   const timer = setTimeout(() => {
