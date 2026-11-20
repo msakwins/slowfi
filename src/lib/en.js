@@ -49,6 +49,24 @@ export const EN = {
   },
 
   wifi: {
+    "wifi-limits-line": ({ measured, capacity }) => ({
+      title: `The Wi-Fi caps the speed (${measured} Mb/s measured for ~${capacity} Mb/s possible)`,
+      detail:
+        "The test almost reaches the maximum of the Wi-Fi link: the line can probably go faster, but the Wi-Fi carries no more",
+      fix: "To get the full speed of the line, switch to 5 GHz, move closer to the router, or connect the device with an Ethernet cable",
+    }),
+    "measured-above-wifi": ({ measured, capacity }) => ({
+      title: `Measured speed above this Wi-Fi's capacity (${measured} Mb/s for ~${capacity} Mb/s)`,
+      detail:
+        "The test was probably run over another connection (Ethernet cable, another device) than this Wi-Fi. The comparison does not apply",
+      fix: "To compare, run the connection test again from this device, connected over Wi-Fi",
+    }),
+    "line-limits": ({ measured, capacity }) => ({
+      title: `The Wi-Fi is not the limiting factor (~${capacity} Mb/s possible, ${measured} Mb/s measured)`,
+      detail:
+        "The Wi-Fi has headroom: the measured speed is limited by the line, the subscribed plan or the router",
+      fix: "Compare the measured speed with the subscribed plan. A large gap is worth reporting to the internet provider",
+    }),
     "band-2ghz": () => ({
       title: "Connected on the 2.4 GHz band",
       detail:
@@ -75,6 +93,11 @@ export const EN = {
   },
 
   components: {
+    "healthy-mac": () => ({
+      title: "Memory without issues",
+      detail: "On a Mac, drivers and firmware are updated along with macOS",
+      fix: "Keep macOS up to date (System Settings › General › Software Update)",
+    }),
     "ram-underclocked": ({ configured, rated, loss }) => ({
       title: `Memory held back (${configured} MHz instead of ${rated} MHz)`,
       detail: `Memory running below its rated frequency, about ${loss} % less bandwidth. Without an XMP or EXPO profile enabled, the motherboard applies the base frequency`,
@@ -113,6 +136,12 @@ export const EN = {
   },
 
   storage: {
+    "smart-failing": ({ where }) => ({
+      title: `Drive reported as failing (${where})`,
+      detail:
+        "The drive itself announces an upcoming failure (SMART status “Failing”). Slowdowns and data loss will get worse",
+      fix: "Back up immediately (Time Machine or a copy to an external drive), then have the drive replaced",
+    }),
     "disk-critical": ({ where, freeGB, pct }) => ({
       title: `${where} full (${freeGB} GB free, ${pct} %)`,
       detail:

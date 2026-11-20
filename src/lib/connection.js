@@ -42,7 +42,8 @@ export function gradeConnection(m) {
         id: "down-low",
         vars: { v: m.download },
         title: `Débit descendant modeste (${m.download} Mb/s)`,
-        detail: "Suffisant pour la navigation, limité lorsque plusieurs appareils partagent la ligne",
+        detail:
+          "Suffisant pour la navigation, limité lorsque plusieurs appareils partagent la ligne",
         fix: "Vérifier l'offre souscrite auprès du FAI, et privilégier le 5 GHz ou l'Ethernet pour les gros usages",
       });
     }
@@ -70,7 +71,8 @@ export function gradeConnection(m) {
       id: "high-jitter",
       vars: { v: m.jitter },
       title: `Connexion instable (variation ${m.jitter} ms)`,
-      detail: "Latence irrégulière, caractéristique d'interférences Wi-Fi ou d'un réseau encombré",
+      detail:
+        "Latence irrégulière, caractéristique d'interférences Wi-Fi ou d'un réseau encombré",
       fix: "Changer de canal Wi-Fi, s'écarter des sources d'interférence (micro-ondes, box voisines), ou passer en filaire",
     });
   }
@@ -93,7 +95,8 @@ export function gradeConnection(m) {
             id: "healthy",
             key: "healthy-excellent",
             title: "Connexion excellente",
-            detail: "Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",
+            detail:
+              "Une analyse approfondie du Wi-Fi, de la box et du câblage peut aider à l'améliorer",
           }
         : {
             id: "healthy",
@@ -105,7 +108,11 @@ export function gradeConnection(m) {
     );
   }
 
-  const grade = { ok: excellent ? "excellent" : "good", warning: "fair", problem: "poor" }[severity];
+  const grade = {
+    ok: excellent ? "excellent" : "good",
+    warning: "fair",
+    problem: "poor",
+  }[severity];
 
   return { ...m, severity, grade, findings };
 }

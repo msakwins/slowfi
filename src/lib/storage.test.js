@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { toGB, parseVolumes, freePercent, gradeVolume, diagnoseStorage } from "./storage.js";
+import {
+  toGB,
+  parseVolumes,
+  freePercent,
+  gradeVolume,
+  diagnoseStorage,
+} from "./storage.js";
 
 // Sortie réelle d'une machine dont le disque système portait une MFT abîmée
 // pendant six semaines sans symptôme visible, et dont le disque de données
@@ -112,7 +118,9 @@ describe("gradeVolume", () => {
   });
 
   it("détecte un système de fichiers à réparer", () => {
-    const r = gradeVolume(vol({ health: "Warning", operational: "Full Repair Needed" }));
+    const r = gradeVolume(
+      vol({ health: "Warning", operational: "Full Repair Needed" }),
+    );
     expect(r.severity).toBe("problem");
     const f = r.findings.find((x) => x.id === "fs-damaged");
     expect(f).toBeDefined();

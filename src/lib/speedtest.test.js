@@ -83,7 +83,9 @@ describe("measureLatency", () => {
   // fetch). On pilote la séquence pour obtenir des allers-retours connus.
   const mockNow = (values) => {
     let i = 0;
-    vi.spyOn(performance, "now").mockImplementation(() => values[i++] ?? values.at(-1));
+    vi.spyOn(performance, "now").mockImplementation(
+      () => values[i++] ?? values.at(-1),
+    );
   };
 
   it("retient le minimum comme latence et la dispersion comme gigue", async () => {

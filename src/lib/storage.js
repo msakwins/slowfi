@@ -69,7 +69,8 @@ export function gradeVolume(v, { system = false } = {}) {
 
   const pct = freePercent(v);
   const freeGB = toGB(v.free);
-  const where = `${v.driveLetter}:`;
+  // Nom affiché : la lettre sous Windows (« C: »), le nom du volume sur Mac.
+  const where = v.name ?? `${v.driveLetter}:`;
 
   // Règle A — saturation. Le symptôme le plus courant et le plus invisible.
   if (pct != null) {
@@ -98,7 +99,12 @@ export function gradeVolume(v, { system = false } = {}) {
 
   // Règle B — le disque système a besoin d'une marge absolue, pas seulement
   // d'un pourcentage : une mise à jour de fonctionnalité réclame ~20 Go.
-  if (system && freeGB != null && freeGB < UPDATE_HEADROOM_GB && pct >= CRITICAL_PCT) {
+  if (
+    system &&
+    freeGB != null &&
+    freeGB < UPDATE_HEADROOM_GB &&
+    pct >= CRITICAL_PCT
+  ) {
     bump("warning");
     findings.push({
       id: "no-update-headroom",
@@ -113,7 +119,8 @@ export function gradeVolume(v, { system = false } = {}) {
   // Règle C — intégrité. `Get-Volume` sait qu'un volume est abîmé bien avant
   // que l'utilisateur ne s'en aperçoive.
   const healthBad = v.health && !/^(healthy|sain)$/i.test(v.health);
-  const repairNeeded = v.operational && /repair needed|r[ée]paration/i.test(v.operational);
+  const repairNeeded =
+    v.operational && /repair needed|r[ée]paration/i.test(v.operational);
 
   if (healthBad || repairNeeded) {
     bump("problem");
@@ -123,6 +130,19 @@ export function gradeVolume(v, { system = false } = {}) {
       title: `Système de fichiers endommagé sur ${where}`,
       detail: `État signalé par Windows : « ${v.operational || v.health} ». Une erreur dans la table des fichiers (MFT) ne se corrige pas d'elle-même et peut rester sans symptôme visible pendant des mois`,
       fix: `Sauvegarder d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres › Récupération › Démarrage avancé › Invite de commandes)`,
+    });
+  }
+
+  // Règle D — Mac : le disque signale lui-même une défaillance (SMART).
+  if (v.smart && /fail/i.test(v.smart)) {
+    bump("problem");
+    findings.push({
+      id: "smart-failing",
+      vars: { where },
+      title: `Disque signalé défaillant (${where})`,
+      detail:
+        "Le disque annonce lui-même une panne prochaine (état SMART « Failing »). Les ralentissements et les pertes de données vont s'aggraver",
+      fix: "Sauvegarder immédiatement (Time Machine ou copie sur un disque externe), puis faire remplacer le disque",
     });
   }
 
@@ -146,9 +166,13 @@ export function gradeVolume(v, { system = false } = {}) {
  * @param {string} raw sortie brute de Get-Volume
  */
 export function diagnoseStorage(raw) {
-  const volumes = parseVolumes(raw).map((v) =>
-    gradeVolume(v, { system: v.driveLetter.toUpperCase() === "C" }),
-  );
+  const volumes = [
+    ...parseVolumes(raw).map((v) =>
+      gradeVolume(v, { system: v.driveLetter.toUpperCase() === "C" }),
+    ),
+    // Sur Mac, la commande ne décrit que le volume de démarrage.
+    ...parseMacDisk(raw).map((v) => gradeVolume(v, { system: true })),
+  ];
 
   const rank = { ok: 0, warning: 1, problem: 2 };
   const severity = volumes.reduce(
@@ -157,4 +181,50 @@ export function diagnoseStorage(raw) {
   );
 
   return { volumes, severity };
+}
+
+/**
+ * Volume de démarrage d'un Mac, d'après `diskutil info /`.
+ *
+ * Sur APFS, l'espace se partage dans un conteneur : c'est sa taille et son
+ * espace libre qui comptent, pas ceux du volume. Les tailles se lisent dans la
+ * parenthèse en octets, plus précise que l'arrondi affiché devant.
+ * @param {string} raw
+ * @returns {Array<{name:string, driveLetter:null, label:null, size:number, free:number, health:null, operational:null, smart:string|null}>}
+ */
+export function parseMacDisk(raw) {
+  if (!/Mount Point:\s*\/\s*$/m.test(raw) && !/Volume Name:/i.test(raw))
+    return [];
+  const bytes = (...labels) => {
+    for (const label of labels) {
+      const m = raw.match(
+        new RegExp(label + ":[^(\\n]*\\((\\d+) Bytes\\)", "i"),
+      );
+      if (m) return Number(m[1]);
+    }
+    return null;
+  };
+  const size = bytes(
+    "Container Total Space",
+    "Disk Size",
+    "Volume Total Space",
+  );
+  const free = bytes(
+    "Container Free Space",
+    "Volume Free Space",
+    "Volume Available Space",
+  );
+  if (!size) return [];
+  return [
+    {
+      name: raw.match(/Volume Name:\s*(.+)/i)?.[1]?.trim() || "Macintosh HD",
+      driveLetter: null,
+      label: null,
+      size,
+      free,
+      health: null,
+      operational: null,
+      smart: raw.match(/SMART Status:\s*(.+)/i)?.[1]?.trim() ?? null,
+    },
+  ];
 }

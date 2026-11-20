@@ -70,13 +70,18 @@ function LegalEn() {
           The speed test downloads and uploads test data to{" "}
           <strong>Cloudflare</strong> servers (speed.cloudflare.com). As with
           any connection to a website, Cloudflare receives the IP address and
-          browser type. No result is sent to or stored by Slowfi
+          browser type. No result is sent to Slowfi
+        </p>
+        <p>
+          The results are kept in this browser&apos;s storage to build the test
+          history. They never leave the device, and the “Clear history” button
+          deletes them
         </p>
 
         <h2>Local network and hardware analyses</h2>
         <p>
-          The pasted text (output of <code>netsh</code> or PowerShell) is read
-          by the browser, on the device. It is not sent to any server and
+          The pasted text (output of the Windows or macOS commands) is read by
+          the browser, on the device. It is not sent to any server and
           disappears when the page is closed
         </p>
         <p>
@@ -132,15 +137,19 @@ function LegalFr() {
           Le test de débit télécharge et envoie des données de test vers les
           serveurs de <strong>Cloudflare</strong> (speed.cloudflare.com). Comme
           pour toute connexion à un site, Cloudflare reçoit l'adresse IP et le
-          type de navigateur. Aucun résultat n'est transmis ni enregistré par
-          Slowfi
+          type de navigateur. Aucun résultat n'est transmis à Slowfi
+        </p>
+        <p>
+          Les résultats sont gardés dans le stockage de ce navigateur pour
+          constituer l'historique des tests. Ils ne quittent jamais l'appareil,
+          et le bouton « Effacer l'historique » les supprime
         </p>
 
         <h2>Analyses du réseau local et du matériel</h2>
         <p>
-          Le texte collé (résultat de <code>netsh</code> ou de PowerShell) est
-          lu par le navigateur, sur l'appareil. Il n'est envoyé à aucun serveur
-          et disparaît à la fermeture de la page
+          Le texte collé (résultat des commandes Windows ou macOS) est lu par le
+          navigateur, sur l'appareil. Il n'est envoyé à aucun serveur et
+          disparaît à la fermeture de la page
         </p>
         <p>
           Les commandes proposées se contentent de lire des informations : elles

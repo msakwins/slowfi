@@ -3,7 +3,10 @@ import { EN, localize } from "./en.js";
 import { gradeConnection } from "./connection.js";
 import { diagnose } from "./diagnostic.js";
 import { diagnoseComponents } from "./components.js";
-import { gradeVolume } from "./storage.js";
+import { gradeVolume, diagnoseStorage } from "./storage.js";
+import { compareWithLine } from "./diagnostic.js";
+import { analyzeComponents } from "./components.js";
+import { HARDWARE_MAC } from "./examples.js";
 
 // Chaque cas déclenche un ou plusieurs constats ; tous doivent exister en
 // anglais, avec un correctif quand la version française en a un.
@@ -77,6 +80,14 @@ const cases = [
       free: 100e9,
       health: "Healthy",
     }),
+  ],
+  ["wifi", compareWithLine(diagnose({ channel: 1, signal: 90, rx: 144 }), 70)],
+  ["wifi", compareWithLine(diagnose({ channel: 36, signal: 90, rx: 866 }), 50)],
+  ["wifi", compareWithLine(diagnose({ channel: 1, signal: 90, rx: 144 }), 500)],
+  ["components", analyzeComponents(HARDWARE_MAC, { year: 2026 })],
+  [
+    "storage",
+    diagnoseStorage(HARDWARE_MAC.replace("Verified", "Failing")).volumes[0],
   ],
 ];
 

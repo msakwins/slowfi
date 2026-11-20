@@ -46,7 +46,13 @@ export function parseComponents(raw) {
     }
   }
 
-  return { memory, gpus, bios };
+  // Rien en Format-List : peut-être la sortie d'un Mac.
+  if (memory.length === 0) {
+    const mac = parseMacMemory(raw);
+    if (mac.length > 0) return { memory: mac, gpus, bios, platform: "mac" };
+  }
+
+  return { memory, gpus, bios, platform: "windows" };
 }
 
 /** Total de mémoire installée, en Go. */
@@ -65,7 +71,10 @@ const BIOS_ANCIENT_YEARS = 6;
  * @param {ReturnType<typeof parseComponents>} c
  * @param {{year?: number}} [opts]
  */
-export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) {
+export function diagnoseComponents(
+  c,
+  { year = new Date().getFullYear() } = {},
+) {
   const findings = [];
   let severity = "ok";
   const bump = (level) => {
@@ -99,7 +108,9 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
   // Règle B — une seule barrette. Deux modules travaillent en double canal et
   // doublent la bande passante ; une seule divise par deux, ce qui se voit
   // surtout sur les machines à carte graphique intégrée.
-  if (c.memory.length === 1) {
+  // Mémoire unifiée (Mac Apple Silicon) : soudée au processeur, sans
+  // barrette à ajouter, la règle ne s'applique pas.
+  if (c.memory.length === 1 && !c.memory[0].unified) {
     bump("warning");
     findings.push({
       id: "ram-single-channel",
@@ -113,7 +124,10 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
   // Règle C — pilote graphique figé. Un pilote ancien coûte des performances
   // et des corrections de bugs, sans jamais le signaler.
   for (const gpu of c.gpus) {
-    if (gpu.driverYear != null && year - gpu.driverYear >= GPU_DRIVER_STALE_YEARS) {
+    if (
+      gpu.driverYear != null &&
+      year - gpu.driverYear >= GPU_DRIVER_STALE_YEARS
+    ) {
       bump("warning");
       findings.push({
         id: `gpu-driver-stale-${gpu.name || "gpu"}`,
@@ -154,6 +168,17 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
     }
   }
 
+  if (findings.length === 0 && c.platform === "mac") {
+    findings.push({
+      id: "healthy",
+      key: "healthy-mac",
+      title: "Mémoire sans anomalie",
+      detail:
+        "Sur Mac, les pilotes et le firmware se mettent à jour avec macOS",
+      fix: "Garder macOS à jour (Réglages Système › Général › Mise à jour de logiciels)",
+    });
+  }
+
   if (findings.length === 0) {
     findings.push({
       id: "healthy",
@@ -170,4 +195,52 @@ export function diagnoseComponents(c, { year = new Date().getFullYear() } = {}) 
 /** Raccourci : texte brut → verdict. */
 export function analyzeComponents(raw, opts) {
   return diagnoseComponents(parseComponents(raw), opts);
+}
+
+/**
+ * Mémoire d'un Mac, d'après `system_profiler SPMemoryDataType`.
+ *
+ * Deux formes : les Mac Intel listent leurs emplacements (BANK…/DIMM…) avec
+ * taille et fréquence ; les Mac Apple Silicon n'indiquent qu'un total, la
+ * mémoire étant unifiée et soudée au processeur.
+ * @param {string} raw
+ */
+export function parseMacMemory(raw) {
+  if (!/^\s*Memory:\s*$/m.test(raw) && !/Memory Slots:/i.test(raw)) return [];
+
+  const slots = [];
+  let current = null;
+  for (const line of raw.split(/\r?\n/)) {
+    const slot = line.match(/^\s*((?:BANK|DIMM)[^:]*):\s*$/i);
+    if (slot) {
+      current = {
+        slot: slot[1].trim(),
+        capacity: null,
+        rated: null,
+        configured: null,
+      };
+      slots.push(current);
+      continue;
+    }
+    if (!current) continue;
+    const size = line.match(/^\s*Size:\s*(\d+)\s*GB/i);
+    if (size) current.capacity = Number(size[1]) * GIB;
+    const speed = line.match(/^\s*Speed:\s*(\d+)\s*MHz/i);
+    if (speed) current.rated = Number(speed[1]);
+  }
+  const filled = slots.filter((s) => s.capacity);
+  if (filled.length > 0) return filled;
+
+  const unified = raw.match(/^\s*Memory:\s*(\d+)\s*GB/im);
+  return unified
+    ? [
+        {
+          slot: null,
+          capacity: Number(unified[1]) * GIB,
+          rated: null,
+          configured: null,
+          unified: true,
+        },
+      ]
+    : [];
 }

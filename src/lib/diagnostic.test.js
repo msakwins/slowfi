@@ -93,7 +93,9 @@ describe("diagnose", () => {
   });
 
   it("signale un signal faible", () => {
-    const r = diagnose(parseNetsh("Canal : 44\nSignal : 25%\nRéception (Mbits/s) : 400"));
+    const r = diagnose(
+      parseNetsh("Canal : 44\nSignal : 25%\nRéception (Mbits/s) : 400"),
+    );
     expect(r.findings.some((f) => f.id === "weak-signal")).toBe(true);
   });
 });

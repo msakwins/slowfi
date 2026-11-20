@@ -19,11 +19,11 @@ const GROUPS = {
         },
         {
           q: "Coupures aléatoires en filaire ?",
-          a: "Souvent un connecteur RJ45 mal serti ou un câble pincé. Réinsérer les deux extrémités jusqu'au clic, puis remplacer le câble par un neuf pour écarter le doute",
+          a: "Cause fréquente : connecteur RJ45 mal serti ou câble pincé. Réinsérer les deux extrémités jusqu'au clic, puis essayer un câble neuf",
         },
         {
           q: "Plus lent que le Wi-Fi ?",
-          a: "Anormal : mettre à jour le pilote de la carte réseau (Gestionnaire de périphériques) et forcer la vitesse/duplex sur « Auto » dans ses propriétés",
+          a: "Une liaison filaire est normalement plus rapide. Mettre à jour le pilote de la carte réseau (Gestionnaire de périphériques), puis régler vitesse/duplex sur « Auto » dans ses propriétés",
         },
       ],
     },
@@ -49,11 +49,11 @@ const GROUPS = {
       items: [
         {
           q: "La box chauffe ou ralentit en fin de journée ?",
-          a: "Un simple redémarrage (débranchée 30 s) vide les tables saturées et corrige beaucoup de lenteurs. À faire avant tout diagnostic poussé",
+          a: "Débrancher la box 30 secondes. Le redémarrage vide les tables saturées et corrige une bonne partie des lenteurs",
         },
         {
           q: "Un répéteur ou un CPL divise le débit ?",
-          a: "Les répéteurs Wi-Fi coupent souvent le débit de moitié, et les CPL dépendent de la qualité du circuit électrique. Préférer un vrai point d'accès câblé si possible",
+          a: "Les répéteurs Wi-Fi coupent souvent le débit de moitié, et les CPL dépendent de la qualité du circuit électrique. Privilégier un point d'accès relié par câble",
         },
         {
           q: "Trop d'appareils connectés ?",
@@ -61,7 +61,7 @@ const GROUPS = {
         },
         {
           q: "Firmware à jour ?",
-          a: "Vérifier les mises à jour de firmware de la box ou du routeur : elles corrigent souvent des bugs de performance et de stabilité",
+          a: "Vérifier les mises à jour de firmware de la box ou du routeur, qui corrigent souvent des défauts de performance et de stabilité",
         },
       ],
     },
@@ -76,11 +76,11 @@ const GROUPS = {
         },
         {
           q: "Random drops on a wired connection?",
-          a: "Often a badly crimped RJ45 connector or a pinched cable. Reseat both ends until they click, then replace the cable with a new one to be sure",
+          a: "Common cause: a badly crimped RJ45 connector or a pinched cable. Reseat both ends until they click, then try a new cable",
         },
         {
           q: "Slower than Wi-Fi?",
-          a: "Not normal: update the network card driver (Device Manager) and set speed/duplex to “Auto” in its properties",
+          a: "A wired link is normally faster. Update the network card driver (Device Manager), then set speed/duplex to “Auto” in its properties",
         },
       ],
     },
@@ -106,11 +106,11 @@ const GROUPS = {
       items: [
         {
           q: "Router hot or slowing down at the end of the day?",
-          a: "A simple restart (unplugged for 30 s) clears saturated tables and fixes many slowdowns. Do it before any deeper diagnosis",
+          a: "Unplug the router for 30 seconds. The restart clears saturated tables and fixes a good share of slowdowns",
         },
         {
           q: "A repeater or powerline adapter halving the speed?",
-          a: "Wi-Fi repeaters often halve the speed, and powerline adapters depend on the quality of the electrical wiring. Prefer a wired access point where possible",
+          a: "Wi-Fi repeaters often halve the speed, and powerline adapters depend on the quality of the electrical wiring. Favour an access point connected by cable",
         },
         {
           q: "Too many connected devices?",
@@ -118,7 +118,7 @@ const GROUPS = {
         },
         {
           q: "Firmware up to date?",
-          a: "Check for firmware updates for the router: they often fix performance and stability bugs",
+          a: "Check for router firmware updates, which often fix performance and stability issues",
         },
       ],
     },

@@ -7,11 +7,18 @@ import React, { useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { runSpeedTest } from "../lib/speedtest.js";
 import { gradeConnection } from "../lib/connection.js";
-import { Button, SEVERITY } from "../ui/theme.js";
+import { Button, Ghost, SEVERITY } from "../ui/theme.js";
 import { Unfold, Verdict, VerdictHead, Findings } from "../ui/verdict.jsx";
 import { useCountUp } from "../ui/useCountUp.js";
 import Arrow from "../ui/Arrow.jsx";
-import { useText } from "../ui/i18n.jsx";
+import { useLang } from "../ui/i18n.jsx";
+import {
+  loadHistory,
+  addToHistory,
+  clearHistory,
+  summarize,
+} from "../lib/history.js";
+import History from "./History.jsx";
 
 // Les mentions de la note s'accordent avec « connexion » : elles sont
 // propres au speed test, les autres analyses nomment leurs niveaux elles-mêmes.
@@ -28,6 +35,8 @@ const TEXT = {
     start: "Tester la connexion",
     again: "Relancer le test",
     next: "Lancer l'analyse du réseau local",
+    summary: "Copier le résumé",
+    summaryDone: "Résumé copié",
     down: "Descendant",
     up: "Montant",
     latency: "Latence",
@@ -51,6 +60,8 @@ const TEXT = {
     start: "Test the connection",
     again: "Run the test again",
     next: "Run the local network analysis",
+    summary: "Copy summary",
+    summaryDone: "Summary copied",
     down: "Download",
     up: "Upload",
     latency: "Latency",
@@ -193,7 +204,13 @@ const fillUp = (v) => fillLog(v, 2, 1000);
 const fillInverse = (v, worst) =>
   v == null ? 0 : Math.max(0, 100 - (v / worst) * 100);
 
-export default function SpeedTest({ onDiagnostic }) {
+/**
+ * @param {{
+ *   onDiagnostic?: () => void,     ouvre l'analyse du réseau local
+ *   onMeasured?: (m: object) => void, transmet les mesures d'un test terminé
+ * }} props
+ */
+export default function SpeedTest({ onDiagnostic, onMeasured }) {
   const [phase, setPhase] = useState("idle");
   const [live, setLive] = useState({
     download: null,
@@ -208,7 +225,10 @@ export default function SpeedTest({ onDiagnostic }) {
     () => (measures ? gradeConnection(measures) : null),
     [measures],
   );
-  const t = useText(TEXT);
+  const { lang } = useLang();
+  const t = TEXT[lang];
+  const [history, setHistory] = useState(loadHistory);
+  const [summaryCopied, setSummaryCopied] = useState(false);
   const abortRef = useRef(null);
   const lastPush = useRef(0);
 
@@ -219,6 +239,7 @@ export default function SpeedTest({ onDiagnostic }) {
     const controller = new AbortController();
     abortRef.current = controller;
     setMeasures(null);
+    setSummaryCopied(false);
     setLive({ download: null, upload: null, latency: null, jitter: null });
     setPhase("download");
     lastPush.current = 0;
@@ -244,11 +265,38 @@ export default function SpeedTest({ onDiagnostic }) {
         },
       });
       setLive(final);
-      setMeasures(final);
+      // La date du test accompagne les mesures, pour le résumé.
+      setMeasures({ ...final, at: new Date().toISOString() });
+      setHistory(addToHistory(final));
+      onMeasured?.(final);
       setPhase("done");
     } catch (err) {
       if (err.name !== "AbortError") setPhase("error");
     }
+  };
+
+  const copySummary = async () => {
+    const text = summarize(
+      { ...measures, gradeLabel: t.grade[result.grade] },
+      lang,
+      window.location.origin,
+    );
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Presse-papiers refusé (page sans focus, navigateur ancien) : l'ancienne
+      // méthode, par une zone de texte temporaire, passe encore souvent.
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand("copy");
+      area.remove();
+      if (!ok) return;
+    }
+    setSummaryCopied(true);
+    setTimeout(() => setSummaryCopied(false), 2000);
   };
 
   const stop = () => {
@@ -366,6 +414,11 @@ export default function SpeedTest({ onDiagnostic }) {
                   {t.grade[result.grade]}
                 </VerdictHead>
                 <Findings findings={result.findings} engine="connection" />
+                <div style={{ marginLeft: -8, fontSize: 13 }}>
+                  <Ghost onClick={copySummary}>
+                    {summaryCopied ? t.summaryDone : t.summary}
+                  </Ghost>
+                </div>
               </Verdict>
             )}
           </Box>
@@ -380,6 +433,10 @@ export default function SpeedTest({ onDiagnostic }) {
             <Arrow />
           </Button>
         </Unfold>
+      )}
+
+      {!running && (
+        <History entries={history} onClear={() => setHistory(clearHistory())} />
       )}
     </div>
   );

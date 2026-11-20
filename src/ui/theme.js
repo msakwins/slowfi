@@ -4,11 +4,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import styled, { createGlobalStyle } from "styled-components";
 
-// Niveaux de gravité partagés par tous les verdicts (couleur + libellé).
+// Couleurs des niveaux de gravité, partagées par tous les verdicts. Les
+// libellés, traduits, sont dans i18n.jsx (SEVERITY_LABEL).
 export const SEVERITY = {
-  ok: { label: "Au vert", color: "#34d399" },
-  warning: { label: "À surveiller", color: "#fbbf24" },
-  problem: { label: "À corriger", color: "#fb7185" },
+  ok: { color: "#34d399" },
+  warning: { color: "#fbbf24" },
+  problem: { color: "#fb7185" },
 };
 
 export const GlobalStyle = createGlobalStyle`

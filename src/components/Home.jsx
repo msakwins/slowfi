@@ -51,6 +51,8 @@ const Hardware = styled(Section)`
 export default function Home() {
   const [network, setNetwork] = useState(false);
   const [hardware, setHardware] = useState(false);
+  // Débit du dernier test, comparé ensuite à ce que le Wi-Fi peut porter.
+  const [download, setDownload] = useState(null);
   const t = useText(TEXT);
 
   return (
@@ -62,8 +64,11 @@ export default function Home() {
       </Lead>
 
       {/* Une fois l'analyse ouverte, le bouton qui la lance disparaît. */}
-      <SpeedTest onDiagnostic={network ? undefined : () => setNetwork(true)} />
-      {network && <NetworkAnalysis />}
+      <SpeedTest
+        onDiagnostic={network ? undefined : () => setNetwork(true)}
+        onMeasured={(m) => setDownload(m.download)}
+      />
+      {network && <NetworkAnalysis download={download} />}
 
       <Hardware>
         <Title as="h2">{t.hwTitle}</Title>

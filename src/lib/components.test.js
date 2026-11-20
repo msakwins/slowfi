@@ -51,14 +51,20 @@ describe("parseComponents", () => {
   });
 
   it("accepte un collage partiel", () => {
-    const c = parseComponents("DeviceLocator : A1\nCapacity : 8589934592\nSpeed : 3200\n");
+    const c = parseComponents(
+      "DeviceLocator : A1\nCapacity : 8589934592\nSpeed : 3200\n",
+    );
     expect(c.memory).toHaveLength(1);
     expect(c.gpus).toEqual([]);
     expect(c.bios).toBeNull();
   });
 
   it("ne trouve rien dans une entrée vide", () => {
-    expect(parseComponents("")).toEqual({ memory: [], gpus: [], bios: null });
+    expect(parseComponents("")).toMatchObject({
+      memory: [],
+      gpus: [],
+      bios: null,
+    });
   });
 });
 
@@ -114,7 +120,9 @@ describe("diagnoseComponents", () => {
 
   it("signale un pilote graphique de deux ans ou plus", () => {
     const r = analyzeComponents(RAW, { year: 2026 });
-    expect(r.findings.some((f) => f.id.startsWith("gpu-driver-stale"))).toBe(true);
+    expect(r.findings.some((f) => f.id.startsWith("gpu-driver-stale"))).toBe(
+      true,
+    );
   });
 
   it("laisse passer un pilote de l'an dernier", () => {
@@ -122,7 +130,9 @@ describe("diagnoseComponents", () => {
       { ...healthy, gpus: [{ name: "GPU", driverYear: 2025 }] },
       { year: 2026 },
     );
-    expect(r.findings.some((f) => f.id.startsWith("gpu-driver-stale"))).toBe(false);
+    expect(r.findings.some((f) => f.id.startsWith("gpu-driver-stale"))).toBe(
+      false,
+    );
   });
 
   it("escalade un BIOS de six ans et plus en problème", () => {

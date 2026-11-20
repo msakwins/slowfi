@@ -44,7 +44,8 @@ export async function measureLatency(samples = 12, { signal } = {}) {
   const median = times[Math.floor(times.length / 2)];
   // Gigue = dispersion autour de la médiane (écart absolu moyen), plus stable
   // que max-min qui sur-réagit à une seule valeur aberrante.
-  const jitter = times.reduce((sum, t) => sum + Math.abs(t - median), 0) / times.length;
+  const jitter =
+    times.reduce((sum, t) => sum + Math.abs(t - median), 0) / times.length;
   return { latency: Math.round(latency), jitter: Math.round(jitter) };
 }
 
@@ -106,7 +107,10 @@ export async function measureDownload({ signal: external, onProgress } = {}) {
   const worker = async () => {
     while (!signal.aborted) {
       try {
-        const res = await fetch(`${DOWN}?bytes=${DL_CHUNK}`, { cache: "no-store", signal });
+        const res = await fetch(`${DOWN}?bytes=${DL_CHUNK}`, {
+          cache: "no-store",
+          signal,
+        });
         const reader = res.body.getReader();
         for (;;) {
           const { done, value } = await reader.read();
@@ -134,7 +138,8 @@ export async function measureDownload({ signal: external, onProgress } = {}) {
     cleanup();
   }
   // Échéance externe (Stop) et non le minuteur → l'appelant doit s'arrêter.
-  if (external?.aborted && !timedOut()) throw new DOMException("aborted", "AbortError");
+  if (external?.aborted && !timedOut())
+    throw new DOMException("aborted", "AbortError");
   return measuring ? toMbps(mBytes, performance.now() - mStart) : 0;
 }
 
@@ -156,7 +161,12 @@ export async function measureUpload({ signal: external, onProgress } = {}) {
   const worker = async () => {
     while (!signal.aborted) {
       try {
-        await fetch(UP, { method: "POST", body: payload, cache: "no-store", signal });
+        await fetch(UP, {
+          method: "POST",
+          body: payload,
+          cache: "no-store",
+          signal,
+        });
       } catch {
         continue; // POST raté / échéance : la boucle `while` tranchera.
       }
@@ -178,7 +188,8 @@ export async function measureUpload({ signal: external, onProgress } = {}) {
   } finally {
     cleanup();
   }
-  if (external?.aborted && !timedOut()) throw new DOMException("aborted", "AbortError");
+  if (external?.aborted && !timedOut())
+    throw new DOMException("aborted", "AbortError");
   return measuring ? toMbps(mBytes, performance.now() - mStart) : 0;
 }
 

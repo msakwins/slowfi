@@ -46,16 +46,21 @@ symptôme → coupable → correctif.
 | --- | --- |
 | `speedtest.js` | Mesure du débit et de la latence contre `speed.cloudflare.com` (seul module qui touche au réseau) |
 | `connection.js` | Verdict sur les chiffres du test de débit |
-| `diagnostic.js` | Lecture de `netsh wlan show interfaces` et règles Wi-Fi |
-| `storage.js` | Lecture de `Get-Volume` et règles de stockage |
-| `components.js` | Mémoire, carte graphique, firmware |
+| `diagnostic.js` | Wi-Fi : `netsh` (Windows) ou `system_profiler` (macOS), règles, détection du filaire, comparaison avec le débit mesuré |
+| `storage.js` | Stockage : `Get-Volume` (Windows) ou `diskutil` (macOS) |
+| `components.js` | Mémoire, carte graphique, firmware (mémoire seule sur macOS) |
 | `powershell.js` | Lecture commune des sorties `Format-List` de PowerShell |
+| `history.js` | Historique des tests (stockage du navigateur) et résumé à copier |
+| `en.js` | Version anglaise des constats, par identifiant |
+| `examples.js` | Sorties d'exemple, affichées sur la page et reprises par les tests |
 
 **`src/components/` — l'interface** (styled-components). L'application tient
 sur une page (`Home.jsx`) : le test de débit, puis les analyses approfondies
-qui s'ouvrent sur place — `NetworkAnalysis.jsx` (Wi-Fi, suivi des
-vérifications manuelles de `ManualChecks.jsx`) et `HardwareAnalysis.jsx`
-(disques et composants, en une seule commande). Les éléments partagés (thème,
+qui s'ouvrent sur place — `NetworkAnalysis.jsx` (Wi-Fi) et
+`HardwareAnalysis.jsx` (disques et composants, en une seule commande), avec
+une commande Windows et une commande macOS. Les vérifications manuelles
+(`ManualChecks.jsx`) et la page de confidentialité (`Legal.jsx`) sont des
+pages à part, liées depuis le pied de page. Les éléments partagés (thème,
 logo, verdicts, étape copier-coller `PasteStep.jsx`, flèche, compteur animé)
 sont dans `src/ui/`.
 
@@ -71,7 +76,8 @@ Les textes ne tutoient pas l'utilisateur : infinitif ou impératif
 
 - [ ] Cas filaire : lire `Get-NetAdapter` et détecter un lien négocié à 100 Mbps
       (câble ou connecteur défaillant).
-- [ ] Support macOS / Linux (les commandes système diffèrent).
+- [x] Support macOS (Wi-Fi, disque, mémoire).
+- [ ] Support Linux.
 - [ ] Version desktop (Tauri) capable de lancer les commandes automatiquement,
       sans copier-coller manuel.
 

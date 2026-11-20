@@ -58,11 +58,21 @@ export function useText(table) {
 
 // Libellés des niveaux de gravité (les couleurs restent dans theme.js).
 export const SEVERITY_LABEL = {
-  fr: { ok: "Au vert", warning: "À surveiller", problem: "À corriger" },
-  en: { ok: "All good", warning: "Worth watching", problem: "Needs fixing" },
+  fr: {
+    ok: "Bon état",
+    warning: "Point d'attention",
+    problem: "Problème détecté",
+  },
+  en: {
+    ok: "Good condition",
+    warning: "Worth a look",
+    problem: "Problem found",
+  },
 };
 
-const Switch = styled.div`
+// Petit sélecteur à deux ou trois choix, partagé (langue, système). Il prend
+// la couleur d'accent de la section où il se trouve.
+export const Segmented = styled.div`
   display: inline-flex;
   gap: 2px;
   padding: 3px;
@@ -88,19 +98,19 @@ const Switch = styled.div`
     color: #e2e8f0;
   }
   button[aria-pressed="true"] {
-    color: #22d3ee;
-    background: rgba(34, 211, 238, 0.1);
+    color: var(--accent);
+    background: rgb(var(--accent-rgb) / 0.1);
   }
   button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.35);
+    box-shadow: 0 0 0 2px rgb(var(--accent-rgb) / 0.35);
   }
 `;
 
 export function LangSwitch() {
   const { lang, setLang } = useLang();
   return (
-    <Switch role="group" aria-label={lang === "fr" ? "Langue" : "Language"}>
+    <Segmented role="group" aria-label={lang === "fr" ? "Langue" : "Language"}>
       {[
         ["fr", "FR", "Français"],
         ["en", "EN", "English"],
@@ -116,6 +126,6 @@ export function LangSwitch() {
           {short}
         </button>
       ))}
-    </Switch>
+    </Segmented>
   );
 }
