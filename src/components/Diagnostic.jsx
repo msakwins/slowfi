@@ -1,14 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Diagnostic élargi : l'utilisateur choisit une zone à explorer.
-// Périmètre actuel : Internet, Wi-Fi, Stockage, Composants, Ethernet, Câble,
-// composants réseau. (Audio, alimentation… viendront comme de nouvelles cartes.)
+// Menu du diagnostic, filtré par famille : « reseau » (Internet, Wi-Fi,
+// Ethernet, câble, composants réseau) ou « materiel » (stockage, composants).
 //
-// Chaque catégorie ouvre soit un outil interactif (speed test, analyseur Wi-Fi,
-// analyseur de stockage), soit une checklist guidée symptôme → piste.
+// Chaque catégorie ouvre soit un outil interactif, soit une checklist guidée
+// symptôme → piste.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Ghost } from "../ui/theme.js";
+import { Ghost, Grid, Card } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import WifiAnalyzer from "./WifiAnalyzer.jsx";
 import StorageAnalyzer from "./StorageAnalyzer.jsx";
@@ -17,6 +16,7 @@ import ComponentsAnalyzer from "./ComponentsAnalyzer.jsx";
 const CATEGORIES = [
   {
     id: "internet",
+    family: "reseau",
     icon: "🌐",
     title: "Internet",
     blurb: "Débit et latence de ta ligne, côté FAI.",
@@ -24,6 +24,7 @@ const CATEGORIES = [
   },
   {
     id: "wifi",
+    family: "reseau",
     icon: "📶",
     title: "Wi-Fi",
     blurb: "Bande, canal, signal, débit de lien de ta carte sans-fil.",
@@ -31,6 +32,7 @@ const CATEGORIES = [
   },
   {
     id: "storage",
+    family: "materiel",
     icon: "💾",
     title: "Stockage",
     blurb: "Espace libre et intégrité de tes disques — la lenteur invisible.",
@@ -38,6 +40,7 @@ const CATEGORIES = [
   },
   {
     id: "components",
+    family: "materiel",
     icon: "🧠",
     title: "Composants",
     blurb: "Mémoire, carte graphique, firmware : ce qui marche mais rend moins.",
@@ -45,6 +48,7 @@ const CATEGORIES = [
   },
   {
     id: "ethernet",
+    family: "reseau",
     icon: "🔌",
     title: "Ethernet",
     blurb: "Connexion filaire : négociation de lien, débit bridé.",
@@ -65,6 +69,7 @@ const CATEGORIES = [
   },
   {
     id: "cable",
+    family: "reseau",
     icon: "🧵",
     title: "Câble",
     blurb: "État physique des câbles réseau et de leurs connecteurs.",
@@ -85,6 +90,7 @@ const CATEGORIES = [
   },
   {
     id: "network-gear",
+    family: "reseau",
     icon: "🖧",
     title: "Composants réseau",
     blurb: "Box, routeur, switch, répéteur, carte réseau.",
@@ -108,38 +114,6 @@ const CATEGORIES = [
     ],
   },
 ];
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin-top: 24px;
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const Card = styled.button`
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-  background: #0b1220;
-  border: 1px solid #1e293b;
-  border-radius: 14px;
-  padding: 18px;
-  transition: border-color 0.15s, transform 0.1s, background 0.15s;
-
-  &:hover {
-    border-color: #22d3ee;
-    background: #0f172a;
-    transform: translateY(-2px);
-  }
-
-  .icon { font-size: 24px; }
-  .t { margin: 10px 0 4px; font-size: 16px; font-weight: 700; color: #f1f5f9; }
-  .b { margin: 0; font-size: 13px; line-height: 1.5; color: #94a3b8; }
-`;
 
 const PanelHead = styled.div`
   display: flex;
@@ -171,14 +145,15 @@ const Check = styled.details`
   p { margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #94a3b8; }
 `;
 
-export default function Diagnostic() {
+export default function Diagnostic({ family }) {
   const [active, setActive] = useState(null);
-  const cat = CATEGORIES.find((c) => c.id === active);
+  const shown = CATEGORIES.filter((c) => c.family === family);
+  const cat = shown.find((c) => c.id === active);
 
   if (cat) {
     return (
       <>
-        <Ghost onClick={() => setActive(null)}>← Toutes les catégories</Ghost>
+        <Ghost onClick={() => setActive(null)}>← Retour</Ghost>
         <PanelHead>
           <span className="icon">{cat.icon}</span>
           <h2>{cat.title}</h2>
@@ -199,7 +174,7 @@ export default function Diagnostic() {
 
   return (
     <Grid>
-      {CATEGORIES.map((c) => (
+      {shown.map((c) => (
         <Card key={c.id} onClick={() => setActive(c.id)}>
           <div className="icon">{c.icon}</div>
           <p className="t">{c.title}</p>

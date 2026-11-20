@@ -1,29 +1,52 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// La home : on accueille l'utilisateur avec un speed test immédiat
-// ("Tester ma connexion"), et une porte de sortie vers le diagnostic complet
-// ("Passer et commencer le diagnostic") pour ceux dont le souci n'est pas la
-// bande passante.
+// L'accueil : un test de débit disponible tout de suite, puis deux portes —
+// la connexion d'un côté, le matériel de l'autre.
+//
+// La séparation existe parce que les deux enquêtes n'ont rien à voir : l'une
+// regarde ce qui sort de la machine, l'autre ce qu'il y a dedans. Les mélanger
+// dans une seule grille obligeait à trier mentalement avant de commencer.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
-import { Title, Lead, Actions, Button } from "../ui/theme.js";
+import { Title, Lead, Grid, Card, Hint } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 
-export default function Home({ onStartDiagnostic }) {
+const DOORS = [
+  {
+    family: "reseau",
+    icon: "📡",
+    title: "Connexion",
+    blurb: "Internet, Wi-Fi, Ethernet, câbles, box.",
+  },
+  {
+    family: "materiel",
+    icon: "🧩",
+    title: "Matériel",
+    blurb: "Disques, mémoire, carte graphique, firmware.",
+  },
+];
+
+export default function Home({ onOpen }) {
   return (
     <>
-      <Title>Diagnostic de connexion et de stockage</Title>
+      <Title>Diagnostic de connexion et de matériel</Title>
       <Lead>
-        Slowfi mesure ta connexion et cherche ce qui la ralentit&nbsp;: Wi-Fi, Ethernet, câbles,
-        disques. Même chose pour la mémoire, la carte graphique et le firmware&nbsp;: ils ne
-        plantent jamais, donc personne ne les soupçonne de rendre moins qu'ils ne pourraient.
-        Tout s'exécute dans le navigateur&nbsp;: rien n'est envoyé, rien n'est installé.
+        Un test de débit pour commencer, puis des pistes à explorer selon ce que tu cherches. Tout
+        s'exécute dans le navigateur&nbsp;: rien n'est envoyé, rien n'est installé.
       </Lead>
 
       <SpeedTest />
 
-      <Actions>
-        <Button onClick={onStartDiagnostic}>Passer et commencer le diagnostic →</Button>
-      </Actions>
+      <Hint>Pour aller plus loin&nbsp;:</Hint>
+
+      <Grid>
+        {DOORS.map((d) => (
+          <Card key={d.family} onClick={() => onOpen(d.family)}>
+            <div className="icon">{d.icon}</div>
+            <p className="t">{d.title}</p>
+            <p className="b">{d.blurb}</p>
+          </Card>
+        ))}
+      </Grid>
     </>
   );
 }

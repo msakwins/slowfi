@@ -55,10 +55,10 @@ export const Eyebrow = styled.div`
 `;
 
 export const Title = styled.h1`
-  font-size: 30px;
+  font-size: clamp(34px, 6.5vw, 46px);
   line-height: 1.1;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: #f8fafc;
   margin: 0;
 `;
@@ -154,4 +154,48 @@ export const Command = styled.pre`
   font-size: 12px;
   line-height: 1.7;
   color: #67e8f9;
+`;
+
+// Grille de cartes, partagée par l'accueil (deux portes) et le menu du
+// diagnostic (les catégories d'une famille).
+export const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 24px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const Card = styled.button`
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  background: #0b1220;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 18px;
+  transition: border-color 0.15s, transform 0.1s, background 0.15s;
+
+  &:hover {
+    border-color: #22d3ee;
+    background: #0f172a;
+    transform: translateY(-2px);
+  }
+
+  .icon { font-size: 24px; }
+  .t { margin: 10px 0 4px; font-size: 16px; font-weight: 700; color: #f1f5f9; }
+  .b { margin: 0; font-size: 13px; line-height: 1.5; color: #94a3b8; }
+`;
+
+// Petite ligne d'orientation entre deux blocs.
+export const Hint = styled.p`
+  margin: 32px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748b;
 `;

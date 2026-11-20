@@ -1,28 +1,28 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Coquille de l'application : gère la navigation entre la home (speed test) et
-// le diagnostic élargi (menu par catégorie). Pas de routeur : deux vues, un
-// simple état suffit.
+// Coquille de l'application : l'accueil, puis l'une des deux familles de
+// diagnostic. Pas de routeur — trois vues possibles, un état suffit.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";
-import { GlobalStyle, Page, Eyebrow, Ghost } from "../ui/theme.js";
+import { GlobalStyle, Page, Ghost } from "../ui/theme.js";
+import Logo from "../ui/Logo.jsx";
 import Home from "./Home.jsx";
 import Diagnostic from "./Diagnostic.jsx";
 
 export { GlobalStyle };
 
 export default function Slowfi() {
-  const [view, setView] = useState("home"); // "home" | "diagnostic"
+  const [family, setFamily] = useState(null); // null = accueil
 
   return (
     <Page>
-      <Eyebrow>slowfi</Eyebrow>
-      {view === "home" ? (
-        <Home onStartDiagnostic={() => setView("diagnostic")} />
-      ) : (
+      <Logo />
+      {family ? (
         <>
-          <Ghost onClick={() => setView("home")}>← Accueil</Ghost>
-          <Diagnostic />
+          <Ghost onClick={() => setFamily(null)}>← Accueil</Ghost>
+          <Diagnostic family={family} />
         </>
+      ) : (
+        <Home onOpen={setFamily} />
       )}
     </Page>
   );
