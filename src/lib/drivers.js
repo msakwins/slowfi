@@ -68,9 +68,19 @@ export function driverStatus(installed, latest) {
  * quand il a répondu (NVIDIA), sinon le catalogue Windows Update.
  * @param {{ version: string, key: string, cls: string, name: string }} installed
  * @param {{ latest: { version: string, date: string|null }|null, vendor: { version: string, date: string|null, url: string|null }|null }} found
- * @returns {{ status: "update"|"current"|"unknown", version: string|null, date: string|null, source: "nvidia"|"windows-update"|null, url: string|null }}
+ * @returns {{ status: "update"|"current"|"unknown"|"info", version: string|null, date: string|null, source: "nvidia"|"amd"|"windows-update"|null, url: string|null }}
  */
 export function driverState(installed, found) {
+  // AMD : dernière version affichée, sans verdict (voir vendors.js).
+  if (found.vendor?.source === "amd") {
+    return {
+      status: "info",
+      version: found.vendor.version,
+      date: found.vendor.date,
+      source: "amd",
+      url: found.vendor.url,
+    };
+  }
   if (found.vendor?.source === "nvidia") {
     const mine = nvidiaVersion(installed.version);
     const status =

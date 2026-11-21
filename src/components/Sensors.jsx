@@ -7,6 +7,9 @@ import styled from "styled-components";
 import { Title, Lead, Button, SEVERITY } from "../ui/theme.js";
 import { useText } from "../ui/i18n.jsx";
 import { desktop } from "../ui/desktop.js";
+import PartsToBuy from "../ui/PartsToBuy.jsx";
+import { recommendParts } from "../lib/parts.js";
+import { useLang } from "../ui/i18n.jsx";
 import {
   sensorRows,
   disksNeedAdmin,
@@ -48,6 +51,22 @@ const TEXT = {
     noSensors:
       "Aucun capteur lisible sans droits administrateur sur ce système",
     admin: "Lire les disques avec les droits administrateur",
+    adminMac: "Lire les températures avec le mot de passe administrateur",
+    adminNoteMac:
+      "macOS demande le mot de passe administrateur pour lire les températures, les ventilateurs et le niveau de chauffe",
+    diskState: "État des disques",
+    smart: (v) => (/verified/i.test(v) ? "Vérifié" : "En défaut"),
+    pressureName: "Niveau de chauffe du Mac",
+    pressure: {
+      Nominal: "Normal",
+      Fair: "Élevé",
+      Moderate: "Élevé",
+      Serious: "Très élevé",
+      Heavy: "Très élevé",
+      Critical: "Critique",
+      Trapping: "Critique",
+      Sleeping: "Critique",
+    },
     adminNote:
       "Windows demande une autorisation : la lecture de l'usure et de la température des disques l'exige sur cet ordinateur",
     reread: "Relire les capteurs",
@@ -101,6 +120,22 @@ const TEXT = {
       "Processor and case fans: readable only by the motherboard maker's software",
     noSensors: "No sensor readable without administrator rights on this system",
     admin: "Read the drives with administrator rights",
+    adminMac: "Read temperatures with the administrator password",
+    adminNoteMac:
+      "macOS asks for the administrator password to read temperatures, fans and heat level",
+    diskState: "Drive status",
+    smart: (v) => (/verified/i.test(v) ? "Verified" : "Failing"),
+    pressureName: "Mac heat level",
+    pressure: {
+      Nominal: "Normal",
+      Fair: "High",
+      Moderate: "High",
+      Serious: "Very high",
+      Heavy: "Very high",
+      Critical: "Critical",
+      Trapping: "Critical",
+      Sleeping: "Critical",
+    },
     adminNote:
       "Windows asks for permission: reading drive wear and temperature requires it on this computer",
     reread: "Read the sensors again",
@@ -293,6 +328,7 @@ function Slowdown({ samples, t }) {
 
 export default function Sensors() {
   const t = useText(TEXT);
+  const { lang } = useLang();
   const [data, setData] = useState(null);
   const [adminBusy, setAdminBusy] = useState(false);
   const [samples, setSamples] = useState([]);
@@ -315,8 +351,11 @@ export default function Sensors() {
   const readAsAdmin = async () => {
     setAdminBusy(true);
     try {
-      const disks = await desktop.sensorsAdmin();
-      if (disks) setData((d) => ({ ...d, disks }));
+      const res = await desktop.sensorsAdmin();
+      // Windows : les disques relus ; macOS : températures, ventilateurs et
+      // niveau de chauffe.
+      if (Array.isArray(res)) setData((d) => ({ ...d, disks: res }));
+      else if (res) setData((d) => ({ ...d, ...res }));
     } finally {
       setAdminBusy(false);
     }
@@ -345,7 +384,15 @@ export default function Sensors() {
   const wear = rows.filter((r) => r.kind === "wear");
   const fans = rows.filter((r) => ["gpuFan", "fan"].includes(r.kind));
 
-  const name = (r) => (r.kind === "zone" ? t.zone : r.name);
+  // Zone ACPI de Windows (\_TZ.TZ00) : nommée « carte mère ».
+  const name = (r) =>
+    r.kind === "zone" && r.name.startsWith("\\")
+      ? t.zone
+      : r.kind === "pressure"
+        ? t.pressureName
+        : r.name;
+  const smartRows = rows.filter((r) => r.kind === "smart");
+  const pressureRow = rows.find((r) => r.kind === "pressure");
   const row = (r, value, sub) => (
     <li key={`${r.kind}-${r.name}`}>
       <span>
@@ -376,6 +423,11 @@ export default function Sensors() {
               <Group>{t.temps}</Group>
               <Rows>
                 {temps.map((r) => row(r, `${Math.round(r.value)} °C`))}
+                {pressureRow &&
+                  row(
+                    pressureRow,
+                    t.pressure[pressureRow.value] ?? pressureRow.value,
+                  )}
               </Rows>
             </>
           )}
@@ -407,12 +459,20 @@ export default function Sensors() {
               </Rows>
             </>
           )}
+          {smartRows.length > 0 && (
+            <>
+              <Group>{t.diskState}</Group>
+              <Rows>{smartRows.map((r) => row(r, t.smart(r.value)))}</Rows>
+            </>
+          )}
           {disksNeedAdmin(data) && (
             <>
-              <Note>{t.adminNote}</Note>
+              <Note>
+                {data.platform === "mac" ? t.adminNoteMac : t.adminNote}
+              </Note>
               <div style={{ marginTop: 12 }}>
                 <Button onClick={readAsAdmin} disabled={adminBusy}>
-                  {t.admin}
+                  {data.platform === "mac" ? t.adminMac : t.admin}
                 </Button>
               </div>
             </>
@@ -466,6 +526,33 @@ export default function Sensors() {
           </Legend>
           <Slowdown samples={samples} t={t} />
         </>
+      )}
+
+      {/* SSD usés, carte qui chauffe pendant le suivi : pièces à prévoir. */}
+      {data && (
+        <PartsToBuy
+          parts={recommendParts(
+            {
+              disks: (data.disks ?? []).map((d) => ({
+                name: d.name,
+                mediaType: d.media,
+                busType: d.bus,
+                health: "Healthy",
+                size: d.size,
+              })),
+              ssdHealth: rows
+                .filter((r) => r.kind === "wear")
+                .map((r) => ({
+                  name: r.name,
+                  wear: r.value,
+                  alerts: r.extra?.alerts ?? [],
+                  spare: r.extra?.spare ?? null,
+                })),
+              gpuOverheating: (slowdownSummary(samples)?.thermal ?? 0) > 0,
+            },
+            lang,
+          )}
+        />
       )}
     </Section>
   );

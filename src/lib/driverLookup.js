@@ -4,7 +4,7 @@
 // du fabricant quand il répond (NVIDIA).
 // ─────────────────────────────────────────────────────────────────────────────
 import { catalogLatest } from "./catalog.js";
-import { nvidiaDevice, nvidiaLatest } from "./vendors.js";
+import { nvidiaDevice, nvidiaLatest, isAmdGpu, amdLatest } from "./vendors.js";
 
 /**
  * @param {string} id identifiant déjà réduit (isLookupKey)
@@ -15,7 +15,11 @@ export async function lookupDriver(id) {
   const device = nvidiaDevice(id);
   const [catalog, vendor] = await Promise.allSettled([
     catalogLatest(id),
-    device ? nvidiaLatest(device) : Promise.resolve(null),
+    device
+      ? nvidiaLatest(device)
+      : isAmdGpu(id)
+        ? amdLatest()
+        : Promise.resolve(null),
   ]);
   if (catalog.status === "rejected" && vendor.status === "rejected")
     throw catalog.reason;

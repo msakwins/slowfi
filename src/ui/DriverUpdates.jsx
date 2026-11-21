@@ -27,8 +27,13 @@ const TEXT = {
   fr: {
     title: "Mises à jour des pilotes",
     intro:
-      "Version installée comparée à la dernière publiée par NVIDIA sur son site, et pour les autres composants à la dernière distribuée par Windows Update. Le site du fabricant peut avoir une version plus récente",
-    sources: { nvidia: "Site NVIDIA", "windows-update": "Windows Update" },
+      "Version installée comparée à la dernière publiée par NVIDIA sur son site, et pour les autres composants à la dernière distribuée par Windows Update. Pour une carte AMD, la dernière version d'AMD est indiquée à titre de repère",
+    sources: {
+      nvidia: "Site NVIDIA",
+      amd: "Site AMD",
+      "windows-update": "Windows Update",
+    },
+    latest: (v) => `Dernière version : ${v}`,
     aiSource: (vendor) => `Site ${vendor}, trouvé par IA`,
     aiPackage: (p) => `Pack ${p.packageVersion} sur le site du fabricant`,
     aiButton: (vendors) => `Chercher sur les sites ${vendors}`,
@@ -62,8 +67,13 @@ const TEXT = {
   en: {
     title: "Driver updates",
     intro:
-      "Installed version compared with the latest one NVIDIA publishes on its site, and for other components with the latest one distributed by Windows Update. The maker's site may have a newer version",
-    sources: { nvidia: "NVIDIA site", "windows-update": "Windows Update" },
+      "Installed version compared with the latest one NVIDIA publishes on its site, and for other components with the latest one distributed by Windows Update. For an AMD card, AMD's latest version is shown for reference",
+    sources: {
+      nvidia: "NVIDIA site",
+      amd: "AMD site",
+      "windows-update": "Windows Update",
+    },
+    latest: (v) => `Latest version: ${v}`,
     aiSource: (vendor) => `${vendor} site, found by AI`,
     aiPackage: (p) => `Package ${p.packageVersion} on the maker's site`,
     aiButton: (vendors) => `Search the ${vendors} sites`,
@@ -148,6 +158,9 @@ const List = styled.ul`
   }
   .update {
     color: #fbbf24;
+  }
+  .info {
+    color: #94a3b8;
   }
   .muted {
     color: #64748b;
@@ -268,7 +281,11 @@ export default function DriverUpdates({ drivers }) {
                 <span className="muted">{t.unknown}</span>
               ) : (
                 <span className={st.status}>
-                  {st.status === "update" ? t.update(st.version) : t.current}
+                  {st.status === "update"
+                    ? t.update(st.version)
+                    : st.status === "info"
+                      ? t.latest(st.version)
+                      : t.current}
                   <span className="sub">{where}</span>
                 </span>
               );

@@ -1,3 +1,4 @@
+import { pressureLevel } from "./macSensors.js";
 // ─────────────────────────────────────────────────────────────────────────────
 // Lecture des capteurs de l'application desktop : températures, usure des
 // SSD, ventilateurs, et suivi de la charge dans le temps.
@@ -122,6 +123,27 @@ export function sensorRows(data) {
       });
     }
   }
+  // macOS : état SMART des disques, et niveau de chauffe du Mac.
+  for (const d of data.disks ?? []) {
+    if (d.smart == null) continue;
+    rows.push({
+      kind: "smart",
+      name: d.name,
+      value: d.smart,
+      unit: "",
+      level: /verified/i.test(d.smart) ? "ok" : "problem",
+    });
+  }
+  if (data.pressure) {
+    rows.push({
+      kind: "pressure",
+      name: "Mac",
+      value: data.pressure,
+      unit: "",
+      level: pressureLevel(data.pressure),
+    });
+  }
+
   for (const g of data.gpus ?? []) {
     if (g.fan != null)
       rows.push({
@@ -149,6 +171,9 @@ export function sensorRows(data) {
 /** Les disques n'ont rien donné : la lecture demande sans doute les droits administrateur. */
 export function disksNeedAdmin(data) {
   const disks = data.disks ?? [];
+  // macOS : températures et ventilateurs seulement avec le mot de passe.
+  if (data.platform === "mac")
+    return !(data.zones ?? []).length && !data.pressure;
   return (
     data.platform === "windows" &&
     disks.length > 0 &&

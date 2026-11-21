@@ -1,7 +1,7 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Diagnostic de connexion, de matériel et de périphériques",
   "author": "Slowfi",
   "homepage": "https://www.slowfi.app",
@@ -47,6 +47,7 @@
       "src/lib/catalog.js",
       "src/lib/vendors.js",
       "src/lib/driverLookup.js",
+      "src/lib/macSensors.js",
       "electron/icon.png",
       "package.json"
     ],

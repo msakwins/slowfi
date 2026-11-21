@@ -185,3 +185,30 @@ describe("alertes et réserve des SSD NVMe", () => {
     expect(row({ ...base, availableSpare: 40 }).level).toBe("warning");
   });
 });
+
+describe("macOS", () => {
+  it("état SMART, niveau de chauffe, mot de passe à demander", () => {
+    const data = {
+      platform: "mac",
+      zones: [],
+      disks: [
+        { name: "APPLE SSD", media: "SSD", bus: "NVMe", smart: "Verified" },
+      ],
+    };
+    expect(disksNeedAdmin(data)).toBe(true);
+    expect(sensorRows(data).map((r) => [r.kind, r.level])).toEqual([
+      ["smart", "ok"],
+    ]);
+    const hot = {
+      ...data,
+      pressure: "Serious",
+      zones: [{ name: "Processeur", celsius: 88 }],
+    };
+    expect(disksNeedAdmin(hot)).toBe(false);
+    expect(sensorRows(hot).map((r) => [r.kind, r.level])).toEqual([
+      ["zone", "warning"],
+      ["smart", "ok"],
+      ["pressure", "problem"],
+    ]);
+  });
+});

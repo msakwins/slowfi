@@ -13,6 +13,9 @@ import { isLinux, parseLinuxComponents } from "./linux.js";
 
 const GIB = 1024 ** 3;
 
+// Codes SMBIOS des générations de mémoire.
+const MEMORY_TYPES = { 24: "DDR3", 26: "DDR4", 34: "DDR5", 35: "DDR5" };
+
 /**
  * Trie les blocs par nature. L'utilisateur colle la sortie de trois commandes
  * d'un coup ; on reconnaît chaque bloc à ses champs plutôt qu'à son ordre,
@@ -66,6 +69,15 @@ export function parseComponents(raw) {
         capacity: number(f, "Capacity"),
         rated: number(f, "Speed"), // fréquence nominale de la barrette
         configured: number(f, "ConfiguredClockSpeed"), // fréquence réellement appliquée
+        // Génération (DDR4, DDR5…) et format (barrette de PC fixe ou de
+        // portable), pour proposer la bonne barrette en remplacement.
+        type: MEMORY_TYPES[number(f, "SMBIOSMemoryType")] ?? null,
+        formFactor:
+          number(f, "FormFactor") === 12
+            ? "SO-DIMM"
+            : number(f, "FormFactor") === 8
+              ? "DIMM"
+              : null,
       });
     } else if ("DriverVersion" in f) {
       gpus.push({

@@ -99,3 +99,48 @@ export function vendorPage({ key, cls, name }) {
   }
   return null;
 }
+
+// ── AMD ──────────────────────────────────────────────────────────────────────
+// Les pages de pilotes d'AMD se construisent dans le navigateur, illisibles
+// pour un programme. La page des notes de version, elle, contient le lien de
+// l'installateur le plus récent, avec la version et la date dans son nom :
+//   amd-software-adrenalin-edition-26.11.2-minimalsetup-261118_web.exe
+// La version d'AMD (26.11.2) ne se rattache pas au numéro de pilote Windows
+// (32.0.xxxxx) : pas de verdict, seulement la dernière version et sa date.
+
+const AMD_NOTES = "https://www.amd.com/en/support/kb/release-notes";
+export const AMD_DRIVERS =
+  "https://www.amd.com/en/support/download/drivers.html";
+
+/** Dernière version d'AMD Software dans le code de la page, ou null. */
+export function parseAmdNotes(html) {
+  const m = html.match(
+    /adrenalin-edition-(\d{2}\.\d{1,2}\.\d{1,2})-minimalsetup-(\d{2})(\d{2})(\d{2})/i,
+  );
+  if (!m) return null;
+  return {
+    source: "amd",
+    name: "AMD Software: Adrenalin Edition",
+    version: m[1],
+    date: `20${m[2]}-${m[3]}-${m[4]}`,
+    url: AMD_DRIVERS,
+  };
+}
+
+/** Puce graphique AMD (PCI\VEN_1002), sinon false. */
+export function isAmdGpu(key) {
+  return /^PCI\\VEN_1002&DEV_[0-9A-F]{4}$/.test(key ?? "");
+}
+
+export async function amdLatest() {
+  const response = await fetch(AMD_NOTES, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error(`amd ${response.status}`);
+  return parseAmdNotes(await response.text());
+}

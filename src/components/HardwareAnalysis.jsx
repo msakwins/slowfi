@@ -39,6 +39,8 @@ import CopySummary from "../ui/CopySummary.jsx";
 import { summarizeBlocks } from "../lib/report.js";
 import { parseInstalledDrivers, DRIVER_CLASSES } from "../lib/drivers.js";
 import DriverUpdates from "../ui/DriverUpdates.jsx";
+import PartsToBuy from "../ui/PartsToBuy.jsx";
+import { recommendParts } from "../lib/parts.js";
 import { localize } from "../lib/en.js";
 import { nvidiaVersion } from "../lib/vendors.js";
 import { analyzeEvents, EVENTS_READ } from "../lib/events.js";
@@ -244,10 +246,10 @@ function useT() {
 // une seule ligne, elles s'exécutent pareil depuis cmd, PowerShell ou Terminal.
 export const HARDWARE_READS = [
   "Get-Volume | Where-Object DriveLetter | Format-List DriveLetter,FileSystemLabel,Size,SizeRemaining,HealthStatus,OperationalStatus",
-  "Get-CimInstance Win32_PhysicalMemory | Format-List DeviceLocator,Capacity,Speed,ConfiguredClockSpeed",
+  "Get-CimInstance Win32_PhysicalMemory | Format-List DeviceLocator,Capacity,Speed,ConfiguredClockSpeed,SMBIOSMemoryType,FormFactor",
   "Get-CimInstance Win32_VideoController | Format-List Name,DriverVersion,DriverDate,Status,ConfigManagerErrorCode",
   "Get-CimInstance Win32_BIOS | Format-List Manufacturer,SMBIOSBIOSVersion,ReleaseDate",
-  "Get-PhysicalDisk | Format-List DeviceId,FriendlyName,MediaType,BusType,HealthStatus",
+  "Get-PhysicalDisk | Format-List DeviceId,FriendlyName,MediaType,BusType,HealthStatus,Size",
   // Erreurs de lecture non corrigées, premier signe d'un disque qui lâche.
   "Get-PhysicalDisk | Get-StorageReliabilityCounter -ErrorAction SilentlyContinue | Format-List DeviceId,ReadErrorsUncorrected",
   // Disque qui porte C:, jours depuis le dernier vrai redémarrage, et mode
@@ -412,6 +414,24 @@ export function HardwareResults({
           </p>
         )}
         <DriverUpdates drivers={drivers} />
+        {/* Seulement si une pièce est en fin de vie (parts.js). */}
+        <PartsToBuy
+          parts={recommendParts(
+            {
+              disks: s?.disks,
+              memory: c?.memory,
+              memoryTestFailed: ev?.findings.some(
+                (f) => f.id === "memory-test-failed",
+              ),
+              singleChannel: c?.findings.some(
+                (f) => f.id === "ram-single-channel",
+              ),
+              battery: s?.env?.battery,
+              machine: c?.machine,
+            },
+            lang,
+          )}
+        />
         <Passed items={passed} />
       </Verdict>
       <CopySummary

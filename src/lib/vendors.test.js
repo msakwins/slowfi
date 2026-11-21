@@ -42,3 +42,17 @@ describe("sites des fabricants", () => {
     ).toBeNull();
   });
 });
+
+describe("AMD", () => {
+  it("lit la dernière version dans le nom de l'installateur", async () => {
+    const { parseAmdNotes, isAmdGpu } = await import("./vendors.js");
+    expect(
+      parseAmdNotes(
+        '<a href="https://drivers.amd.com/drivers/installer/26.20/whql/amd-software-adrenalin-edition-26.11.2-minimalsetup-261118_web.exe">',
+      ),
+    ).toMatchObject({ version: "26.11.2", date: "2026-11-18" });
+    expect(parseAmdNotes("rien")).toBeNull();
+    expect(isAmdGpu("PCI\\VEN_1002&DEV_73BF")).toBe(true);
+    expect(isAmdGpu("PCI\\VEN_10DE&DEV_2182")).toBe(false);
+  });
+});

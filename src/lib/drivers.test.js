@@ -66,7 +66,7 @@ describe("pilotes installés", () => {
 
 describe("verdict par source", () => {
   const gpu = {
-    key: "PCI\VEN_10DE&DEV_2182",
+    key: "PCI\\VEN_10DE&DEV_2182",
     cls: "DISPLAY",
     name: "NVIDIA GeForce GTX 1660 Ti",
     version: "32.0.16.2124",
@@ -89,7 +89,7 @@ describe("verdict par source", () => {
 
   it("garde le catalogue et le lien du fabricant sinon", () => {
     const wifi = {
-      key: "PCI\VEN_8086&DEV_A370",
+      key: "PCI\\VEN_8086&DEV_A370",
       cls: "NET",
       name: "Intel(R) Wireless-AC 9560",
       version: "23.150.0.4",
@@ -109,7 +109,7 @@ describe("verdict par source", () => {
 
 describe("recherche IA", () => {
   const wifi = {
-    key: "PCI\VEN_8086&DEV_A370",
+    key: "PCI\\VEN_8086&DEV_A370",
     cls: "NET",
     name: "Intel(R) Wireless-AC 9560",
     version: "23.150.0.4",
@@ -156,7 +156,7 @@ describe("recherche IA", () => {
 
 describe("version lue par l'IA", () => {
   const bt = {
-    key: "USB\VID_8087&PID_0AAA",
+    key: "USB\\VID_8087&PID_0AAA",
     cls: "BLUETOOTH",
     name: "Intel(R) Wireless Bluetooth(R)",
     version: "23.90.0.8",

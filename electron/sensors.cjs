@@ -23,7 +23,7 @@ $zones = @(Get-CimInstance Win32_PerfFormattedData_Counters_ThermalZoneInformati
 $disks = @(Get-PhysicalDisk | ForEach-Object {
   $r = $_ | Get-StorageReliabilityCounter -ErrorAction SilentlyContinue
   @{
-    name = $_.FriendlyName; media = [string]$_.MediaType; bus = [string]$_.BusType
+    name = $_.FriendlyName; media = [string]$_.MediaType; bus = [string]$_.BusType; size = $_.Size
     temperature = $r.Temperature; temperatureMax = $r.TemperatureMax
     wear = $r.Wear; powerOnHours = $r.PowerOnHours
     readErrors = $r.ReadErrorsTotal; writeErrors = $r.WriteErrorsTotal
@@ -202,7 +202,21 @@ async function readSensors() {
   if (process.platform === "linux") {
     return { platform: "linux", ...readHwmon(), disks: [], gpus };
   }
-  return { platform: "mac", zones: [], fans: [], disks: [], gpus };
+  // macOS : santé des disques sans droits ; températures avec le mot de
+  // passe administrateur (readMacAsAdmin).
+  const mac = await macLib();
+  const profile = await run(
+    "/usr/sbin/system_profiler",
+    ["SPNVMeDataType", "SPSerialATADataType"],
+    30_000,
+  );
+  return {
+    platform: "mac",
+    zones: [],
+    fans: [],
+    disks: mac.parseMacDisks(profile ?? ""),
+    gpus,
+  };
 }
 
 /**
@@ -210,7 +224,34 @@ async function readSensors() {
  * administrateur : Windows affiche sa demande d'autorisation. Le résultat
  * passe par un fichier temporaire, effacé ensuite.
  */
+/** Analyse des sorties macOS (module ESM partagé avec les tests). */
+function macLib() {
+  return import(
+    require("node:url").pathToFileURL(
+      path.join(__dirname, "..", "src", "lib", "macSensors.js"),
+    ).href
+  );
+}
+
+/**
+ * Températures, ventilateurs et niveau de chauffe d'un Mac : powermetrics,
+ * lancé avec le mot de passe administrateur (fenêtre de macOS).
+ */
+async function readMacAsAdmin() {
+  const out = await run(
+    "/usr/bin/osascript",
+    [
+      "-e",
+      'do shell script "/usr/bin/powermetrics --samplers smc,thermal -i 1000 -n 1" with administrator privileges',
+    ],
+    60_000,
+  );
+  if (!out) return null; // mot de passe refusé ou annulé
+  return (await macLib()).parsePowermetrics(out);
+}
+
 async function readDisksAsAdmin() {
+  if (process.platform === "darwin") return readMacAsAdmin();
   if (process.platform !== "win32") return null;
   const file = path.join(os.tmpdir(), `slowfi-disks-${process.pid}.json`);
   const inner = `${WINDOWS_SENSORS.trim()} | Set-Content -Encoding UTF8 -LiteralPath '${file.replace(/'/g, "''")}'`;

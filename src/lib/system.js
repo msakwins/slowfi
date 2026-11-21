@@ -40,6 +40,7 @@ export function parseSystem(raw) {
       mediaType: field(f, "MediaType"),
       busType: field(f, "BusType"),
       health: field(f, "HealthStatus"),
+      size: number(f, "Size"),
     }));
   // Erreurs de lecture que le disque n'a pas pu corriger
   // (Get-StorageReliabilityCounter), par numéro de disque.
