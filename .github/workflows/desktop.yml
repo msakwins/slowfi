@@ -1,7 +1,9 @@
 # Application desktop : installateurs Windows, macOS et Linux.
 #
 # - À chaque version (tag v0.1.0, v0.2.0…), les trois installateurs sont
-#   construits et joints à un brouillon de release GitHub, à publier à la main.
+#   construits et joints à une release GitHub publiée d'office. Pas de
+#   brouillon : une release publiée avant la fin de la build macOS (la plus
+#   lente) refusait son installateur.
 # - Lancement manuel possible (onglet Actions) : les installateurs restent
 #   alors en artefacts du workflow, sans release.
 name: Desktop

@@ -112,8 +112,8 @@ Textes à l'infinitif ou à l'impératif, sans tutoiement (« Tester en filaire 
   les tests et le build.
 - **Application desktop** : mise à jour de `version` dans `package.json`, puis
   push d'un tag `v0.x.y`. Le workflow `Desktop` construit les installateurs
-  Windows, macOS et Linux et les joint à un brouillon de release, à publier
-  depuis la page d'édition de la release.
+  Windows, macOS et Linux et les joint à une release publiée d'office.
+  Les applications installées s'y mettent à jour d'elles-mêmes.
 
 ## Feuille de route
 
