@@ -17,107 +17,108 @@ Chaque anomalie détectée est accompagnée d'une explication et d'un correctif.
 Windows, macOS et Linux. Commandes en lecture seule, analyse effectuée dans le
 navigateur, aucune donnée collectée.
 
-## Démarrer
+## Application desktop
+
+Mêmes analyses, lancées directement par l'application, sans copier-coller.
+Fonctions supplémentaires :
+
+- Températures de la carte graphique, de la carte mère et des disques.
+- Usure des SSD.
+- Ventilateur de la carte graphique.
+- Suivi de la charge du processeur, de la mémoire et de la carte graphique sur
+  une minute.
+- Mises à jour des pilotes : site du fabricant (NVIDIA) ou catalogue Windows
+  Update, recherche assistée sur les sites AMD, Intel et Realtek.
+
+Téléchargement : [slowfi.app/application](https://www.slowfi.app/application)
+ou [dernière version](https://github.com/msakwins/slowfi/releases/latest).
+
+Installateurs non signés : Windows SmartScreen et macOS Gatekeeper affichent
+un avertissement à la première ouverture.
+
+## Développement
 
 ```bash
 npm install
-npm run dev        # serveur de dev
-npm run test       # tests en watch
-npm run test:run   # tests une fois (CI)
+npm run dev        # serveur de développement
+npm run test       # tests en continu
+npm run test:run   # tests, une exécution (CI)
 npm run lint       # oxlint
-npm run build      # build de production
+npm run build      # build de production, dans dist/
+npm run app        # build, puis ouverture de l'application desktop
+npm run app:dist   # installateur du système courant, dans release/
 ```
+
+Vérification de l'application desktop : `npx electron . --smoke` (affichage de
+la page, lecture par le shell, analyse du matériel, pilotes, capteurs).
 
 ## Architecture
 
-Le projet sépare volontairement le moteur de l'interface.
-
-**`src/lib/` — le moteur.** Fonctions pures, sans React ; chaque domaine a son
-fichier et ses tests. C'est là que vit l'expertise, sous forme de règles
-symptôme → coupable → correctif.
+**`src/lib/` : moteurs d'analyse.** Fonctions pures, sans React, un fichier et
+ses tests par domaine. Chaque règle associe un symptôme, une cause et un
+correctif.
 
 | Fichier | Rôle |
 | --- | --- |
-| `speedtest.js` | Mesure du débit et de la latence contre `speed.cloudflare.com` (seul module qui touche au réseau) |
-| `connection.js` | Verdict sur les chiffres du test de débit |
-| `diagnostic.js` | Wi-Fi : `netsh` (Windows) ou `system_profiler` (macOS), règles, détection du filaire, comparaison avec le débit mesuré |
-| `storage.js` | Stockage : `Get-Volume` (Windows) ou `diskutil` (macOS) |
-| `components.js` | Mémoire, carte graphique, firmware (mémoire seule sur macOS) |
-| `powershell.js` | Lecture commune des sorties `Format-List` de PowerShell |
-| `summary.js` | Résumé du test de débit, à copier |
-| `en.js` | Version anglaise des constats, par identifiant |
-| `linux.js` | Lecture des sorties Linux, appelée par chaque moteur |
-| `platform.js` | Version du système et fin de support, batterie, démarrage |
-| `activity.js` | Charge du processeur et de la mémoire, programmes gourmands |
-| `devices.js` | Périphériques et appareils en erreur |
+| `speedtest.js` | Mesure du débit et de la latence via `speed.cloudflare.com` |
+| `connection.js` | Verdict sur le résultat du test de débit |
+| `diagnostic.js` | Wi-Fi : lecture de `netsh` (Windows) et `system_profiler` (macOS), règles, comparaison avec le débit mesuré |
 | `ethernet.js` | Vitesse et duplex de la liaison filaire |
-| `report.js` | Résumé en texte d'une analyse, à copier |
+| `storage.js` | Stockage : `Get-Volume` (Windows), `diskutil` (macOS) |
+| `components.js` | Mémoire, carte graphique, firmware |
+| `system.js` | Disque de démarrage, dernier redémarrage, mode d'alimentation |
+| `platform.js` | Version du système, fin de support, batterie, programmes au démarrage |
+| `activity.js` | Charge du processeur et de la mémoire, programmes les plus gourmands |
+| `devices.js` | Périphériques et appareils en erreur |
+| `linux.js` | Lecture des sorties Linux, appelée par chaque moteur |
+| `powershell.js` | Lecture des sorties `Format-List` de PowerShell |
+| `manual.js` | Saisie guidée : valeurs relevées à la main converties pour les moteurs |
+| `commands.js` | Assemblage des commandes à copier, script de l'application desktop |
+| `drivers.js` | Pilotes installés et comparaison avec Windows Update |
+| `catalog.js` | Lecture du catalogue Microsoft Update |
+| `vendors.js` | Sites des fabricants de pilotes |
+| `driverLookup.js` | Recherche d'un pilote, commune au site et à l'application |
+| `aiDriver.js` | Lecture assistée (Google Gemini) des pages de pilotes AMD, Intel et Realtek |
+| `sensors.js` | Lecture des capteurs de l'application desktop |
+| `download.js` | Liens de téléchargement, d'après la dernière version publiée |
+| `summary.js`, `report.js` | Résumés en texte brut, à copier |
+| `en.js` | Version anglaise des constats |
 | `examples.js` | Sorties d'exemple, affichées sur la page et reprises par les tests |
 
-**`src/components/` — l'interface** (styled-components). L'application tient
-sur une page (`Home.jsx`) : le test de débit, puis les analyses approfondies
-qui s'ouvrent sur place — `NetworkAnalysis.jsx` (Wi-Fi) et
-`HardwareAnalysis.jsx` (disques et composants, en une seule commande), avec
-une commande Windows et une commande macOS. Les vérifications manuelles
-(`ManualChecks.jsx`) et la page de confidentialité (`Legal.jsx`) sont des
-pages à part, liées depuis le pied de page. Les éléments partagés (thème,
-logo, verdicts, étape copier-coller `PasteStep.jsx`, flèche, compteur animé)
-sont dans `src/ui/`.
+**`src/components/` et `src/ui/` : interface** (React, styled-components).
+L'accueil (`Home.jsx`) présente le test de débit (`SpeedTest.jsx`), puis le
+diagnostic approfondi (`CombinedAnalysis.jsx`) : choix des analyses, commande à
+copier ou saisie guidée, résultats. Pages séparées : vérifications manuelles
+(`ManualChecks.jsx`), application (`AppPage.jsx`), confidentialité
+(`Legal.jsx`).
 
-Ajouter un cas de diagnostic = ajouter une règle dans le module concerné + un
-test à côté. Rien d'autre à modifier.
+**`api/` : fonctions Vercel.** Recherche de pilotes (`drivers.js`) et lecture
+assistée des sites fabricants (`driver-ai.js`, clé `GEMINI_API_KEY`).
 
-## Ton des textes
+**`electron/` : application desktop.** Affichage du site en local, exécution
+des lectures par le shell du système (`main.cjs`), capteurs (`sensors.cjs`).
 
-Les textes ne tutoient pas l'utilisateur : infinitif ou impératif
-(« Tester en filaire… », « Analyser le matériel »).
+Ajout d'un cas de diagnostic : une règle dans le moteur concerné et un test
+associé.
 
-## Feuille de route
+## Rédaction
 
-- [x] Cas filaire : vitesse de la liaison Ethernet (`Get-NetAdapter`, `ifconfig`).
-- [x] Support macOS (Wi-Fi, disque, mémoire).
-- [x] Support Linux (commandes sans droits root, sortie forcée en anglais par
-      `LC_ALL=C`, saisie guidée pour GNOME).
-- [x] Analyse complète : une seule commande pour la connexion, le matériel et
-      les périphériques, au choix.
-- [ ] Version desktop (Tauri) capable de lancer les commandes automatiquement,
-      sans copier-coller manuel.
-
-### Réservé à l'application desktop
-
-Ce qu'un site ne peut pas obtenir, même par copier-coller : ces mesures
-demandent des droits administrateur ou un accès direct au matériel, et
-attendront l'application.
-
-- [x] Températures : carte graphique NVIDIA (nvidia-smi), zone thermique de la
-      carte mère et disques sous Windows, capteurs hwmon sous Linux.
-- [x] Usure des SSD : `Get-StorageReliabilityCounter`, relancé avec les droits
-      administrateur si Windows l'exige.
-- [x] Ventilateurs : carte graphique NVIDIA, et hwmon sous Linux. Ceux du
-      processeur et du boîtier restent illisibles sous Windows sans le logiciel
-      du fabricant de la carte mère.
-- [x] Suivi sur une minute : processeur, mémoire, carte graphique.
-- [ ] macOS : les capteurs demandent `sudo powermetrics`.
+Textes à l'infinitif ou à l'impératif, sans tutoiement (« Tester en filaire »,
+« Analyser le matériel »).
 
 ## Déploiement
 
-Vercel (`vercel.json`) : build Vite, sortie dans `dist/`. La CI GitHub Actions
-lance les tests et le build à chaque push sur `main`.
+- **Site** : Vercel, à chaque push sur `main`. La CI GitHub Actions exécute
+  les tests et le build.
+- **Application desktop** : mise à jour de `version` dans `package.json`, puis
+  push d'un tag `v0.x.y`. Le workflow `Desktop` construit les installateurs
+  Windows, macOS et Linux et les joint à un brouillon de release, à publier
+  depuis la page d'édition de la release.
 
-## Application desktop
+## Feuille de route
 
-Electron (`electron/`) : la même page, servie en local, qui lance elle-même
-les lectures de l'analyse au lieu de demander un copier-coller.
-
-- `npm run app` : construit le site et ouvre l'application.
-- `npm run app:dist` : installateur du système courant, dans `release/`.
-- `npx electron . --smoke` : vérification rapide (page, lecture par le shell,
-  analyse du matériel), utilisée aussi par la CI.
-- Version : changer `version` dans `package.json`, puis pousser un tag
-  `v0.x.y`. Le workflow `Desktop` construit les installateurs Windows, macOS
-  et Linux et les joint à un brouillon de release GitHub, à publier à la main.
-- Les installateurs ne sont pas encore signés : Windows SmartScreen et macOS
-  Gatekeeper affichent un avertissement à la première ouverture.
+- [ ] Capteurs sous macOS (`sudo powermetrics`).
+- [ ] Signature des installateurs Windows et macOS.
 
 ## Stack
 
