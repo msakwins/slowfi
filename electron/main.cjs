@@ -205,7 +205,18 @@ function smokeTest(win) {
       ),
     ]).catch((e) => `erreur : ${e.message}`);
 
-  win.webContents.once("did-finish-load", async () => {
+  // Les libellés cherchés sont en français, et les machines de CI sont en
+  // anglais : choisir le français, recharger, puis vérifier.
+  win.webContents.once("did-finish-load", () => {
+    win.webContents
+      .executeJavaScript('localStorage.setItem("slowfi-lang", "fr")')
+      .then(() => {
+        win.webContents.once("did-finish-load", run);
+        win.webContents.reload();
+      });
+  });
+
+  async function run() {
     await new Promise((r) => setTimeout(r, 1500));
     const script =
       process.platform === "win32"
@@ -275,7 +286,7 @@ function smokeTest(win) {
       require("node:fs").writeFileSync(process.env.SLOWFI_SHOT, image.toPNG());
     }
     finish(false);
-  });
+  }
 }
 
 // Une seule instance : relancer l'application ramène la fenêtre ouverte.

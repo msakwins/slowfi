@@ -1,27 +1,21 @@
 # Slowfi
 
-Un diagnostiqueur de connexion et de matériel qui ne se contente pas de mesurer :
-il dit **quel composant coince** et **comment le réparer**.
+Test de débit et diagnostic de connexion et de matériel, sur
+[slowfi.app](https://www.slowfi.app).
 
-Deux enquêtes, séparées parce qu'elles n'ont rien à voir :
+## Fonctionnalités
 
-- **Connexion** — un test de débit lancé depuis le navigateur (débit descendant,
-  montant, latence, variation), puis l'analyse du Wi-Fi à partir de la sortie de
-  `netsh wlan show interfaces` : bande, norme, signal, canal, débit réel estimé.
-- **Matériel** — l'analyse des disques (espace libre, intégrité des volumes via
-  `Get-Volume`) et des composants (mémoire, carte graphique, âge du BIOS).
+- **Test de débit** : débit descendant et montant, latence, variation.
+- **Réseau local** : bande, norme, signal et canal Wi-Fi, vitesse de la liaison
+  Ethernet, comparaison avec le débit mesuré.
+- **Matériel** : système, disques, mémoire, processeur, carte graphique,
+  firmware, batterie.
+- **Périphériques** : audio, caméra, clavier, souris, Bluetooth, écrans.
 
-Chaque problème détecté arrive avec son explication et son correctif. Les
-commandes à coller sont en lecture seule, et leur sortie ne quitte pas le
-navigateur.
+Chaque anomalie détectée est accompagnée d'une explication et d'un correctif.
 
-## Pourquoi
-
-Les speed tests classiques répondent à « combien ai-je de débit ? ». Ils ne
-répondent pas à « pourquoi c'est lent, et que faire ? ». Cas fondateur : un Wi-Fi
-coincé en 2,4 GHz qui plafonne à ~55 Mb/s au lieu de 355 en 5 GHz. Et quand la
-ligne va bien, la lenteur vient souvent d'ailleurs : un disque plein ou un
-firmware ancien pèsent autant qu'une mauvaise connexion.
+Windows, macOS et Linux. Commandes en lecture seule, analyse effectuée dans le
+navigateur, aucune donnée collectée.
 
 ## Démarrer
 
