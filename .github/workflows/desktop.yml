@@ -33,10 +33,9 @@ jobs:
       - run: npm run test:run
       - run: npm run build
         env:
-          # Identifiants d'affiliation (variables du dépôt, publiques) : vides,
+          # Identifiant Amazon Partenaires (variable du dépôt, publique) : vide,
           # les liens restent de simples recherches.
           VITE_AMAZON_TAG: ${{ vars.VITE_AMAZON_TAG }}
-          VITE_LDLC_TAG: ${{ vars.VITE_LDLC_TAG }}
 
       # Vérification de l'application : la page s'affiche, une lecture passe
       # par le shell, et l'analyse du matériel rend un verdict.

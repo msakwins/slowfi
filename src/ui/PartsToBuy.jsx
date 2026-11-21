@@ -15,7 +15,7 @@ const TEXT = {
     search: (q) => `Chercher « ${q} »`,
     on: (shop) => `Voir sur ${shop}`,
     affiliate:
-      "Liens affiliés : Slowfi peut toucher une commission sur un achat, sans surcoût. Les suggestions ne dépendent que de l'analyse",
+      "Lien affilié : en tant que Partenaire Amazon, Slowfi réalise un bénéfice sur les achats remplissant les conditions requises, sans surcoût. Les suggestions ne dépendent que de l'analyse",
     plain: "Suggestions faites seulement à partir de l'analyse",
   },
   en: {
@@ -24,7 +24,7 @@ const TEXT = {
     search: (q) => `Search for “${q}”`,
     on: (shop) => `See on ${shop}`,
     affiliate:
-      "Affiliate links: Slowfi may earn a commission on a purchase, at no extra cost. Suggestions depend only on the analysis",
+      "Affiliate link: as an Amazon Associate, Slowfi earns from qualifying purchases, at no extra cost. Suggestions depend only on the analysis",
     plain: "Suggestions based only on the analysis",
   },
 };
@@ -112,7 +112,7 @@ export default function PartsToBuy({ parts }) {
                 .join(". ")}
             </div>
             <div className="links">
-              {shopLinks(p.query, lang).map((l) => (
+              {shopLinks(p.query).map((l) => (
                 <a
                   key={l.shop}
                   href={l.url}

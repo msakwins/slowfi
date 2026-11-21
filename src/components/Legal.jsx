@@ -97,14 +97,13 @@ function LegalEn() {
           The suggested commands only read information: they change no settings
         </p>
 
-        <h2>Links to shops</h2>
+        <h2>Links to Amazon</h2>
         <p>
           When the analysis finds a worn or failing part, Slowfi suggests a
-          replacement with links to <strong>Amazon</strong> and{" "}
-          <strong>LDLC</strong>. These links may be affiliate links: Slowfi then
-          earns a commission on the purchase, at no extra cost. The link only
-          contains the search (for example “SATA SSD 1 TB”), never data from the
-          analysis. Suggestions depend only on the analysis
+          replacement with a link to <strong>Amazon</strong>. As an Amazon
+          Associate, Slowfi earns from qualifying purchases, at no extra cost.
+          The link only contains the search (for example “SATA SSD 1 TB”), never
+          data from the analysis. Suggestions depend only on the analysis
         </p>
 
         <h2>Fixes</h2>
@@ -184,14 +183,14 @@ function LegalFr() {
           ne modifient aucun réglage
         </p>
 
-        <h2>Liens vers des marchands</h2>
+        <h2>Liens vers Amazon</h2>
         <p>
           Quand l'analyse trouve une pièce usée ou défaillante, Slowfi propose
-          un remplacement avec des liens vers <strong>Amazon</strong> et{" "}
-          <strong>LDLC</strong>. Ces liens peuvent être des liens affiliés :
-          Slowfi touche alors une commission sur l'achat, sans surcoût. Le lien
-          ne contient que la recherche (par exemple « SSD SATA 1 To »), jamais
-          de données de l'analyse. Les suggestions ne dépendent que de l'analyse
+          un remplacement avec un lien vers <strong>Amazon</strong>. En tant que
+          Partenaire Amazon, Slowfi réalise un bénéfice sur les achats
+          remplissant les conditions requises, sans surcoût. Le lien ne contient
+          que la recherche (par exemple « SSD SATA 1 To »), jamais de données de
+          l'analyse. Les suggestions ne dépendent que de l'analyse
         </p>
 
         <h2>Correctifs</h2>

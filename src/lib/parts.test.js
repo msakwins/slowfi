@@ -81,15 +81,14 @@ describe("pièces à remplacer", () => {
 });
 
 describe("liens marchands", () => {
-  it("recherche Amazon et LDLC", () => {
-    const links = shopLinks('SSD SATA 2,5" 1 To', "fr");
-    expect(links.map((l) => l.shop)).toEqual(["Amazon", "LDLC"]);
-    expect(links[0].url).toBe(
-      "https://www.amazon.fr/s?k=SSD%20SATA%202%2C5%22%201%20To",
-    );
-    expect(links[1].url).toBe(
-      "https://www.ldlc.com/recherche/SSD%20SATA%202%2C5%22%201%20To/",
-    );
+  it("recherche Amazon seulement, sans identifiant d'affiliation au test", () => {
+    const links = shopLinks('SSD SATA 2,5" 1 To');
+    expect(links).toEqual([
+      {
+        shop: "Amazon",
+        url: "https://www.amazon.fr/s?k=SSD%20SATA%202%2C5%22%201%20To",
+      },
+    ]);
   });
 });
 
