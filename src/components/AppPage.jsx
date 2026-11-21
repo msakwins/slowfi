@@ -42,7 +42,8 @@ const TEXT = {
     loading: "Recherche de la dernière version…",
     soon: "Bientôt disponible",
     none: "Aucune version n'est encore publiée",
-    failed: "Impossible de joindre GitHub. Les fichiers restent disponibles sur",
+    failed:
+      "Impossible de joindre GitHub. Les fichiers restent disponibles sur",
     releasesPage: "la page des versions",
     open: "Première ouverture",
     unsigned:
@@ -220,9 +221,7 @@ export default function AppPage() {
             {t.button(OS_NAMES[os])}
           </Button>
         ) : (
-          <Button disabled>
-            {state === "loading" ? t.loading : t.soon}
-          </Button>
+          <Button disabled>{state === "loading" ? t.loading : t.soon}</Button>
         )}
 
         {state === "ready" && (
@@ -270,6 +269,26 @@ export default function AppPage() {
           <a href={SOURCE} target="_blank" rel="noreferrer">
             GitHub
           </a>
+        </p>
+        {/* Mention demandée par SignPath sur la page de téléchargement. */}
+        <p>
+          Free code signing provided by{" "}
+          <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
+            SignPath.io
+          </a>
+          , certificate by{" "}
+          <a href="https://signpath.org/" target="_blank" rel="noreferrer">
+            SignPath Foundation
+          </a>{" "}
+          (
+          <a
+            href={`${SOURCE}/blob/main/CODE_SIGNING_POLICY.md`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            code signing policy
+          </a>
+          )
         </p>
       </Body>
     </>

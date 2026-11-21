@@ -123,13 +123,19 @@ function runScript(script) {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1100,
+    width: 860,
     height: 860,
     minWidth: 420,
     minHeight: 500,
     backgroundColor: "#020617",
     autoHideMenuBar: true,
     title: "Slowfi",
+    // Sans la barre de titre du système : la page dessine la sienne, avec
+    // ses boutons (Windows, Linux). macOS garde ses trois boutons natifs,
+    // posés sur la page. Windows 11 et macOS arrondissent les coins.
+    ...(process.platform === "darwin"
+      ? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 16, y: 14 } }
+      : { frame: false }),
     icon: path.join(__dirname, "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -154,8 +160,27 @@ function createWindow() {
     }
   });
 
+  // La page suit l'état agrandi, pour changer l'icône du bouton.
+  const sendMaximized = () =>
+    win.webContents.send("slowfi:maximized", win.isMaximized());
+  win.on("maximize", sendMaximized);
+  win.on("unmaximize", sendMaximized);
+
   win.loadURL(home);
   if (process.argv.includes("--smoke")) smokeTest(win);
+  // Capture de la fenêtre au démarrage, pour vérifier son allure :
+  // SLOWFI_SHOT_START=chemin.png (l'application quitte ensuite).
+  if (process.env.SLOWFI_SHOT_START) {
+    win.webContents.once("did-finish-load", async () => {
+      await new Promise((r) => setTimeout(r, 1500));
+      const image = await win.webContents.capturePage();
+      require("node:fs").writeFileSync(
+        process.env.SLOWFI_SHOT_START,
+        image.toPNG(),
+      );
+      app.exit(0);
+    });
+  }
 }
 
 /**
@@ -300,6 +325,20 @@ function smokeTest(win) {
 }
 
 // Une seule instance : relancer l'application ramène la fenêtre ouverte.
+// Copie de développement (npm run app) : dossier de données à part, pour
+// tourner à côté de l'application installée sans se heurter au verrou
+// d'instance unique.
+// Vérification et capture : encore à part, pour tourner même quand une
+// copie de développement est ouverte.
+if (!app.isPackaged) {
+  const check =
+    process.argv.includes("--smoke") || Boolean(process.env.SLOWFI_SHOT_START);
+  app.setPath(
+    "userData",
+    path.join(app.getPath("appData"), check ? "slowfi-check" : "slowfi-dev"),
+  );
+}
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -331,6 +370,16 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle("slowfi:sample", (event, withGpu) =>
       fromApp(event) ? sensors.sample(Boolean(withGpu)) : null,
     );
+    // Boutons de la barre de titre dessinée par la page.
+    ipcMain.handle("slowfi:window", (event, action) => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (!win || !fromApp(event)) return null;
+      if (action === "minimize") win.minimize();
+      else if (action === "maximize")
+        win.isMaximized() ? win.unmaximize() : win.maximize();
+      else if (action === "close") win.close();
+      return win.isMaximized();
+    });
     createWindow();
     setupUpdates();
     app.on("activate", () => {

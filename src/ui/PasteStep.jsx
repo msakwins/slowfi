@@ -43,9 +43,8 @@ const TEXT = {
         "Sélectionner tout le texte du terminal (clic droit › Tout sélectionner), le copier (Ctrl + Maj + C), puis le coller ici",
     },
     pasteButton: "Coller depuis le presse-papiers",
-    running: "Lecture en cours…",
+    running: "Analyse en cours…",
     rerun: "Relancer l'analyse",
-    appAbout: "Que lit l'application ?",
     failed: "La lecture n'a rien renvoyé",
     example: "Voir un exemple",
     clear: "Effacer",
@@ -73,9 +72,8 @@ const TEXT = {
         "Select all the terminal text (right-click › Select All), copy it (Ctrl + Shift + C), then paste it here",
     },
     pasteButton: "Paste from clipboard",
-    running: "Reading…",
+    running: "Analyzing…",
     rerun: "Run the analysis again",
-    appAbout: "What does the app read?",
     failed: "The reading returned nothing",
     example: "Show an example",
     clear: "Clear",
@@ -298,11 +296,6 @@ export default function PasteStep({
             <Label>{t.running}</Label>
           ) : (
             <Button onClick={run}>{t.rerun}</Button>
-          )}
-          {about && (
-            <div style={{ marginTop: 6 }}>
-              <Info label={t.appAbout}>{about}</Info>
-            </div>
           )}
         </Step>
         {failed && <Empty>{t.failed}</Empty>}

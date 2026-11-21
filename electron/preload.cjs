@@ -17,4 +17,11 @@ contextBridge.exposeInMainWorld("slowfi", {
     return () => ipcRenderer.removeListener("slowfi:update", listener);
   },
   installUpdate: () => ipcRenderer.invoke("slowfi:install-update"),
+  // Fenêtre : réduire, agrandir, fermer, et suivi de l'état agrandi.
+  windowAction: (action) => ipcRenderer.invoke("slowfi:window", action),
+  onMaximized: (callback) => {
+    const listener = (_event, maximized) => callback(maximized);
+    ipcRenderer.on("slowfi:maximized", listener);
+    return () => ipcRenderer.removeListener("slowfi:maximized", listener);
+  },
 });

@@ -42,6 +42,7 @@
       "electron/main.cjs",
       "electron/preload.cjs",
       "electron/sensors.cjs",
+      "electron/nvme-health.ps1",
       "electron/updater.cjs",
       "src/lib/catalog.js",
       "src/lib/vendors.js",

@@ -127,3 +127,9 @@ React 19 · Vite · styled-components · Vitest · oxlint · Electron
 ## Licence
 
 MIT
+
+## Signature du code
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/),
+certificate by [SignPath Foundation](https://signpath.org/) — demande en
+cours, voir [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).

@@ -10,7 +10,8 @@ const listeners = new Set();
 export function navigate(to) {
   if (to === window.location.pathname) return;
   window.history.pushState(null, "", to);
-  window.scrollTo(0, 0);
+  // Dans l'application, la page défile dans sa propre zone (Slowfi.jsx).
+  (document.getElementById("scroll-root") ?? window).scrollTo(0, 0);
   listeners.forEach((fn) => fn(to));
 }
 

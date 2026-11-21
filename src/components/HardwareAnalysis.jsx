@@ -10,7 +10,7 @@
 // macOS : `diskutil info /` pour le volume de démarrage, `system_profiler`
 // pour la mémoire. Pas de pilote ni de BIOS à contrôler : ils suivent macOS.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { diagnoseStorage } from "../lib/storage.js";
 import { analyzeComponents } from "../lib/components.js";
@@ -40,6 +40,8 @@ import { summarizeBlocks } from "../lib/report.js";
 import { parseInstalledDrivers, DRIVER_CLASSES } from "../lib/drivers.js";
 import DriverUpdates from "../ui/DriverUpdates.jsx";
 import { localize } from "../lib/en.js";
+import { nvidiaVersion } from "../lib/vendors.js";
+import { analyzeEvents, EVENTS_READ } from "../lib/events.js";
 
 // Page officielle des pilotes de chaque constructeur. Aucun ne publie de
 // service interrogeable par un site : le lien permet de vérifier en un clic
@@ -101,7 +103,8 @@ const TEXT = {
     components: "Composants",
     reportTitle: "Slowfi — analyse du matériel",
     hardware: "Matériel",
-    detected: "Matériel détecté",
+    detected: "Liste du matériel analysé",
+    history: "Historique",
     results: "Résultats du diagnostic",
     noIssue: "Aucune anomalie détectée",
     sticksN: (n) => `${n} barrette${n > 1 ? "s" : ""}`,
@@ -136,9 +139,11 @@ const TEXT = {
     processes: (n) => `${n} processus`,
     gpu: "Carte graphique",
     driver: "Pilote",
-    state: "État",
-    stateOk: "OK",
-    stateError: (code) => (code ? `Erreur ${code}` : "Anormal"),
+    driverOf: (v, date) =>
+      [v ? `Pilote ${v}` : "Pilote", date && `de ${date}`]
+        .filter(Boolean)
+        .join(" "),
+    stateError: (code) => (code ? `en erreur (code ${code})` : "en erreur"),
     update: (vendor) => `Vérifier les mises à jour sur le site ${vendor}`,
     memory: "Mémoire",
     sticks: "Barrettes",
@@ -169,7 +174,8 @@ const TEXT = {
     components: "Components",
     reportTitle: "Slowfi — hardware analysis",
     hardware: "Hardware",
-    detected: "Detected hardware",
+    detected: "List of analyzed hardware",
+    history: "History",
     results: "Diagnostic results",
     noIssue: "No issue found",
     sticksN: (n) => `${n} stick${n > 1 ? "s" : ""}`,
@@ -203,9 +209,11 @@ const TEXT = {
     processes: (n) => `${n} process${n > 1 ? "es" : ""}`,
     gpu: "Graphics card",
     driver: "Driver",
-    state: "Status",
-    stateOk: "OK",
-    stateError: (code) => (code ? `Error ${code}` : "Abnormal"),
+    driverOf: (v, date) =>
+      [v ? `Driver ${v}` : "Driver", date && `from ${date}`]
+        .filter(Boolean)
+        .join(" "),
+    stateError: (code) => (code ? `in error (code ${code})` : "in error"),
     update: (vendor) => `Check for updates on the ${vendor} website`,
     memory: "Memory",
     sticks: "Sticks",
@@ -265,6 +273,9 @@ export const HARDWARE_READS = [
   // version dans le catalogue Microsoft Update. Get-WmiObject garde la date
   // brute (20261107…) : Get-CimInstance l’écrit mois en premier, quelle que
   // soit la langue du système, ce qui la confond avec le format français.
+  // Historique de Windows sur 90 jours : plantages du pilote graphique,
+  // erreurs matérielles, arrêts brutaux (events.js).
+  EVENTS_READ,
   `Get-WmiObject Win32_PnPSignedDriver | Where-Object DeviceClass -in ${DRIVER_CLASSES.join(",")} | Format-List DeviceClass,DeviceName,DriverVersion,DriverDate,HardWareID`,
 ];
 const COMMAND_WINDOWS = windowsCommand(HARDWARE_READS);
@@ -306,9 +317,16 @@ export function analyzeHardware(raw) {
   const c = analyzeComponents(raw);
   const system = analyzeSystem(raw);
   const activity = analyzeActivity(parseBlocks(raw), raw);
+  const events = analyzeEvents(raw);
   const hasComponents =
     c.memory.length > 0 || c.gpus.length > 0 || c.bios || c.cpu;
-  if (storage.volumes.length === 0 && !hasComponents && !system && !activity)
+  if (
+    storage.volumes.length === 0 &&
+    !hasComponents &&
+    !system &&
+    !activity &&
+    !events
+  )
     return null;
   return {
     volumes: storage.volumes,
@@ -316,6 +334,7 @@ export function analyzeHardware(raw) {
     system,
     activity,
     drivers: parseInstalledDrivers(raw),
+    events,
   };
 }
 
@@ -327,7 +346,14 @@ const RANK = { problem: 0, warning: 1, ok: 2 };
 
 /** Blocs de résultats du matériel, suivis du résumé à copier. */
 export function HardwareResults({
-  data: { volumes, components: c, system: s, activity: a, drivers = [] },
+  data: {
+    volumes,
+    components: c,
+    system: s,
+    activity: a,
+    events: ev,
+    drivers = [],
+  },
 }) {
   const { t, label } = useT();
   const { lang } = useLang();
@@ -336,6 +362,7 @@ export function HardwareResults({
     { name: t.system, engine: "system", result: s },
     { name: t.activity, engine: "activity", result: a },
     { name: t.components, engine: "components", result: c },
+    { name: t.history, engine: "events", result: ev },
     ...volumes.map((v) => ({
       name: v.name ?? `${v.driveLetter}:`,
       engine: "storage",
@@ -364,11 +391,15 @@ export function HardwareResults({
 
   return (
     <>
+      {/* Ce qui a été lu, replié d'office : le verdict passe en premier à
+          l'œil, la liste s'ouvre au besoin. */}
+      <InventoryFold title={t.detected}>
+        <Inventory data={{ volumes, c, s, a }} />
+      </InventoryFold>
       <Verdict $color={sev.color} gap={32} first={0}>
         <VerdictHead
           color={sev.color}
         >{`${t.hardware} — ${label[severity]}`}</VerdictHead>
-        <Inventory data={{ volumes, c, s, a }} />
         <Section2>{t.results}</Section2>
         {findings.length ? (
           <Findings findings={findings} />
@@ -388,6 +419,67 @@ export function HardwareResults({
         }
       />
     </>
+  );
+}
+
+const FoldHead = styled.button`
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748b;
+
+  svg {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+  &:hover,
+  &:focus-visible {
+    color: var(--accent);
+    outline: none;
+  }
+`;
+
+/** Menu dépliant, fermé d'office. */
+function InventoryFold({ title, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <FoldHead
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {title}
+        <svg
+          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 6l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </FoldHead>
+      {open && <div style={{ margin: "-12px 0 28px" }}>{children}</div>}
+    </div>
   );
 }
 
@@ -527,25 +619,41 @@ function Inventory({ data: { volumes, c, s, a } }) {
       ),
     ]);
   }
+  // Carte graphique : le pilote en une phrase (« Pilote 621.24 de
+  // novembre 2026 »). Le lien vers le site du fabricant seulement si le
+  // pilote a plus d'un an ou si Windows signale une erreur.
   for (const g of c?.gpus ?? []) {
     const page = driverPage(g.name, lang);
-    const known = g.status != null || g.errorCode != null;
-    const ok = known && /^ok$/i.test(g.status ?? "OK") && !g.errorCode;
+    const error =
+      (g.status != null && !/^ok$/i.test(g.status)) || Boolean(g.errorCode);
+    const version = /nvidia/i.test(g.name)
+      ? (nvidiaVersion(g.driverVersion) ?? g.driverVersion)
+      : g.driverVersion;
+    const date =
+      g.driverYear &&
+      (g.driverMonth
+        ? new Date(g.driverYear, g.driverMonth - 1).toLocaleDateString(
+            lang === "fr" ? "fr-FR" : "en-GB",
+            { month: "long", year: "numeric" },
+          )
+        : String(g.driverYear));
+    const now = new Date();
+    const ageMonths = g.driverYear
+      ? (now.getFullYear() - g.driverYear) * 12 +
+        (now.getMonth() + 1 - (g.driverMonth ?? 6))
+      : null;
+    const old = ageMonths == null || ageMonths >= 12;
     rows.push([
       t.gpu,
       <>
         {g.name}
         <br />
         <span className="sub">
-          {join(
-            g.driverYear &&
-              `${t.driver} ${g.driverMonth ? `${String(g.driverMonth).padStart(2, "0")}/` : ""}${g.driverYear}`,
-            g.driverVersion && `v${g.driverVersion}`,
-            known &&
-              `${t.state} : ${ok ? t.stateOk : t.stateError(g.errorCode)}`,
-          )}
+          {[t.driverOf(version, date), error && t.stateError(g.errorCode)]
+            .filter(Boolean)
+            .join(", ")}
         </span>
-        {page && (
+        {page && (old || error) && (
           <>
             <br />
             <a href={page.url} target="_blank" rel="noreferrer">
@@ -611,7 +719,6 @@ function Inventory({ data: { volumes, c, s, a } }) {
 
   return (
     <>
-      <Section2 style={{ marginTop: 8 }}>{t.detected}</Section2>
       <Table>
         {rows.map(([k, v], i) => (
           <React.Fragment key={i}>

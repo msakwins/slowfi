@@ -17,6 +17,7 @@ import Legal from "./Legal.jsx";
 import AppPage from "./AppPage.jsx";
 import { desktop } from "../ui/desktop.js";
 import UpdateBanner from "../ui/UpdateBanner.jsx";
+import TitleBar, { TITLE_BAR_HEIGHT } from "../ui/TitleBar.jsx";
 
 export { GlobalStyle };
 
@@ -122,6 +123,16 @@ const DownloadLink = styled.a`
   }
 `;
 
+const ScrollArea = styled.div`
+  position: fixed;
+  top: ${TITLE_BAR_HEIGHT}px;
+  left: 0;
+  right: 3px;
+  bottom: 3px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+`;
+
 const HomeLink = styled(Link)`
   display: inline-block;
   color: inherit;
@@ -176,8 +187,12 @@ export default function Slowfi() {
     document.title = t.titles[path];
   }, [t, path]);
 
-  return (
-    <Page>
+  // Dans l'application, une colonne plus large : la fenêtre n'a pas les
+  // marges d'un navigateur, et 680 px y laissaient de grands vides.
+  const page = (
+    <Page
+      style={desktop ? { maxWidth: 960, padding: "24px 32px 48px" } : undefined}
+    >
       <Header>
         <HomeLink to="/" aria-label={t.home}>
           <Logo />
@@ -231,5 +246,16 @@ export default function Slowfi() {
         <p>{desktop ? t.appNote : t.note}</p>
       </Footer>
     </Page>
+  );
+
+  // Sur le site, la page défile avec la fenêtre du navigateur. Dans
+  // l'application, seule la zone sous la barre de titre défile : la barre de
+  // défilement commence sous les boutons, un peu en retrait du bord.
+  if (!desktop) return page;
+  return (
+    <>
+      <TitleBar />
+      <ScrollArea id="scroll-root">{page}</ScrollArea>
+    </>
   );
 }

@@ -383,6 +383,43 @@ export const EN = {
     }),
   },
 
+  events: {
+    "gpu-crashes": ({ count, last }) => ({
+      title:
+        count === 1
+          ? "Graphics driver crashed once in 90 days"
+          : `Graphics driver crashed ${count} times in 90 days`,
+      detail: `Last crash on ${dayEn(last)}. A driver that keeps crashing often comes from a card running too hot, a damaged driver, or a card wearing out`,
+      fix: "Track the card temperature during a game (one-minute tracking in the app). Above 85 °C, dust off the card and its fans. Below that, reinstall the driver from the maker's website",
+    }),
+    "hardware-errors": ({ count, last }) => ({
+      title:
+        count === 1
+          ? "One hardware error reported by Windows in 90 days"
+          : `${count} hardware errors reported by Windows in 90 days`,
+      detail: `Last one on ${dayEn(last)}. The processor, memory or a card reported an error: a component running hot, wearing out or poorly powered`,
+      fix: "Run Windows Memory Diagnostic (Start menu) and track temperatures. If errors continue, have the computer checked",
+    }),
+    "memory-test-failed": ({ date }) => ({
+      title: "Windows memory test found errors",
+      detail: `Test from ${dayEn(date)}. A faulty memory stick causes crashes, blue screens and corrupted files`,
+      fix: "Run the test again with one stick at a time (Windows Memory Diagnostic) to find the faulty one, then replace it",
+    }),
+    "hard-shutdowns": ({ count, afterGpu, last }) => ({
+      title:
+        count === 1
+          ? "One hard shutdown in 90 days"
+          : `${count} hard shutdowns in 90 days`,
+      detail: `The computer turned off without a normal shutdown, the last one on ${dayEn(last)}${
+        afterGpu
+          ? afterGpu === count
+            ? ", right after a graphics driver crash"
+            : `, ${afterGpu} of them right after a graphics driver crash`
+          : ""
+      }. Possible causes: power cut, button held down, or a protective shutdown from overheating`,
+      fix: "If it was not a power cut, track temperatures and check that the fans spin",
+    }),
+  },
   activity: {
     "memory-full": ({ pct, top }) => ({
       title: `Memory almost full (${pct} % used)`,
@@ -456,6 +493,15 @@ const MONTHS_EN = [
 ];
 
 /** « July 2026 », or the year alone when the month is unknown. */
+/** « 2026-11-17 » → « 17 November ». */
+function dayEn(isoDate) {
+  const [y, m, d] = String(isoDate).split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+  });
+}
+
 export function monthEn(year, month) {
   return month ? `${MONTHS_EN[month - 1]} ${year}` : String(year);
 }
@@ -472,6 +518,11 @@ const GROUPS_EN = {
 };
 
 export const PASSED_EN = {
+  "no-gpu-crash": ({ days }) => `No graphics driver crash in ${days} days`,
+  "no-hardware-error": () => "No hardware error reported by Windows",
+  "no-hard-shutdown": ({ days }) => `No hard shutdown in ${days} days`,
+  "memory-test-ok": ({ date }) =>
+    `Windows memory test passed on ${dayEn(date)}`,
   "windows-supported": ({ label, end }) =>
     end
       ? `${label}, supported until ${dateEn(end)}`

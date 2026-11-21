@@ -258,6 +258,9 @@ describe("couverture des contrôles passés", () => {
         ...analyzeSystem(ex.HARDWARE_MAC, { today: "2026-11-20" }).passed,
         ...analyzeActivity(parseBlocks(healthyWin), healthyWin).passed,
         ...analyzeDevices(ex.DEVICES_WINDOWS).passed,
+        ...(await import("./events.js")).analyzeEvents(
+          `"TimeCreated","ProviderName","Id"\n"03/11/2026 10:00:00","Microsoft-Windows-MemoryDiagnostics-Results","1201"`,
+        ).passed,
         ...gradeVolume({
           driveLetter: "D",
           size: 100e9,

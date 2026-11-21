@@ -63,15 +63,33 @@ export function sensorRows(data) {
         unit: "°C",
         level: level(d.temperature, ssd ? LIMITS.ssd : LIMITS.hdd),
       });
-    if (ssd && d.wear != null)
+    // Journal de santé NVMe en priorité : l'usure qu'il donne est celle que
+    // le SSD calcule lui-même (le compteur de Windows reste souvent à 0).
+    const wear = d.nvme?.percentageUsed ?? d.wear;
+    if (ssd && wear != null) {
+      const heat = d.nvme?.warningTempMinutes ?? null;
+      const critical = d.nvme?.criticalTempMinutes ?? null;
+      // Quelques minutes au-dessus du seuil d'alerte arrivent ; au-delà
+      // d'une heure, ou dès la moindre minute au seuil critique, le SSD a
+      // vraiment chauffé.
+      const heatLevel =
+        critical > 0 ? "problem" : heat >= 60 ? "warning" : "ok";
+      const wearLevel = level(wear, WEAR);
+      const rank = { ok: 0, unknown: 0, warning: 1, problem: 2 };
       rows.push({
         kind: "wear",
         name: d.name,
-        value: d.wear,
+        value: wear,
         unit: "%",
-        level: level(d.wear, WEAR),
-        extra: { hours: d.powerOnHours },
+        level: rank[heatLevel] > rank[wearLevel] ? heatLevel : wearLevel,
+        extra: {
+          hours: d.nvme?.powerOnHours ?? d.powerOnHours,
+          heatMinutes: heat,
+          criticalMinutes: critical,
+          mediaErrors: d.nvme?.mediaErrors ?? null,
+        },
       });
+    }
   }
   for (const g of data.gpus ?? []) {
     if (g.fan != null)
@@ -116,4 +134,24 @@ export function seriesSummary(values) {
   if (v.length === 0) return null;
   const avg = v.reduce((a, b) => a + b, 0) / v.length;
   return { avg: Math.round(avg), max: Math.round(Math.max(...v)) };
+}
+
+/**
+ * Ralentissements de la carte graphique pendant le suivi, en secondes. La
+ * carte n'est lue qu'une seconde sur deux : chaque relevé compte pour
+ * l'intervalle depuis le précédent.
+ * @param {{ t: number, gpuThermal?: boolean|null, gpuPower?: boolean|null }[]} samples
+ * @returns {{ thermal: number, power: number } | null} null sans relevé de la carte
+ */
+export function slowdownSummary(samples) {
+  const read = samples.filter((s) => s.gpuThermal != null);
+  if (read.length === 0) return null;
+  let thermal = 0;
+  let power = 0;
+  for (let i = 0; i < read.length; i++) {
+    const span = i > 0 ? (read[i].t - read[i - 1].t) / 1000 : 1;
+    if (read[i].gpuThermal) thermal += span;
+    if (read[i].gpuPower) power += span;
+  }
+  return { thermal: Math.round(thermal), power: Math.round(power) };
 }

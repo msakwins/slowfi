@@ -7,7 +7,12 @@ import styled from "styled-components";
 import { Title, Lead, Button, SEVERITY } from "../ui/theme.js";
 import { useText } from "../ui/i18n.jsx";
 import { desktop } from "../ui/desktop.js";
-import { sensorRows, disksNeedAdmin, seriesSummary } from "../lib/sensors.js";
+import {
+  sensorRows,
+  disksNeedAdmin,
+  seriesSummary,
+  slowdownSummary,
+} from "../lib/sensors.js";
 
 const TEXT = {
   fr: {
@@ -21,6 +26,14 @@ const TEXT = {
     gpuFan: (name) => `${name}`,
     wearValue: (v) => `${v} % d'endurance consommée`,
     hours: (h) => `${h.toLocaleString("fr-FR")} heures d'utilisation`,
+    heat: (m, crit) =>
+      crit > 0
+        ? `${duration(m, "fr")} au-dessus de sa température d'alerte, dont ${duration(crit, "fr")} au seuil critique`
+        : m > 0
+          ? `${duration(m, "fr")} au-dessus de sa température d'alerte depuis sa mise en service`
+          : "jamais au-dessus de sa température d'alerte",
+    mediaErrors: (n) =>
+      `${n} erreur${n > 1 ? "s" : ""} de lecture enregistrée${n > 1 ? "s" : ""}`,
     noFans:
       "Ventilateurs du processeur et du boîtier : lisibles seulement par le logiciel du fabricant de la carte mère",
     noSensors:
@@ -43,6 +56,11 @@ const TEXT = {
     },
     summary: (s, unit) =>
       `${s.avg} ${unit} en moyenne, ${s.max} ${unit} au plus haut`,
+    slowNone: "Carte graphique jamais ralentie pendant le suivi",
+    slowThermal: (n) =>
+      `Carte graphique ralentie par la chaleur pendant ${n} s : elle baisse sa vitesse pour ne pas surchauffer. Dépoussiérer la carte et vérifier que ses ventilateurs tournent`,
+    slowPower: (n) =>
+      `Carte graphique bridée par sa limite de consommation pendant ${n} s, comportement normal en pleine charge`,
   },
   en: {
     title: "Sensors",
@@ -55,6 +73,13 @@ const TEXT = {
     gpuFan: (name) => `${name}`,
     wearValue: (v) => `${v}% of endurance used`,
     hours: (h) => `${h.toLocaleString("en-US")} hours of use`,
+    heat: (m, crit) =>
+      crit > 0
+        ? `${duration(m, "en")} above its alert temperature, ${duration(crit, "en")} of it at the critical limit`
+        : m > 0
+          ? `${duration(m, "en")} above its alert temperature since first use`
+          : "never above its alert temperature",
+    mediaErrors: (n) => `${n} recorded read error${n > 1 ? "s" : ""}`,
     noFans:
       "Processor and case fans: readable only by the motherboard maker's software",
     noSensors: "No sensor readable without administrator rights on this system",
@@ -76,8 +101,22 @@ const TEXT = {
     },
     summary: (s, unit) =>
       `${s.avg} ${unit} on average, ${s.max} ${unit} at peak`,
+    slowNone: "Graphics card never slowed down during tracking",
+    slowThermal: (n) =>
+      `Graphics card slowed down by heat for ${n} s: it lowers its speed to avoid overheating. Dust off the card and check that its fans spin`,
+    slowPower: (n) =>
+      `Graphics card held back by its power limit for ${n} s, normal at full load`,
   },
 };
+
+/** Durée en minutes, lisible : « 45 min », « 5 h », « 3 jours ». */
+function duration(min, lang) {
+  if (min < 60) return `${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 48) return `${h} h`;
+  const d = Math.round(h / 24);
+  return lang === "fr" ? `${d} jours` : `${d} days`;
+}
 
 const HARDWARE = {
   "--accent": "#f97316",
@@ -218,6 +257,23 @@ function LineChart({ samples }) {
   );
 }
 
+/** Ralentissements de la carte graphique pendant le suivi. */
+function Slowdown({ samples, t }) {
+  const slow = slowdownSummary(samples);
+  if (!slow) return null;
+  return (
+    <>
+      {slow.thermal > 0 && (
+        <Note style={{ color: SEVERITY.warning.color }}>
+          {t.slowThermal(slow.thermal)}
+        </Note>
+      )}
+      {slow.power > 0 && <Note>{t.slowPower(slow.power)}</Note>}
+      {slow.thermal === 0 && slow.power === 0 && <Note>{t.slowNone}</Note>}
+    </>
+  );
+}
+
 export default function Sensors() {
   const t = useText(TEXT);
   const [data, setData] = useState(null);
@@ -317,6 +373,10 @@ export default function Sensors() {
                     [
                       t.wearValue(r.value),
                       r.extra?.hours && t.hours(r.extra.hours),
+                      r.extra?.heatMinutes != null &&
+                        t.heat(r.extra.heatMinutes, r.extra.criticalMinutes),
+                      r.extra?.mediaErrors > 0 &&
+                        t.mediaErrors(r.extra.mediaErrors),
                     ]
                       .filter(Boolean)
                       .join(", "),
@@ -382,6 +442,7 @@ export default function Sensors() {
               );
             })}
           </Legend>
+          <Slowdown samples={samples} t={t} />
         </>
       )}
     </Section>

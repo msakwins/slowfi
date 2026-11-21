@@ -159,18 +159,43 @@ function readHwmon() {
 /**
  * @returns {Promise<{ platform: string, zones: {name:string, celsius:number}[], fans: {name:string, rpm:number}[], disks: object[], gpus: object[] }>}
  */
+/**
+ * Journal de santé des SSD NVMe (nvme-health.ps1) : usure, heures, minutes
+ * passées trop chaud depuis la fabrication. Une entrée par SSD NVMe.
+ */
+async function readNvmeHealth() {
+  let script;
+  try {
+    // Lu depuis l'archive de l'application : Electron sait lire dans app.asar.
+    script = fs.readFileSync(path.join(__dirname, "nvme-health.ps1"), "utf8");
+  } catch {
+    return [];
+  }
+  const out = await run("powershell.exe", powershellArgs(script), 60_000);
+  return (out ?? "")
+    .split(/\r?\n/)
+    .map((line) => parseJson(line.trim()))
+    .filter((d) => d?.readable);
+}
+
 async function readSensors() {
   const gpus = await readNvidia();
   if (process.platform === "win32") {
-    const data =
-      parseJson(
-        await run("powershell.exe", powershellArgs(WINDOWS_SENSORS), 60_000),
-      ) ?? {};
+    const [raw, nvme] = await Promise.all([
+      run("powershell.exe", powershellArgs(WINDOWS_SENSORS), 60_000),
+      readNvmeHealth(),
+    ]);
+    const data = parseJson(raw) ?? {};
+    // Chaque SSD NVMe reçoit son journal de santé, reconnu à son nom.
+    const disks = [data.disks ?? []].flat().map((d) => ({
+      ...d,
+      nvme: nvme.find((n) => n.name === d.name) ?? null,
+    }));
     return {
       platform: "windows",
       zones: [data.zones ?? []].flat(),
       fans: [],
-      disks: [data.disks ?? []].flat(),
+      disks,
       gpus,
     };
   }
@@ -206,6 +231,41 @@ async function readDisksAsAdmin() {
   }
 }
 
+// ── Ralentissements de la carte NVIDIA ───────────────────────────────────────
+// La carte baisse d'elle-même sa fréquence quand elle chauffe trop
+// (« thermal ») ou atteint sa limite de consommation (« power »). Les champs
+// s'appellent clocks_event_reasons depuis 2023, clocks_throttle_reasons
+// avant : l'ancien nom sert de repli.
+
+const SLOW_FIELDS = [
+  "hw_thermal_slowdown",
+  "sw_thermal_slowdown",
+  "sw_power_cap",
+  "hw_power_brake_slowdown",
+];
+let slowPrefix = "clocks_event_reasons";
+
+async function readSlowdown() {
+  for (const prefix of [slowPrefix, "clocks_throttle_reasons"]) {
+    const out = await run(
+      "nvidia-smi",
+      [
+        `--query-gpu=${SLOW_FIELDS.map((f) => `${prefix}.${f}`).join(",")}`,
+        "--format=csv,noheader",
+      ],
+      8000,
+    );
+    const line = out?.trim().split(/\r?\n/)[0];
+    if (!line || /field|invalid/i.test(line)) continue;
+    slowPrefix = prefix;
+    const [hwHot, swHot, power, brake] = line
+      .split(",")
+      .map((v) => /^\s*active/i.test(v));
+    return { thermal: hwHot || swHot, power: power || brake };
+  }
+  return null;
+}
+
 // ── Suivi dans le temps ─────────────────────────────────────────────────────
 
 let lastCpu = null;
@@ -231,13 +291,21 @@ async function sample(withGpu) {
   }
   lastCpu = now;
   const memory = Math.round((1 - os.freemem() / os.totalmem()) * 1000) / 10;
-  const gpu = withGpu ? ((await readNvidia())[0] ?? null) : null;
+  const [gpu, slow] = withGpu
+    ? await Promise.all([
+        readNvidia().then((g) => g[0] ?? null),
+        readSlowdown(),
+      ])
+    : [null, null];
   return {
     t: Date.now(),
     cpu,
     memory,
     gpuLoad: gpu?.load ?? null,
     gpuTemperature: gpu?.temperature ?? null,
+    // Ralentie pour chaleur ou pour consommation, à cet instant.
+    gpuThermal: slow ? slow.thermal : null,
+    gpuPower: slow ? slow.power : null,
   };
 }
 
