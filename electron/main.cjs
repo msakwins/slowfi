@@ -177,6 +177,19 @@ function smokeTest(win) {
       typeof report.hardware === "string" &&
       !report.hardware.startsWith("erreur");
     console.log(JSON.stringify(report), ok ? "OK" : "ÉCHEC");
+    // Sur GitHub Actions, l'échec devient une annotation, lisible sans
+    // ouvrir les journaux. Les retours à la ligne s'y écrivent %0A.
+    if (!ok && process.env.GITHUB_ACTIONS) {
+      const brief = { ...report };
+      for (const k of ["drivers", "sensors"])
+        if (Array.isArray(brief[k])) brief[k] = brief[k].slice(0, 6);
+      console.log(
+        `::error title=Smoke test (${process.platform})::${JSON.stringify(brief)
+          .slice(0, 3000)
+          .replace(/%/g, "%25")
+          .replace(/\r?\n/g, "%0A")}`,
+      );
+    }
     app.exit(ok ? 0 : 1);
   };
   // Filet de sécurité : quatre minutes au plus, quoi qu'il arrive.
