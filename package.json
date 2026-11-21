@@ -1,7 +1,7 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Diagnostic de connexion, de matériel et de périphériques",
   "author": "Slowfi",
   "homepage": "https://www.slowfi.app",
@@ -42,6 +42,7 @@
       "electron/main.cjs",
       "electron/preload.cjs",
       "electron/sensors.cjs",
+      "electron/updater.cjs",
       "src/lib/catalog.js",
       "src/lib/vendors.js",
       "src/lib/driverLookup.js",
@@ -94,5 +95,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/msakwins/slowfi.git"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }

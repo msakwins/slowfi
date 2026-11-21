@@ -22,6 +22,7 @@ const { spawn } = require("node:child_process");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const sensors = require("./sensors.cjs");
+const { setupUpdates } = require("./updater.cjs");
 
 const DIST = path.join(__dirname, "..", "dist");
 const ORIGIN = "app://slowfi";
@@ -232,7 +233,8 @@ function smokeTest(win) {
     );
     Object.assign(report, typeof first === "string" ? { start: first } : first);
     // Analyse du matériel réelle : ouvrir le menu, lancer, attendre le verdict.
-    report.hardware = await step(`(async () => {
+    report.hardware = await step(
+      `(async () => {
       const button = (text) =>
         [...document.querySelectorAll("button")].find((b) => b.textContent.includes(text));
       // Diagnostic complet, matériel seul : la lecture part d'elle-même.
@@ -248,10 +250,13 @@ function smokeTest(win) {
         if (verdict) return verdict[0];
       }
       return null;
-    })()`, 90000);
+    })()`,
+      90000,
+    );
     // Mises à jour des pilotes (Windows) : affichées, sans faire échouer la
     // vérification, car elles dépendent du réseau et du matériel présent.
-    report.drivers = await step(`(async () => {
+    report.drivers = await step(
+      `(async () => {
       for (let i = 0; i < 40; i++) {
         const text = document.body.innerText;
         const at = text.search(/Mises à jour des pilotes/i);
@@ -261,10 +266,13 @@ function smokeTest(win) {
         await new Promise((r) => setTimeout(r, 500));
       }
       return "délai dépassé";
-    })()`, 30000);
+    })()`,
+      30000,
+    );
     // Capteurs : lecture, puis quelques secondes de suivi. Absents sur une
     // machine de CI : noté, sans faire échouer.
-    report.sensors = await step(`(async () => {
+    report.sensors = await step(
+      `(async () => {
       const section = () =>
         [...document.querySelectorAll("section")].find((s) =>
           s.querySelector("h2")?.textContent === "Capteurs",
@@ -279,7 +287,9 @@ function smokeTest(win) {
       await new Promise((r) => setTimeout(r, 6000));
       section().scrollIntoView();
       return section().innerText.split("\\n").filter(Boolean);
-    })()`, 60000);
+    })()`,
+      60000,
+    );
     // Capture d'écran, pour vérifier l'affichage : SLOWFI_SHOT=chemin.png
     if (process.env.SLOWFI_SHOT) {
       const image = await win.webContents.capturePage();
@@ -322,6 +332,7 @@ if (!app.requestSingleInstanceLock()) {
       fromApp(event) ? sensors.sample(Boolean(withGpu)) : null,
     );
     createWindow();
+    setupUpdates();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

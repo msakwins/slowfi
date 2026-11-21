@@ -24,7 +24,9 @@ app.whenReady().then(async () => {
   const html = `<html><body style="margin:0;background:transparent">
     <img src="data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}"
       width="${SIZE}" height="${SIZE}" style="display:block"></body></html>`;
-  await win.loadURL(`data:text/html;base64,${Buffer.from(html).toString("base64")}`);
+  await win.loadURL(
+    `data:text/html;base64,${Buffer.from(html).toString("base64")}`,
+  );
   await new Promise((r) => setTimeout(r, 500));
   const image = await win.webContents.capturePage();
   const png = image.resize({ width: SIZE, height: SIZE }).toPNG();

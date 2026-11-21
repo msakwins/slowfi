@@ -16,6 +16,7 @@ import ManualChecks from "./ManualChecks.jsx";
 import Legal from "./Legal.jsx";
 import AppPage from "./AppPage.jsx";
 import { desktop } from "../ui/desktop.js";
+import UpdateBanner from "../ui/UpdateBanner.jsx";
 
 export { GlobalStyle };
 
@@ -193,6 +194,7 @@ export default function Slowfi() {
         </Actions>
       </Header>
       <Current />
+      {desktop && <UpdateBanner />}
       <Footer>
         <nav>
           {Object.keys(PAGES)
