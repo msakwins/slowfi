@@ -1,0 +1,389 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Capteurs (application desktop seulement) : températures, usure des SSD,
+// ventilateurs, puis suivi de la charge pendant une minute.
+// ─────────────────────────────────────────────────────────────────────────────
+import React, { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { Title, Lead, Button, SEVERITY } from "../ui/theme.js";
+import { useText } from "../ui/i18n.jsx";
+import { desktop } from "../ui/desktop.js";
+import { sensorRows, disksNeedAdmin, seriesSummary } from "../lib/sensors.js";
+
+const TEXT = {
+  fr: {
+    title: "Capteurs",
+    lead: "Températures, usure des SSD et ventilateurs, lus directement sur cet ordinateur",
+    reading: "Lecture des capteurs…",
+    temps: "Températures",
+    wear: "Usure des SSD",
+    fans: "Ventilateurs",
+    zone: "Carte mère (zone thermique)",
+    gpuFan: (name) => `${name}`,
+    wearValue: (v) => `${v} % d'endurance consommée`,
+    hours: (h) => `${h.toLocaleString("fr-FR")} heures d'utilisation`,
+    noFans:
+      "Ventilateurs du processeur et du boîtier : lisibles seulement par le logiciel du fabricant de la carte mère",
+    noSensors:
+      "Aucun capteur lisible sans droits administrateur sur ce système",
+    admin: "Lire les disques avec les droits administrateur",
+    adminNote:
+      "Windows demande une autorisation : la lecture de l'usure et de la température des disques l'exige sur cet ordinateur",
+    reread: "Relire les capteurs",
+    track: "Suivi sur une minute",
+    trackLead:
+      "Charge du processeur, de la mémoire et de la carte graphique, une mesure par seconde. Lancer un jeu ou un programme lent pendant le suivi pour voir ce qui sature",
+    start: "Lancer le suivi",
+    stop: "Arrêter",
+    restart: "Relancer le suivi",
+    series: {
+      cpu: "Processeur",
+      memory: "Mémoire",
+      gpuLoad: "Carte graphique",
+      gpuTemperature: "Température graphique",
+    },
+    summary: (s, unit) =>
+      `${s.avg} ${unit} en moyenne, ${s.max} ${unit} au plus haut`,
+  },
+  en: {
+    title: "Sensors",
+    lead: "Temperatures, SSD wear and fans, read directly on this computer",
+    reading: "Reading sensors…",
+    temps: "Temperatures",
+    wear: "SSD wear",
+    fans: "Fans",
+    zone: "Motherboard (thermal zone)",
+    gpuFan: (name) => `${name}`,
+    wearValue: (v) => `${v}% of endurance used`,
+    hours: (h) => `${h.toLocaleString("en-US")} hours of use`,
+    noFans:
+      "Processor and case fans: readable only by the motherboard maker's software",
+    noSensors: "No sensor readable without administrator rights on this system",
+    admin: "Read the drives with administrator rights",
+    adminNote:
+      "Windows asks for permission: reading drive wear and temperature requires it on this computer",
+    reread: "Read the sensors again",
+    track: "One-minute tracking",
+    trackLead:
+      "Processor, memory and graphics card load, one reading per second. Start a game or a slow program during tracking to see what saturates",
+    start: "Start tracking",
+    stop: "Stop",
+    restart: "Track again",
+    series: {
+      cpu: "Processor",
+      memory: "Memory",
+      gpuLoad: "Graphics card",
+      gpuTemperature: "Graphics temperature",
+    },
+    summary: (s, unit) =>
+      `${s.avg} ${unit} on average, ${s.max} ${unit} at peak`,
+  },
+};
+
+const HARDWARE = {
+  "--accent": "#f97316",
+  "--accent-light": "#fb923c",
+  "--accent-rgb": "249 115 22",
+};
+
+const SERIES = [
+  { key: "cpu", color: "#f97316", unit: "%" },
+  { key: "memory", color: "#a78bfa", unit: "%" },
+  { key: "gpuLoad", color: "#22d3ee", unit: "%" },
+  { key: "gpuTemperature", color: "#fb7185", unit: "°C" },
+];
+
+const SECONDS = 60;
+
+const Section = styled.section`
+  margin-top: 64px;
+`;
+
+const Group = styled.p`
+  margin: 28px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748b;
+`;
+
+const Rows = styled.ul`
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 9px 0;
+    border-top: 1px solid #111a2e;
+    font-size: 14px;
+    color: #e2e8f0;
+  }
+  .sub {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+  }
+  .value {
+    flex: none;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+const Note = styled.p`
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 62ch;
+`;
+
+const Chart = styled.svg`
+  display: block;
+  width: 100%;
+  height: 160px;
+  margin-top: 16px;
+  border-radius: 12px;
+  background: #0b1220;
+`;
+
+const Legend = styled.ul`
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #e2e8f0;
+
+  li::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+  .sub {
+    color: #64748b;
+  }
+`;
+
+/** Courbes du suivi : 0–100 sur l'axe vertical, une minute en largeur. */
+function LineChart({ samples }) {
+  const W = 600;
+  const H = 160;
+  const x = (i) => (i / (SECONDS - 1)) * W;
+  const y = (v) => H - 8 - (Math.min(v, 100) / 100) * (H - 16);
+  return (
+    <Chart
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {[25, 50, 75].map((g) => (
+        <line
+          key={g}
+          x1="0"
+          x2={W}
+          y1={y(g)}
+          y2={y(g)}
+          stroke="#1e293b"
+          strokeWidth="1"
+        />
+      ))}
+      {SERIES.map(({ key, color }) => {
+        const points = samples
+          .map((s, i) => (s[key] == null ? null : `${x(i)},${y(s[key])}`))
+          .filter(Boolean);
+        if (points.length < 2) return null;
+        return (
+          <polyline
+            key={key}
+            points={points.join(" ")}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+            strokeLinejoin="round"
+          />
+        );
+      })}
+    </Chart>
+  );
+}
+
+export default function Sensors() {
+  const t = useText(TEXT);
+  const [data, setData] = useState(null);
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [samples, setSamples] = useState([]);
+  const [tracking, setTracking] = useState(false);
+  const stopRef = useRef(false);
+
+  const read = async () => {
+    setData(null);
+    setData(await desktop.sensors());
+  };
+
+  useEffect(() => {
+    read();
+    return () => {
+      stopRef.current = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const readAsAdmin = async () => {
+    setAdminBusy(true);
+    try {
+      const disks = await desktop.sensorsAdmin();
+      if (disks) setData((d) => ({ ...d, disks }));
+    } finally {
+      setAdminBusy(false);
+    }
+  };
+
+  const track = async () => {
+    stopRef.current = false;
+    setTracking(true);
+    setSamples([]);
+    const withGpu = (data?.gpus ?? []).length > 0;
+    await desktop.sample(false); // point de départ du calcul de charge
+    for (let i = 0; i < SECONDS && !stopRef.current; i++) {
+      const started = Date.now();
+      // La carte graphique une seconde sur deux : nvidia-smi prend du temps.
+      const s = await desktop.sample(withGpu && i % 2 === 0);
+      setSamples((prev) => [...prev, s]);
+      await new Promise((r) =>
+        setTimeout(r, Math.max(0, 1000 - (Date.now() - started))),
+      );
+    }
+    setTracking(false);
+  };
+
+  const rows = data ? sensorRows(data) : [];
+  const temps = rows.filter((r) => ["gpu", "zone", "disk"].includes(r.kind));
+  const wear = rows.filter((r) => r.kind === "wear");
+  const fans = rows.filter((r) => ["gpuFan", "fan"].includes(r.kind));
+
+  const name = (r) => (r.kind === "zone" ? t.zone : r.name);
+  const row = (r, value, sub) => (
+    <li key={`${r.kind}-${r.name}`}>
+      <span>
+        {name(r)}
+        {sub && <span className="sub">{sub}</span>}
+      </span>
+      <span
+        className="value"
+        style={{ color: SEVERITY[r.level]?.color ?? "#e2e8f0" }}
+      >
+        {value}
+      </span>
+    </li>
+  );
+
+  return (
+    <Section style={HARDWARE}>
+      <Title as="h2">{t.title}</Title>
+      <Lead>{t.lead}</Lead>
+
+      {!data ? (
+        <Note>{t.reading}</Note>
+      ) : (
+        <>
+          {rows.length === 0 && <Note>{t.noSensors}</Note>}
+          {temps.length > 0 && (
+            <>
+              <Group>{t.temps}</Group>
+              <Rows>
+                {temps.map((r) => row(r, `${Math.round(r.value)} °C`))}
+              </Rows>
+            </>
+          )}
+          {wear.length > 0 && (
+            <>
+              <Group>{t.wear}</Group>
+              <Rows>
+                {wear.map((r) =>
+                  row(
+                    r,
+                    `${r.value} %`,
+                    [
+                      t.wearValue(r.value),
+                      r.extra?.hours && t.hours(r.extra.hours),
+                    ]
+                      .filter(Boolean)
+                      .join(", "),
+                  ),
+                )}
+              </Rows>
+            </>
+          )}
+          {disksNeedAdmin(data) && (
+            <>
+              <Note>{t.adminNote}</Note>
+              <div style={{ marginTop: 12 }}>
+                <Button onClick={readAsAdmin} disabled={adminBusy}>
+                  {t.admin}
+                </Button>
+              </div>
+            </>
+          )}
+          <Group>{t.fans}</Group>
+          {fans.length > 0 && (
+            <Rows>
+              {fans.map((r) =>
+                row(
+                  r,
+                  r.unit === "%" ? `${r.value} %` : `${r.value} ${r.unit}`,
+                ),
+              )}
+            </Rows>
+          )}
+          {data.platform === "windows" && <Note>{t.noFans}</Note>}
+        </>
+      )}
+
+      <Group>{t.track}</Group>
+      <Note>{t.trackLead}</Note>
+      <div style={{ marginTop: 14 }}>
+        {tracking ? (
+          <Button
+            onClick={() => {
+              stopRef.current = true;
+            }}
+          >
+            {t.stop}
+          </Button>
+        ) : (
+          <Button $primary onClick={track} disabled={!data}>
+            {samples.length ? t.restart : t.start}
+          </Button>
+        )}
+      </div>
+      {samples.length > 1 && (
+        <>
+          <LineChart samples={samples} />
+          <Legend>
+            {SERIES.map(({ key, color, unit }) => {
+              const s = seriesSummary(samples.map((p) => p[key]));
+              if (!s) return null;
+              return (
+                <li key={key} style={{ "--dot": color }}>
+                  {t.series[key]}{" "}
+                  <span className="sub">{t.summary(s, unit)}</span>
+                </li>
+              );
+            })}
+          </Legend>
+        </>
+      )}
+    </Section>
+  );
+}

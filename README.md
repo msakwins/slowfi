@@ -95,22 +95,39 @@ Ce qu'un site ne peut pas obtenir, même par copier-coller : ces mesures
 demandent des droits administrateur ou un accès direct au matériel, et
 attendront l'application.
 
-- [ ] Températures du processeur, de la carte graphique et des disques.
-- [ ] Usure des SSD (pourcentage d'endurance consommé, données SMART
-      détaillées) : `Get-StorageReliabilityCounter` exige les droits
-      administrateur.
-- [ ] Vitesse des ventilateurs et état de l'alimentation.
-- [ ] Suivi dans le temps : charge du processeur et de la mémoire sur
-      plusieurs minutes, plutôt qu'un instantané.
+- [x] Températures : carte graphique NVIDIA (nvidia-smi), zone thermique de la
+      carte mère et disques sous Windows, capteurs hwmon sous Linux.
+- [x] Usure des SSD : `Get-StorageReliabilityCounter`, relancé avec les droits
+      administrateur si Windows l'exige.
+- [x] Ventilateurs : carte graphique NVIDIA, et hwmon sous Linux. Ceux du
+      processeur et du boîtier restent illisibles sous Windows sans le logiciel
+      du fabricant de la carte mère.
+- [x] Suivi sur une minute : processeur, mémoire, carte graphique.
+- [ ] macOS : les capteurs demandent `sudo powermetrics`.
 
 ## Déploiement
 
 Vercel (`vercel.json`) : build Vite, sortie dans `dist/`. La CI GitHub Actions
 lance les tests et le build à chaque push sur `main`.
 
+## Application desktop
+
+Electron (`electron/`) : la même page, servie en local, qui lance elle-même
+les lectures de l'analyse au lieu de demander un copier-coller.
+
+- `npm run app` : construit le site et ouvre l'application.
+- `npm run app:dist` : installateur du système courant, dans `release/`.
+- `npx electron . --smoke` : vérification rapide (page, lecture par le shell,
+  analyse du matériel), utilisée aussi par la CI.
+- Version : changer `version` dans `package.json`, puis pousser un tag
+  `v0.x.y`. Le workflow `Desktop` construit les installateurs Windows, macOS
+  et Linux et les joint à un brouillon de release GitHub, à publier à la main.
+- Les installateurs ne sont pas encore signés : Windows SmartScreen et macOS
+  Gatekeeper affichent un avertissement à la première ouverture.
+
 ## Stack
 
-React 19 · Vite · styled-components · Vitest · oxlint
+React 19 · Vite · styled-components · Vitest · oxlint · Electron
 
 ## Licence
 

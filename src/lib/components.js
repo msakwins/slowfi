@@ -31,6 +31,10 @@ export function parseComponents(raw) {
 
   for (const f of parseBlocks(raw)) {
     if ("DeviceName" in f && "DriverDate" in f) {
+      // Seuls les pilotes réseau comptent ici ; les autres classes servent à
+      // la recherche de mises à jour (drivers.js).
+      const cls = field(f, "DeviceClass");
+      if (cls && cls.toUpperCase() !== "NET") continue;
       // Pilote réseau (Win32_PnPSignedDriver) : à tester avant les cartes
       // graphiques, qui ont aussi un champ DriverVersion.
       netDrivers.push({

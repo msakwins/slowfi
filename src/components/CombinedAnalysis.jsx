@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Diagnostic complet : choisir les analyses (connexion, matériel,
-// périphériques), puis avancer étape par étape — test de débit, commande (ou
-// saisie guidée), résultats. Une étape terminée se replie en une ligne de
+// Diagnostic approfondi, sous le test de débit de l'accueil : choisir les
+// analyses (réseau local, matériel, périphériques), puis avancer étape par
+// étape — commande (ou saisie guidée), résultats. Une étape terminée se replie en une ligne de
 // résumé et la suivante s'ouvre.
 //
 // Chaque bouton prend la couleur de sa section. La commande se construit à
@@ -11,10 +11,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLang } from "../ui/i18n.jsx";
-import { Subtitle, Ghost, NeonButton, Lead } from "../ui/theme.js";
+import { Subtitle, NeonButton, Lead } from "../ui/theme.js";
 import { diagnosticIntro } from "../lib/intro.js";
 import { Unfold } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import { desktop } from "../ui/desktop.js";
 import { windowsCommand, macCommand, linuxCommand } from "../lib/commands.js";
 import { analyzeDevices } from "../lib/devices.js";
 import {
@@ -29,11 +30,9 @@ import {
   DEVICES_LINUX,
 } from "../lib/examples.js";
 import { analyzeWifi, WifiResult, WIFI_COMMANDS } from "./NetworkAnalysis.jsx";
-import SpeedTest from "./SpeedTest.jsx";
 import WifiManual from "./WifiManual.jsx";
 import HardwareManual from "./HardwareManual.jsx";
 import DeviceManual from "./DeviceManual.jsx";
-import { gradeConnection } from "../lib/connection.js";
 import {
   analyzeHardware,
   HardwareResults,
@@ -64,41 +63,30 @@ const accentVars = (k) => ({
 const TEXT = {
   fr: {
     pick: "Analyses à inclure",
-    // Le bouton « Connexion » couvre le test de débit et le réseau local.
     labels: {
-      network: "Connexion",
+      network: "Réseau local",
       hardware: "Matériel",
       devices: "Périphériques",
     },
-    results: { network: "Réseau local" },
     none: "Choisir au moins une analyse",
     start: "Lancer le diagnostic",
     steps: {
-      speed: "Test de débit",
       command: "Commande",
+      reading: "Analyse",
       results: "Résultats",
     },
     step: (n) => `Étape ${n}`,
-    skip: "Passer à l'étape suivante",
-    grades: {
-      excellent: "Excellente",
-      good: "Bonne",
-      fair: "Correcte",
-      poor: "Faible",
-    },
     // Juste au-dessus du bouton, avant le lancement : une ligne par analyse.
     launch: {
-      network: "Test de débit et contrôle du Wi-Fi, de la box et du câblage",
+      network: "Contrôle du Wi-Fi, de la box et du câblage",
       hardware:
         "Contrôle du système, des disques, de la mémoire, du processeur, de la carte graphique et de la batterie",
       devices:
         "Contrôle des périphériques branchés : audio, caméra, clavier, souris, Bluetooth et écrans",
     },
     intro: {
-      speed:
-        "L'analyse de connexion teste le débit descendant et montant, la latence et la stabilité de la ligne",
       network:
-        "Une analyse approfondie du Wi-Fi, de la box et du câblage permet de comparer ce résultat au débit maximal atteignable",
+        "Une analyse approfondie du Wi-Fi, de la box et du câblage permet de comparer le débit mesuré au débit maximal atteignable",
       hardware:
         "Contrôle du système, des disques, de la mémoire, du processeur, de la carte graphique, du firmware et de la batterie, avec un correctif pour chaque problème détecté",
       devices:
@@ -113,34 +101,28 @@ const TEXT = {
   en: {
     pick: "Analyses to include",
     labels: {
-      network: "Connection",
+      network: "Local network",
       hardware: "Hardware",
       devices: "Devices",
     },
-    results: { network: "Local network" },
     none: "Choose at least one analysis",
     start: "Run the diagnostic",
-    steps: { speed: "Speed test", command: "Command", results: "Results" },
-    step: (n) => `Step ${n}`,
-    skip: "Skip to the next step",
-    grades: {
-      excellent: "Excellent",
-      good: "Good",
-      fair: "Fair",
-      poor: "Poor",
+    steps: {
+      command: "Command",
+      reading: "Analysis",
+      results: "Results",
     },
+    step: (n) => `Step ${n}`,
     launch: {
-      network: "Speed test and a check of the Wi-Fi, router and cabling",
+      network: "Checks the Wi-Fi, router and cabling",
       hardware:
         "Checks the system, drives, memory, processor, graphics card and battery",
       devices:
         "Checks connected devices: audio, camera, keyboard, mouse, Bluetooth and displays",
     },
     intro: {
-      speed:
-        "The connection analysis tests download and upload speed, latency and line stability",
       network:
-        "An in-depth analysis of the Wi-Fi, router and cabling compares this result with the maximum achievable speed",
+        "An in-depth analysis of the Wi-Fi, router and cabling compares the measured speed with the maximum achievable speed",
       hardware:
         "Checks the system, drives, memory, processor, graphics card, firmware and battery, with a fix for every problem detected",
       devices:
@@ -223,11 +205,10 @@ const Missing = styled.p`
 
 /**
  * @param {{
- *   download?: number|null,            débit mesuré par le dernier test
- *   onMeasured?: (m: object) => void,  transmet les mesures d'un test terminé
+ *   download?: number|null,  débit mesuré par le test de l'accueil
  * }} props
  */
-export default function CombinedAnalysis({ download, onMeasured }) {
+export default function CombinedAnalysis({ download }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   const [chosen, setChosen] = useState({
@@ -236,15 +217,12 @@ export default function CombinedAnalysis({ download, onMeasured }) {
     devices: true,
   });
   const keys = KEYS.filter((k) => chosen[k]);
-  const offset = chosen.network ? 1 : 0;
 
-  // Une étape après l'autre : le test de débit (si « Connexion » est choisi),
-  // puis la commande une fois le test terminé, puis les résultats.
-  //   idle → speed → command
+  // Une étape après l'autre : la commande, puis les résultats.
+  //   idle → command
   const [phase, setPhase] = useState("idle");
   // Une étape terminée se replie en une ligne de résumé ; un clic la rouvre.
-  const [open, setOpen] = useState({ speed: true, command: true });
-  const [measures, setMeasures] = useState(null);
+  const [open, setOpen] = useState({ command: true });
   const [res, setRes] = useState(null);
 
   const variants = useMemo(() => {
@@ -269,7 +247,7 @@ export default function CombinedAnalysis({ download, onMeasured }) {
     const join = (parts) => parts.filter(Boolean).join("\n\n");
     return {
       windows: {
-        command: win.length ? windowsCommand(win) : "",
+        command: win.length ? windowsCommand(win, lang) : "",
         example: join([
           chosen.hardware && HARDWARE_WINDOWS,
           chosen.devices && DEVICES_WINDOWS,
@@ -278,7 +256,7 @@ export default function CombinedAnalysis({ download, onMeasured }) {
         about: t.about,
       },
       mac: {
-        command: mac.length ? macCommand(mac) : "",
+        command: mac.length ? macCommand(mac, lang) : "",
         example: join([
           chosen.hardware && HARDWARE_MAC,
           chosen.devices && DEVICES_MAC,
@@ -296,7 +274,7 @@ export default function CombinedAnalysis({ download, onMeasured }) {
         about: t.about,
       },
     };
-  }, [chosen, t.about]);
+  }, [chosen, t.about, lang]);
 
   const analyze = useCallback(
     (raw) => {
@@ -310,33 +288,23 @@ export default function CombinedAnalysis({ download, onMeasured }) {
     [chosen],
   );
 
-  // Dès qu'un résultat arrive, l'étape « Commande » se replie ; s'il
-  // disparaît (texte effacé), elle se rouvre.
-  const onResult = useCallback((r) => {
-    setRes(r);
-    setOpen((o) => ({ ...o, command: !r }));
-  }, []);
+  // L'étape « Commande » reste ouverte après le collage : le texte collé
+  // reste sous les yeux, à corriger ou à recoller. Seul un clic sur
+  // l'intertitre la replie.
+  const onResult = useCallback((r) => setRes(r), []);
 
-  const n = (v) =>
-    v == null
-      ? "—"
-      : (Math.round(v * 10) / 10).toLocaleString(
-          lang === "fr" ? "fr-FR" : "en-GB",
-        );
-  const speedSummary = measures
-    ? `${t.grades[gradeConnection(measures).grade]} · ${n(measures.download)} / ${n(measures.upload)} Mb/s`
-    : null;
   const commandSummary = res
     ? keys
         .filter((k) => res[k])
-        .map((k) => t.results[k] ?? t.labels[k])
+        .map((k) => t.labels[k])
         .join(", ")
     : null;
 
   return (
     <>
       {/* Introduction accordée aux analyses choisies. */}
-      <Lead>{diagnosticIntro(chosen, lang)}</Lead>
+      {/* Rien de choisi : la consigne prend la place de l'introduction. */}
+      <Lead>{diagnosticIntro(chosen, lang) ?? t.none}</Lead>
       <Pick>{t.pick}</Pick>
       <Chips role="group" aria-label={t.pick}>
         {KEYS.map((k) => (
@@ -352,76 +320,40 @@ export default function CombinedAnalysis({ download, onMeasured }) {
         ))}
       </Chips>
 
-      {keys.length === 0 && <Missing>{t.none}</Missing>}
-
-      {/* Étape 1 — test de débit. Le composant reste monté une fois replié :
-          ses chiffres et son verdict restent disponibles. */}
-      {chosen.network && keys.length > 0 && (
-        <StepBox
-          style={accentVars("network")}
-          head={
-            phase !== "idle" ? { label: t.step(1), name: t.steps.speed } : null
-          }
-          summary={!open.speed ? speedSummary : null}
-          open={open.speed}
-          onToggle={() => setOpen((o) => ({ ...o, speed: !o.speed }))}
-        >
-          {phase === "idle" ? (
-            <Launch>
-              {keys.map((k) => (
-                <li key={k} style={accentVars(k)}>{t.launch[k]}</li>
-              ))}
-            </Launch>
-          ) : (
-            <Intro>{t.intro.speed}</Intro>
-          )}
-          <SpeedTest
-            onMeasured={(m) => {
-              onMeasured?.(m);
-              setMeasures(m);
-              setPhase("command");
-              setOpen((o) => ({ ...o, speed: false, command: true }));
-            }}
-            onStart={() => setPhase((p) => (p === "idle" ? "speed" : p))}
-            startLabel={t.start}
-            neon
-          />
-          {/* Échec du test, ou envie d'aller plus vite : la suite reste
-              accessible. */}
-          {phase === "speed" && (
-            <div style={{ marginTop: 12, marginLeft: -8, fontSize: 13 }}>
-              <Ghost
-                onClick={() => {
-                  setPhase("command");
-                  setOpen((o) => ({ ...o, speed: false, command: true }));
-                }}
-              >
-                {t.skip}
-              </Ghost>
-            </div>
-          )}
-        </StepBox>
-      )}
-
-      {/* Sans test de débit, un bouton lance directement la commande. */}
-      {!chosen.network && keys.length > 0 && phase !== "command" && (
+      {/* Avant le lancement : ce que couvre chaque analyse, puis le bouton.
+          Les trois lignes restent en place, celles qui ne sont pas choisies
+          s'estompent : cocher ou décocher ne fait pas bouger la page. */}
+      {phase !== "command" && (
         <>
           <Launch>
-            {keys.map((k) => (
-              <li key={k} style={accentVars(k)}>{t.launch[k]}</li>
+            {KEYS.map((k) => (
+              <li
+                key={k}
+                style={accentVars(k)}
+                aria-hidden={!chosen[k] || undefined}
+                className={chosen[k] ? undefined : "off"}
+              >
+                {t.launch[k]}
+              </li>
             ))}
           </Launch>
-          <NeonButton onClick={() => setPhase("command")}>
+          <NeonButton
+            onClick={() => setPhase("command")}
+            disabled={keys.length === 0}
+          >
             <span className="neon">{t.start}</span>
           </NeonButton>
         </>
       )}
 
-      {/* Étape 2 — commande (ou saisie guidée). */}
+      {/* Étape 1 — commande (ou saisie guidée). */}
       {keys.length > 0 && phase === "command" && (
         <Unfold gap={8} first={0.1}>
           <StepBox
-            head={{ label: t.step(offset + 1), name: t.steps.command }}
+            head={{
+              label: t.step(1),
+              name: desktop ? t.steps.reading : t.steps.command,
+            }}
             summary={!open.command ? commandSummary : null}
             open={open.command}
             onToggle={() => setOpen((o) => ({ ...o, command: !o.command }))}
@@ -429,7 +361,7 @@ export default function CombinedAnalysis({ download, onMeasured }) {
             <Intros>
               {keys.map((k) => (
                 <p key={k} style={accentVars(k)}>
-                  <strong>{t.results[k] ?? t.labels[k]}</strong>
+                  <strong>{t.labels[k]}</strong>
                   {t.intro[k]}
                 </p>
               ))}
@@ -449,17 +381,17 @@ export default function CombinedAnalysis({ download, onMeasured }) {
         </Unfold>
       )}
 
-      {/* Étape 3 — résultats. */}
+      {/* Étape 2 — résultats. */}
       {res && phase === "command" && (
         <Unfold gap={8} first={0.1}>
           <StepBox
-            head={{ label: t.step(offset + 2), name: t.steps.results }}
+            head={{ label: t.step(2), name: t.steps.results }}
             open
           >
             {keys.map((k) => (
               <Group key={k} style={accentVars(k)}>
                 <Subtitle style={{ color: "var(--accent)" }}>
-                  {t.results[k] ?? t.labels[k]}
+                  {t.labels[k]}
                 </Subtitle>
                 {!res[k] ? (
                   <Missing>{t.missing}</Missing>
@@ -591,6 +523,10 @@ const Launch = styled.ul`
   li {
     position: relative;
     padding-left: 18px;
+    transition: opacity 0.2s;
+  }
+  li.off {
+    opacity: 0.25;
   }
   li::before {
     content: "";
@@ -602,14 +538,6 @@ const Launch = styled.ul`
     border-radius: 50%;
     background: var(--accent);
   }
-`;
-
-const Intro = styled.p`
-  margin: 0 0 20px;
-  max-width: 62ch;
-  font-size: 15px;
-  line-height: 1.7;
-  color: #94a3b8;
 `;
 
 // Ce que couvre la commande, une ligne par analyse choisie, à sa couleur.
@@ -670,7 +598,7 @@ function CombinedManual({ system, onResult, keys }) {
   return keys.map((k) => (
     <Group key={k} style={{ ...accentVars(k), marginTop: 28 }}>
       <Subtitle style={{ color: "var(--accent)" }}>
-        {t.results[k] ?? t.labels[k]}
+        {t.labels[k]}
       </Subtitle>
       {k === "network" ? (
         <WifiManual system={system} onResult={setNetwork} />

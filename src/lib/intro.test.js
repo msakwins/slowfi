@@ -6,10 +6,10 @@ const all = { network: true, hardware: true, devices: true };
 describe("phrase d'introduction du diagnostic", () => {
   it("suit les analyses choisies, en français", () => {
     expect(diagnosticIntro(all, "fr")).toBe(
-      "Contrôle de la connexion, du matériel et des périphériques",
+      "Contrôle du réseau local, du matériel et des périphériques",
     );
     expect(diagnosticIntro({ network: true }, "fr")).toBe(
-      "Contrôle de la connexion",
+      "Contrôle du réseau local",
     );
     expect(diagnosticIntro({ hardware: true, devices: true }, "fr")).toBe(
       "Contrôle du matériel et des périphériques",
@@ -18,7 +18,7 @@ describe("phrase d'introduction du diagnostic", () => {
 
   it("et en anglais", () => {
     expect(diagnosticIntro(all, "en")).toBe(
-      "Checks the connection, hardware and devices",
+      "Checks the local network, hardware and devices",
     );
     expect(diagnosticIntro({ hardware: true }, "en")).toBe(
       "Checks the hardware",

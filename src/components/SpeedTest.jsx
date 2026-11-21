@@ -7,7 +7,7 @@ import React, { useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { runSpeedTest } from "../lib/speedtest.js";
 import { gradeConnection } from "../lib/connection.js";
-import { Button, Ghost, NeonButton, SEVERITY } from "../ui/theme.js";
+import { Button, NeonButton, SEVERITY } from "../ui/theme.js";
 import { Unfold, Verdict, VerdictHead, Findings } from "../ui/verdict.jsx";
 import { useCountUp } from "../ui/useCountUp.js";
 import Arrow from "../ui/Arrow.jsx";
@@ -37,8 +37,8 @@ const TEXT = {
     start: "Tester la connexion",
     again: "Relancer le test",
     next: "Lancer l'analyse du réseau local",
-    summary: "Copier le résumé",
-    summaryDone: "Résumé copié",
+    summary: "Copier le résultat",
+    summaryDone: "Résultat copié",
     down: "Descendant",
     up: "Montant",
     latency: "Latence",
@@ -62,8 +62,8 @@ const TEXT = {
     start: "Test the connection",
     again: "Run the test again",
     next: "Run the local network analysis",
-    summary: "Copy summary",
-    summaryDone: "Summary copied",
+    summary: "Copy result",
+    summaryDone: "Result copied",
     down: "Download",
     up: "Upload",
     latency: "Latency",
@@ -73,11 +73,50 @@ const TEXT = {
 };
 
 // Le cadre de la mesure, ouvert seulement une fois le test lancé.
+// Panneau du test : un léger dégradé d'ardoise, un peu plus clair que la
+// page, sans teinte.
 const Box = styled.div`
   border: 1px solid #1e293b;
   border-radius: 16px;
   padding: 24px;
-  background: linear-gradient(180deg, #0b1220 0%, #060b16 100%);
+  background: linear-gradient(180deg, #111a2e 0%, #0b1324 100%);
+`;
+
+const CopyRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+`;
+
+// Cachée tant que le test n'est pas survolé ; toujours visible au clavier
+// et sur écran tactile.
+const CopyIcon = styled.button`
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  color: ${(p) => (p.$done ? "#34d399" : "#64748b")};
+  opacity: ${(p) => (p.$done ? 1 : 0)};
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+
+  *:hover > ${CopyRow} > &,
+  &:focus-visible {
+    opacity: 1;
+  }
+  &:hover {
+    color: #cbd5e1;
+  }
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(34 211 238 / 0.35);
+  }
+  @media (hover: none) {
+    opacity: 1;
+  }
 `;
 
 const Gauges = styled.div`
@@ -161,7 +200,9 @@ const Readout = styled.div`
 
 const Status = styled.p`
   min-height: 20px;
-  margin: 0 0 16px;
+  /* Dernière ligne du panneau pendant la mesure : pas de marge sous elle,
+     le rembourrage du panneau suffit. */
+  margin: 0;
   font-size: 13px;
   color: #67e8f9;
 `;
@@ -196,9 +237,9 @@ const fillLog = (v, min, max) => {
   return Math.max(0, Math.min(100, pos * 100));
 };
 
-// Descendant : de 5 Mb/s à 2 Gb/s. Une fibre à 600 remplit environ 80 %, il
-// reste donc de la marge visible pour les lignes multi-gigabit.
-const fillDown = (v) => fillLog(v, 5, 2000);
+// Descendant : de 5 Mb/s à 10 Gb/s, pour couvrir les offres fibre à 8 Gb/s.
+// Une fibre à 600 remplit environ 63 %, un gigabit environ 70 %.
+const fillDown = (v) => fillLog(v, 5, 10000);
 // Montant : les offres sont plus basses, l'échelle s'arrête au gigabit.
 const fillUp = (v) => fillLog(v, 2, 1000);
 
@@ -437,14 +478,43 @@ export default function SpeedTest({
                   {t.grade[result.grade]}
                 </VerdictHead>
                 <Findings findings={result.findings} engine="connection" />
-                <div style={{ marginLeft: -8, fontSize: 13 }}>
-                  <Ghost onClick={copySummary}>
-                    {summaryCopied ? t.summaryDone : t.summary}
-                  </Ghost>
-                </div>
               </Verdict>
             )}
           </Box>
+          {/* Copie du résumé : une petite icône sous le panneau, à droite,
+              visible au survol. */}
+          {result && (
+            <CopyRow>
+              <CopyIcon
+                type="button"
+                onClick={copySummary}
+                aria-label={summaryCopied ? t.summaryDone : t.summary}
+                title={summaryCopied ? t.summaryDone : t.summary}
+                $done={summaryCopied}
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  {summaryCopied ? (
+                    <path d="M3.5 8.5l3 3 6-7" />
+                  ) : (
+                    <>
+                      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+                      <path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" />
+                    </>
+                  )}
+                </svg>
+              </CopyIcon>
+            </CopyRow>
+          )}
         </Unfold>
       )}
 

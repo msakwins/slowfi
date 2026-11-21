@@ -17,7 +17,7 @@ function joinList(items, and) {
 export function diagnosticIntro(chosen, lang) {
   const en = lang === "en";
   const items = [
-    chosen.network && (en ? "connection" : "de la connexion"),
+    chosen.network && (en ? "local network" : "du réseau local"),
     chosen.hardware && (en ? "hardware" : "du matériel"),
     chosen.devices && (en ? "devices" : "des périphériques"),
   ].filter(Boolean);

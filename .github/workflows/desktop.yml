@@ -1,0 +1,59 @@
+# Application desktop : installateurs Windows, macOS et Linux.
+#
+# - À chaque version (tag v0.1.0, v0.2.0…), les trois installateurs sont
+#   construits et joints à un brouillon de release GitHub, à publier à la main.
+# - Lancement manuel possible (onglet Actions) : les installateurs restent
+#   alors en artefacts du workflow, sans release.
+name: Desktop
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:run
+      - run: npm run build
+
+      # Vérification de l'application : la page s'affiche, une lecture passe
+      # par le shell, et l'analyse du matériel rend un verdict.
+      - name: Smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npx electron . --smoke --no-sandbox
+      - name: Smoke test
+        if: runner.os != 'Linux'
+        run: npx electron . --smoke
+
+      - name: Installateurs
+        run: npx electron-builder --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pas encore de certificat de signature.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: slowfi-${{ runner.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error

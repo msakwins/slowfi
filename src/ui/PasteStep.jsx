@@ -13,7 +13,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import { Command, Textarea, Ghost } from "./theme.js";
+import { Command, Textarea, Ghost, Button } from "./theme.js";
+import { desktop, desktopSystem } from "./desktop.js";
+import { appScript } from "../lib/commands.js";
 import { useText, Segmented } from "./i18n.jsx";
 import Info from "./Info.jsx";
 
@@ -41,6 +43,10 @@ const TEXT = {
         "Sélectionner tout le texte du terminal (clic droit › Tout sélectionner), le copier (Ctrl + Maj + C), puis le coller ici",
     },
     pasteButton: "Coller depuis le presse-papiers",
+    running: "Lecture en cours…",
+    rerun: "Relancer l'analyse",
+    appAbout: "Que lit l'application ?",
+    failed: "La lecture n'a rien renvoyé",
     example: "Voir un exemple",
     clear: "Effacer",
   },
@@ -67,6 +73,10 @@ const TEXT = {
         "Select all the terminal text (right-click › Select All), copy it (Ctrl + Shift + C), then paste it here",
     },
     pasteButton: "Paste from clipboard",
+    running: "Reading…",
+    rerun: "Run the analysis again",
+    appAbout: "What does the app read?",
+    failed: "The reading returned nothing",
     example: "Show an example",
     clear: "Clear",
   },
@@ -219,6 +229,7 @@ export default function PasteStep({
   children,
 }) {
   const [system, setSystem] = useState(() => {
+    if (desktopSystem) return desktopSystem;
     const detected = detectSystem();
     return variants[detected] ? detected : "windows";
   });
@@ -227,6 +238,8 @@ export default function PasteStep({
   const { command, example, about } = variants[system];
   const [raw, setRaw] = useState("");
   const [copied, setCopied] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [failed, setFailed] = useState(false);
   const pre = useRef(null);
   const t = useText(TEXT);
 
@@ -244,6 +257,24 @@ export default function PasteStep({
     onResult?.(result);
   }, [result, onResult]);
 
+  const run = async () => {
+    setRunning(true);
+    setFailed(false);
+    try {
+      const out = await desktop.run(appScript(system, command));
+      setRaw(out);
+      setFailed(!out.trim());
+    } finally {
+      setRunning(false);
+    }
+  };
+  // La commande change avec les analyses choisies : chaque nouvelle commande
+  // est relancée.
+  useEffect(() => {
+    if (desktop) run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [command]);
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(command);
@@ -258,6 +289,28 @@ export default function PasteStep({
       sel.addRange(range);
     }
   };
+
+  if (desktop) {
+    return (
+      <>
+        <Step>
+          {running ? (
+            <Label>{t.running}</Label>
+          ) : (
+            <Button onClick={run}>{t.rerun}</Button>
+          )}
+          {about && (
+            <div style={{ marginTop: 6 }}>
+              <Info label={t.appAbout}>{about}</Info>
+            </div>
+          )}
+        </Step>
+        {failed && <Empty>{t.failed}</Empty>}
+        {!running && raw.trim() && !result && <Empty>{empty}</Empty>}
+        {result && children && <div>{children(result)}</div>}
+      </>
+    );
+  }
 
   return (
     <>

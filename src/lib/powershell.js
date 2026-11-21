@@ -70,6 +70,9 @@ export function yearOf(value) {
  */
 export function monthOf(value) {
   if (!value) return null;
+  // Date WMI brute (Get-WmiObject) : 20261107000000.******+***, sans ambiguïté.
+  const wmi = value.match(/^((?:19|20)\d{2})(\d{2})\d{2}\d{6}\./);
+  if (wmi) return { year: Number(wmi[1]), month: Number(wmi[2]) };
   const m = value.match(/(\d{1,2})[/.-](\d{1,2})[/.-]((?:19|20)\d{2})/);
   if (m) {
     const a = Number(m[1]);

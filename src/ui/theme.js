@@ -144,6 +144,31 @@ const neonFlow = keyframes`
   from { background-position: 0 0, 0 0; }
   to { background-position: 0 0, -200% 0; }
 `;
+// Le dégradé fait quatre fois la largeur du titre : chaque couleur couvre
+// environ les deux tiers du texte, on en voit une ou deux à la fois. Le
+// décalage de 133,33 % équivaut à une largeur d'image entière (4 × largeur
+// du texte), donc la boucle ne saute pas.
+const neonTextFlow = keyframes`
+  from { background-position: 0 0; }
+  to { background-position: -133.333% 0; }
+`;
+
+// Titre du diagnostic approfondi : les trois couleurs du bouton, dans les
+// lettres, en larges plages qui glissent lentement.
+export const NeonText = styled.span`
+  background: ${NEON};
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: ${neonTextFlow} 16s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
 export const NeonButton = styled.button`
   font: inherit;
   font-weight: 700;
@@ -166,12 +191,17 @@ export const NeonButton = styled.button`
     animation: none;
   }
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-image: linear-gradient(#0b1220, #0b1220), ${NEON};
   }
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    animation: none;
   }
 `;
 

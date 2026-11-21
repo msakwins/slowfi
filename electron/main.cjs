@@ -1,0 +1,280 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Application desktop Slowfi (Electron).
+//
+// La fenêtre affiche le site, servi depuis le dossier dist par un protocole
+// interne (app://slowfi) plutôt que file:// : la page garde une vraie origine,
+// ce qui permet au test de débit d'interroger speed.cloudflare.com.
+//
+// Différence avec le site : l'application lance elle-même les lectures de
+// l'analyse et lit leur sortie, sans copier-coller. Le script vient de la page,
+// qui ne charge que ses propres fichiers ; les liens externes s'ouvrent dans le
+// navigateur.
+// ─────────────────────────────────────────────────────────────────────────────
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  protocol,
+  net,
+  shell,
+} = require("electron");
+const { spawn } = require("node:child_process");
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+const sensors = require("./sensors.cjs");
+
+const DIST = path.join(__dirname, "..", "dist");
+const ORIGIN = "app://slowfi";
+// En développement, la page vient du serveur Vite.
+const DEV_URL = process.env.SLOWFI_DEV_URL;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app",
+    privileges: { standard: true, secure: true, supportFetchAPI: true },
+  },
+]);
+
+/** Fichiers de dist ; toute route inconnue renvoie index.html (pages du site). */
+function serveDist() {
+  protocol.handle("app", (request) => {
+    const { pathname, searchParams } = new URL(request.url);
+    if (pathname === "/api/drivers") return driversApi(searchParams.get("id"));
+    const file = path.normalize(path.join(DIST, decodeURIComponent(pathname)));
+    const inside = file.startsWith(DIST + path.sep);
+    const hasExt = path.extname(file) !== "";
+    const target = inside && hasExt ? file : path.join(DIST, "index.html");
+    return net.fetch(pathToFileURL(target).toString());
+  });
+}
+
+/**
+ * /api/drivers, comme la fonction Vercel du site : l'application interroge
+ * elle-même le catalogue Microsoft Update, sans passer par slowfi.app.
+ */
+async function driversApi(rawId) {
+  const lib = (name) =>
+    import(pathToFileURL(path.join(__dirname, "..", "src", "lib", name)).href);
+  const { isLookupKey } = await lib("catalog.js");
+  const { lookupDriver } = await lib("driverLookup.js");
+  const id = String(rawId ?? "").toUpperCase();
+  const json = (status, body) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    });
+  if (!isLookupKey(id)) return json(400, { error: "id" });
+  try {
+    return json(200, await lookupDriver(id));
+  } catch {
+    return json(502, { id, error: "catalog" });
+  }
+}
+
+/** Lance le script avec le shell du système et renvoie sa sortie. */
+function runScript(script) {
+  let cmd;
+  let args;
+  if (process.platform === "win32") {
+    // Script encodé en UTF-16 : ni guillemets ni accents à échapper. La sortie
+    // est forcée en UTF-8 pour garder les accents des noms de périphériques.
+    const full = [
+      "[Console]::OutputEncoding = [Text.Encoding]::UTF8",
+      "$ProgressPreference = 'SilentlyContinue'",
+      script,
+    ].join("\n");
+    cmd = "powershell.exe";
+    args = [
+      "-NoProfile",
+      "-NonInteractive",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-EncodedCommand",
+      Buffer.from(full, "utf16le").toString("base64"),
+    ];
+  } else if (process.platform === "darwin") {
+    cmd = "/bin/zsh";
+    args = ["-c", script];
+  } else {
+    cmd = "/bin/bash";
+    args = ["-c", script];
+  }
+
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { windowsHide: true });
+    const chunks = [];
+    child.stdout.on("data", (d) => chunks.push(d));
+    // Sous Windows, PowerShell écrit ses erreurs et sa progression en XML sur
+    // stderr : seule la sortie compte, comme avec Set-Clipboard.
+    if (process.platform !== "win32") {
+      child.stderr.on("data", (d) => chunks.push(d));
+    }
+    // Garde-fou : une lecture bloquée ne fige pas l'analyse.
+    const timer = setTimeout(() => child.kill(), 120_000);
+    const done = () => {
+      clearTimeout(timer);
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    };
+    child.on("close", done);
+    child.on("error", done);
+  });
+}
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1100,
+    height: 860,
+    minWidth: 420,
+    minHeight: 500,
+    backgroundColor: "#020617",
+    autoHideMenuBar: true,
+    title: "Slowfi",
+    icon: path.join(__dirname, "icon.png"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+    },
+  });
+
+  const home = DEV_URL || `${ORIGIN}/`;
+  const ours = (url) => url.startsWith(DEV_URL || ORIGIN);
+
+  // Liens externes (pilotes, code source…) : dans le navigateur par défaut.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:/.test(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
+  win.webContents.on("will-navigate", (event, url) => {
+    if (!ours(url)) {
+      event.preventDefault();
+      if (/^https?:/.test(url)) shell.openExternal(url);
+    }
+  });
+
+  win.loadURL(home);
+  if (process.argv.includes("--smoke")) smokeTest(win);
+}
+
+/**
+ * Vérification rapide, pour la CI et après chaque build : la page s'affiche,
+ * et une lecture passe par le shell avec ses accents. Affiche le résultat
+ * puis quitte (code 1 en cas d'échec).
+ */
+function smokeTest(win) {
+  win.webContents.once("did-finish-load", async () => {
+    await new Promise((r) => setTimeout(r, 1500));
+    const script =
+      process.platform === "win32"
+        ? "Write-Output 'Réseau ok'"
+        : "echo 'Réseau ok'";
+    const report = await win.webContents.executeJavaScript(`(async () => ({
+      title: document.querySelector("h1")?.textContent ?? null,
+      bridge: typeof window.slowfi?.run === "function",
+      output: (await window.slowfi.run(${JSON.stringify(script)})).trim(),
+    }))()`);
+    // Analyse du matériel réelle : ouvrir le menu, lancer, attendre le verdict.
+    report.hardware = await win.webContents.executeJavaScript(`(async () => {
+      const button = (text) =>
+        [...document.querySelectorAll("button")].find((b) => b.textContent.includes(text));
+      // Diagnostic complet, matériel seul : la lecture part d'elle-même.
+      for (const chip of ["Réseau local", "Périphériques"]) {
+        const b = button(chip);
+        if (b?.getAttribute("aria-pressed") === "true") b.click();
+      }
+      await new Promise((r) => setTimeout(r, 300));
+      button("Lancer le diagnostic").click();
+      for (let i = 0; i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        const verdict = document.body.innerText.match(/Matériel — .+/i);
+        if (verdict) return verdict[0];
+      }
+      return null;
+    })()`);
+    // Mises à jour des pilotes (Windows) : affichées, sans faire échouer la
+    // vérification, car elles dépendent du réseau et du matériel présent.
+    report.drivers = await win.webContents.executeJavaScript(`(async () => {
+      for (let i = 0; i < 40; i++) {
+        const text = document.body.innerText;
+        const at = text.search(/Mises à jour des pilotes/i);
+        if (at < 0) return null;
+        const part = text.slice(at, text.indexOf("Vérifié", at));
+        if (!part.includes("Recherche…")) return part.split("\\n").slice(2);
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      return "délai dépassé";
+    })()`);
+    // Capteurs : lecture, puis quelques secondes de suivi.
+    report.sensors = await win.webContents.executeJavaScript(`(async () => {
+      const section = () =>
+        [...document.querySelectorAll("section")].find((s) =>
+          s.querySelector("h2")?.textContent === "Capteurs",
+        );
+      for (let i = 0; i < 60 && section()?.innerText.includes("Lecture des capteurs"); i++)
+        await new Promise((r) => setTimeout(r, 500));
+      const start = [...section().querySelectorAll("button")].find((b) =>
+        b.textContent.includes("Lancer le suivi"),
+      );
+      start?.click();
+      await new Promise((r) => setTimeout(r, 6000));
+      section().scrollIntoView();
+      return section().innerText.split("\\n").filter(Boolean);
+    })()`);
+    // Capture d'écran, pour vérifier l'affichage : SLOWFI_SHOT=chemin.png
+    if (process.env.SLOWFI_SHOT) {
+      const image = await win.webContents.capturePage();
+      require("node:fs").writeFileSync(process.env.SLOWFI_SHOT, image.toPNG());
+    }
+    const ok =
+      report.title &&
+      report.bridge &&
+      report.output === "Réseau ok" &&
+      report.hardware;
+    console.log(JSON.stringify(report), ok ? "OK" : "ÉCHEC");
+    app.exit(ok ? 0 : 1);
+  });
+}
+
+// Une seule instance : relancer l'application ramène la fenêtre ouverte.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    const [win] = BrowserWindow.getAllWindows();
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    serveDist();
+    ipcMain.handle("slowfi:run", (event, script) => {
+      // Seule la page de l'application peut demander une lecture.
+      if (!event.senderFrame?.url.startsWith(DEV_URL || ORIGIN)) return "";
+      if (typeof script !== "string" || script.length > 100_000) return "";
+      return runScript(script);
+    });
+    // Capteurs : réservés à la page de l'application, comme les lectures.
+    const fromApp = (event) =>
+      event.senderFrame?.url.startsWith(DEV_URL || ORIGIN);
+    ipcMain.handle("slowfi:sensors", (event) =>
+      fromApp(event) ? sensors.readSensors() : null,
+    );
+    ipcMain.handle("slowfi:sensors-admin", (event) =>
+      fromApp(event) ? sensors.readDisksAsAdmin() : null,
+    );
+    ipcMain.handle("slowfi:sample", (event, withGpu) =>
+      fromApp(event) ? sensors.sample(Boolean(withGpu)) : null,
+    );
+    createWindow();
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
+  });
+}

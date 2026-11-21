@@ -80,6 +80,20 @@ function LegalEn() {
           disappears when the page is closed
         </p>
         <p>
+          One exception, to check for driver updates on Windows: the identifier
+          of each component (for example PCIVEN_10DE&DEV_2182, the same for
+          every card of that model) is sent to Slowfi, which looks it up in the{" "}
+          <strong>Microsoft Update Catalog</strong>. Nothing else from the text
+          is sent, and nothing is stored
+        </p>
+        <p>
+          On request only, with the « Search the makers' sites » button: the
+          name and identifier of each AMD, Intel or Realtek component are sent
+          to <strong>Google Gemini</strong>, which reads the maker's driver
+          page. Google may use these requests to improve its services. Nothing
+          else is sent
+        </p>
+        <p>
           The suggested commands only read information: they change no settings
         </p>
 
@@ -140,6 +154,20 @@ function LegalFr() {
           Le texte collé (résultat des commandes Windows ou macOS) est lu par le
           navigateur, sur l'appareil. Il n'est envoyé à aucun serveur et
           disparaît à la fermeture de la page
+        </p>
+        <p>
+          Une exception, pour vérifier les mises à jour de pilotes sous Windows
+          : l'identifiant de chaque composant (par exemple PCIVEN_10DE&DEV_2182,
+          le même pour toutes les cartes de ce modèle) est envoyé à Slowfi, qui
+          le cherche dans le <strong>catalogue Microsoft Update</strong>. Rien
+          d'autre du texte n'est transmis, et rien n'est conservé
+        </p>
+        <p>
+          Seulement à la demande, avec le bouton « Chercher sur les sites » : le
+          nom et l'identifiant de chaque composant AMD, Intel ou Realtek sont
+          envoyés à <strong>Google Gemini</strong>, qui lit la page de pilotes
+          du fabricant. Google peut se servir de ces demandes pour améliorer ses
+          services. Rien d'autre n'est transmis
         </p>
         <p>
           Les commandes proposées se contentent de lire des informations : elles

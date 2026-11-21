@@ -1,7 +1,11 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Diagnostic de connexion, de matériel et de périphériques",
+  "author": "Slowfi",
+  "homepage": "https://www.slowfi.app",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,19 +13,86 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
-  },
-  "dependencies": {
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "styled-components": "^6.4.3"
+    "test:run": "vitest run",
+    "app": "vite build && electron .",
+    "app:dist": "vite build && electron-builder --publish never"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
     "oxlint": "^1.71.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "styled-components": "^6.4.3",
     "vite": "^8.1.1",
     "vitest": "^4.1.9"
+  },
+  "build": {
+    "appId": "app.slowfi.desktop",
+    "productName": "Slowfi",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "!dist/logos.html",
+      "electron/main.cjs",
+      "electron/preload.cjs",
+      "electron/sensors.cjs",
+      "src/lib/catalog.js",
+      "src/lib/vendors.js",
+      "src/lib/driverLookup.js",
+      "electron/icon.png",
+      "package.json"
+    ],
+    "icon": "electron/icon.png",
+    "artifactName": "Slowfi-${os}-${arch}.${ext}",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "maintainer": "Slowfi <contact@slowfi.app>",
+      "artifactName": "Slowfi-linux-${arch}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "msakwins",
+      "repo": "slowfi",
+      "releaseType": "draft"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msakwins/slowfi.git"
   }
 }

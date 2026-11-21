@@ -37,6 +37,8 @@ import HardwareManual from "./HardwareManual.jsx";
 import Arrow from "../ui/Arrow.jsx";
 import CopySummary from "../ui/CopySummary.jsx";
 import { summarizeBlocks } from "../lib/report.js";
+import { parseInstalledDrivers, DRIVER_CLASSES } from "../lib/drivers.js";
+import DriverUpdates from "../ui/DriverUpdates.jsx";
 import { localize } from "../lib/en.js";
 
 // Page officielle des pilotes de chaque constructeur. Aucun ne publie de
@@ -258,7 +260,12 @@ export const HARDWARE_READS = [
   // Les 40 processus les plus gourmands en mémoire, regroupés par programme
   // à l'analyse.
   "Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 40 | Format-List ProcessName,WorkingSet64",
-  "Get-CimInstance Win32_PnPSignedDriver | Where-Object DeviceClass -eq NET | Format-List DeviceName,DriverVersion,DriverDate",
+  // Pilotes des composants physiques (graphique, réseau, audio, Bluetooth,
+  // stockage), avec leur identifiant matériel pour chercher la dernière
+  // version dans le catalogue Microsoft Update. Get-WmiObject garde la date
+  // brute (20261107…) : Get-CimInstance l’écrit mois en premier, quelle que
+  // soit la langue du système, ce qui la confond avec le format français.
+  `Get-WmiObject Win32_PnPSignedDriver | Where-Object DeviceClass -in ${DRIVER_CLASSES.join(",")} | Format-List DeviceClass,DeviceName,DriverVersion,DriverDate,HardWareID`,
 ];
 const COMMAND_WINDOWS = windowsCommand(HARDWARE_READS);
 export const HARDWARE_MAC_READS = [
@@ -308,6 +315,7 @@ export function analyzeHardware(raw) {
     components: hasComponents ? c : null,
     system,
     activity,
+    drivers: parseInstalledDrivers(raw),
   };
 }
 
@@ -319,7 +327,7 @@ const RANK = { problem: 0, warning: 1, ok: 2 };
 
 /** Blocs de résultats du matériel, suivis du résumé à copier. */
 export function HardwareResults({
-  data: { volumes, components: c, system: s, activity: a },
+  data: { volumes, components: c, system: s, activity: a, drivers = [] },
 }) {
   const { t, label } = useT();
   const { lang } = useLang();
@@ -369,6 +377,7 @@ export function HardwareResults({
             {t.noIssue}
           </p>
         )}
+        <DriverUpdates drivers={drivers} />
         <Passed items={passed} />
       </Verdict>
       <CopySummary

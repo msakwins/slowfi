@@ -25,3 +25,6 @@ dist-ssr
 
 # Claude Code (local, personnel)
 .claude/settings.local.json
+
+# Installateurs de l'application desktop
+release
