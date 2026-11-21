@@ -41,6 +41,13 @@ export function parseSystem(raw) {
       busType: field(f, "BusType"),
       health: field(f, "HealthStatus"),
     }));
+  // Erreurs de lecture que le disque n'a pas pu corriger
+  // (Get-StorageReliabilityCounter), par numéro de disque.
+  for (const f of blocks.filter((b) => "ReadErrorsUncorrected" in b)) {
+    const disk = disks.find((d) => d.id === field(f, "DeviceId"));
+    const n = number(f, "ReadErrorsUncorrected");
+    if (disk && n != null) disk.uncorrected = n;
+  }
   const info = blocks.find(
     (f) => "UptimeDays" in f || "SystemDisk" in f || "PowerScheme" in f,
   );
@@ -141,6 +148,24 @@ export function diagnoseSystem(
     }
   }
 
+  // Règle B2 — secteurs illisibles : le disque n'a pas pu relire des
+  // données. Premier signe d'un disque qui lâche, avant que Windows ne le
+  // déclare en mauvais état.
+  for (const d of s.disks) {
+    if (d.uncorrected > 0) {
+      bump("problem");
+      findings.push({
+        level: "problem",
+        id: `disk-unreadable-${d.id ?? d.name}`,
+        key: "disk-unreadable",
+        vars: { name: d.name || "?", count: d.uncorrected },
+        title: `Secteurs illisibles sur le disque ${d.name || "?"}`,
+        detail: `${d.uncorrected} erreur${d.uncorrected > 1 ? "s" : ""} de lecture que le disque n'a pas pu corriger : des données y sont déjà perdues ou abîmées`,
+        fix: "Sauvegarder les fichiers importants dès maintenant, puis remplacer le disque",
+      });
+    }
+  }
+
   // Règle C — pas de redémarrage depuis longtemps.
   if (s.uptimeDays != null && s.uptimeDays >= UPTIME_DAYS) {
     bump("warning");
@@ -218,7 +243,8 @@ export function diagnoseSystem(
     });
   }
   const healthy = s.disks.filter(
-    (d) => d.health && /^(healthy|sain|ok)$/i.test(d.health),
+    (d) =>
+      d.health && /^(healthy|sain|ok)$/i.test(d.health) && !(d.uncorrected > 0),
   );
   if (healthy.length > 0 && healthy.length === s.disks.length) {
     const n = healthy.length;

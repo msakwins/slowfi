@@ -70,5 +70,10 @@ foreach ($disk in $disks) {
     mediaErrors = [BitConverter]::ToUInt64($log, 160)
     warningTempMinutes = [BitConverter]::ToUInt32($log, 192)
     criticalTempMinutes = [BitConverter]::ToUInt32($log, 196)
+    # Alertes que le SSD lève lui-même (bits : réserve basse, température,
+    # fiabilité dégradée, lecture seule), et sa réserve de cellules neuves.
+    criticalWarning = $log[0]
+    availableSpare = $log[3]
+    spareThreshold = $log[4]
   } | ConvertTo-Json -Compress
 }

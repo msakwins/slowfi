@@ -4,6 +4,7 @@ import {
   disksNeedAdmin,
   seriesSummary,
   slowdownSummary,
+  nvmeAlerts,
 } from "./sensors.js";
 
 // Relevé réel d'un PC fixe (GTX 1660 Ti, SSD NVMe, disque dur SATA).
@@ -155,5 +156,32 @@ describe("journal de santé NVMe", () => {
       }),
     );
     expect(burnt.level).toBe("problem");
+  });
+});
+
+describe("alertes et réserve des SSD NVMe", () => {
+  const row = (nvme) =>
+    sensorRows({
+      disks: [
+        { name: "SSD", media: "SSD", bus: "NVMe", temperature: 40, nvme },
+      ],
+    })[1];
+  it("lit les alertes levées par le SSD", () => {
+    expect(nvmeAlerts({ criticalWarning: 0 })).toEqual([]);
+    expect(nvmeAlerts({ criticalWarning: 5 })).toEqual([
+      "spare",
+      "reliability",
+    ]);
+  });
+  it("passe au rouge sur alerte de fiabilité ou réserve épuisée", () => {
+    const base = {
+      percentageUsed: 10,
+      availableSpare: 100,
+      spareThreshold: 10,
+    };
+    expect(row(base).level).toBe("ok");
+    expect(row({ ...base, criticalWarning: 4 }).level).toBe("problem");
+    expect(row({ ...base, availableSpare: 8 }).level).toBe("problem");
+    expect(row({ ...base, availableSpare: 40 }).level).toBe("warning");
   });
 });

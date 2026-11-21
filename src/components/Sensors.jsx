@@ -34,6 +34,15 @@ const TEXT = {
           : "jamais au-dessus de sa température d'alerte",
     mediaErrors: (n) =>
       `${n} erreur${n > 1 ? "s" : ""} de lecture enregistrée${n > 1 ? "s" : ""}`,
+    spare: (p) => `réserve de cellules neuves à ${p} %`,
+    alerts: {
+      spare: "le SSD signale une réserve presque épuisée",
+      temperature: "le SSD signale une température trop haute",
+      reliability:
+        "le SSD signale une fiabilité dégradée : sauvegarder les données",
+      readOnly:
+        "le SSD est passé en lecture seule : sauvegarder les données et le remplacer",
+    },
     noFans:
       "Ventilateurs du processeur et du boîtier : lisibles seulement par le logiciel du fabricant de la carte mère",
     noSensors:
@@ -80,6 +89,14 @@ const TEXT = {
           ? `${duration(m, "en")} above its alert temperature since first use`
           : "never above its alert temperature",
     mediaErrors: (n) => `${n} recorded read error${n > 1 ? "s" : ""}`,
+    spare: (p) => `spare cells at ${p}%`,
+    alerts: {
+      spare: "the SSD reports its spare cells almost used up",
+      temperature: "the SSD reports a temperature too high",
+      reliability: "the SSD reports degraded reliability: back up the data",
+      readOnly:
+        "the SSD switched to read-only: back up the data and replace it",
+    },
     noFans:
       "Processor and case fans: readable only by the motherboard maker's software",
     noSensors: "No sensor readable without administrator rights on this system",
@@ -377,6 +394,11 @@ export default function Sensors() {
                         t.heat(r.extra.heatMinutes, r.extra.criticalMinutes),
                       r.extra?.mediaErrors > 0 &&
                         t.mediaErrors(r.extra.mediaErrors),
+                      // La réserve seulement quand elle a commencé à servir.
+                      r.extra?.spare != null &&
+                        r.extra.spare < 100 &&
+                        t.spare(r.extra.spare),
+                      ...(r.extra?.alerts ?? []).map((a) => t.alerts[a]),
                     ]
                       .filter(Boolean)
                       .join(", "),

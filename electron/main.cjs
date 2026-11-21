@@ -123,7 +123,7 @@ function runScript(script) {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 860,
+    width: 780,
     height: 860,
     minWidth: 420,
     minHeight: 500,

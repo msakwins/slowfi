@@ -25,6 +25,21 @@ const level = (value, [warn, bad]) =>
         : "ok";
 
 /**
+ * Alertes NVMe (octet 0 du journal de santé) : réserve sous le seuil,
+ * température, fiabilité dégradée, passage en lecture seule.
+ * @returns {("spare"|"temperature"|"reliability"|"readOnly")[]}
+ */
+export function nvmeAlerts(nvme) {
+  const bits = nvme?.criticalWarning ?? 0;
+  return [
+    bits & 1 && "spare",
+    bits & 2 && "temperature",
+    bits & 4 && "reliability",
+    bits & 8 && "readOnly",
+  ].filter(Boolean);
+}
+
+/**
  * Lignes à afficher, chacune avec son niveau.
  * @param {{ zones?: {name:string, celsius:number}[], fans?: {name:string, rpm:number}[], disks?: object[], gpus?: object[] }} data
  * @returns {{ kind: "gpu"|"zone"|"disk"|"wear"|"fan"|"gpuFan", name: string, value: number, level: string, unit: string, extra?: object }[]}
@@ -75,18 +90,34 @@ export function sensorRows(data) {
       const heatLevel =
         critical > 0 ? "problem" : heat >= 60 ? "warning" : "ok";
       const wearLevel = level(wear, WEAR);
+      // Alertes levées par le SSD lui-même, et sa réserve de cellules neuves
+      // (celles qui remplacent les cellules usées).
+      const alerts = nvmeAlerts(d.nvme);
+      const spare = d.nvme?.availableSpare ?? null;
+      const spareLevel =
+        alerts.some((a) => a !== "temperature") ||
+        (spare != null && spare <= (d.nvme?.spareThreshold ?? 10))
+          ? "problem"
+          : spare != null && spare < 50
+            ? "warning"
+            : "ok";
       const rank = { ok: 0, unknown: 0, warning: 1, problem: 2 };
+      const worst = [heatLevel, wearLevel, spareLevel].reduce((a, b) =>
+        rank[b] > rank[a] ? b : a,
+      );
       rows.push({
         kind: "wear",
         name: d.name,
         value: wear,
         unit: "%",
-        level: rank[heatLevel] > rank[wearLevel] ? heatLevel : wearLevel,
+        level: worst,
         extra: {
           hours: d.nvme?.powerOnHours ?? d.powerOnHours,
           heatMinutes: heat,
           criticalMinutes: critical,
           mediaErrors: d.nvme?.mediaErrors ?? null,
+          spare,
+          alerts,
         },
       });
     }

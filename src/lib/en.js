@@ -316,6 +316,11 @@ export const EN = {
       detail: `Status reported by Windows: “${state}”. The drive itself anticipates a failure`,
       fix: "Back up immediately, then replace the drive",
     }),
+    "disk-unreadable": ({ name, count }) => ({
+      title: `Unreadable sectors on drive ${name}`,
+      detail: `${count} read error${count > 1 ? "s" : ""} the drive could not correct: some data is already lost or damaged`,
+      fix: "Back up important files now, then replace the drive",
+    }),
     "uptime-long": ({ days }) => ({
       title: `No restart for ${days} days`,
       detail:

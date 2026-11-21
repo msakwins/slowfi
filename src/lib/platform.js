@@ -86,11 +86,17 @@ export function parsePlatform(blocks, raw) {
   const full = blocks
     .filter((f) => "FullChargedCapacity" in f)
     .reduce((s, f) => s + (number(f, "FullChargedCapacity") || 0), 0);
+  // Nombre de cycles de charge (BatteryCycleCount), quand le portable le
+  // renseigne.
+  const cycleBlock = blocks.find((f) => "CycleCount" in f);
+  const cycleCount = cycleBlock
+    ? number(cycleBlock, "CycleCount") || null
+    : null;
   let battery =
     designed > 0 && full > 0
       ? {
           pct: Math.min(100, Math.round((full / designed) * 100)),
-          cycles: null,
+          cycles: cycleCount,
           condition: null,
         }
       : null;

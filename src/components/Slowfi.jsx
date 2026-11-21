@@ -187,11 +187,11 @@ export default function Slowfi() {
     document.title = t.titles[path];
   }, [t, path]);
 
-  // Dans l'application, une colonne plus large : la fenêtre n'a pas les
-  // marges d'un navigateur, et 680 px y laissaient de grands vides.
+  // Dans l'application, une colonne de 720 px centrée dans la fenêtre, avec
+  // des marges égales de chaque côté.
   const page = (
     <Page
-      style={desktop ? { maxWidth: 960, padding: "24px 32px 48px" } : undefined}
+      style={desktop ? { maxWidth: 720, padding: "24px 28px 48px" } : undefined}
     >
       <Header>
         <HomeLink to="/" aria-label={t.home}>

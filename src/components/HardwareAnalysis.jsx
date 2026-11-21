@@ -248,6 +248,8 @@ export const HARDWARE_READS = [
   "Get-CimInstance Win32_VideoController | Format-List Name,DriverVersion,DriverDate,Status,ConfigManagerErrorCode",
   "Get-CimInstance Win32_BIOS | Format-List Manufacturer,SMBIOSBIOSVersion,ReleaseDate",
   "Get-PhysicalDisk | Format-List DeviceId,FriendlyName,MediaType,BusType,HealthStatus",
+  // Erreurs de lecture non corrigées, premier signe d'un disque qui lâche.
+  "Get-PhysicalDisk | Get-StorageReliabilityCounter -ErrorAction SilentlyContinue | Format-List DeviceId,ReadErrorsUncorrected",
   // Disque qui porte C:, jours depuis le dernier vrai redémarrage, et mode
   // d'alimentation actif, réunis dans un seul bloc Format-List.
   "[pscustomobject]@{SystemDisk=(Get-Partition -DriveLetter C).DiskNumber; UptimeDays=[int]((Get-Date)-(Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalDays; PowerScheme=(powercfg /getactivescheme)} | Format-List",
@@ -264,6 +266,7 @@ export const HARDWARE_READS = [
   // Batterie : capacité d'origine et capacité actuelle. Rien sur un PC fixe.
   "Get-CimInstance -Namespace root/wmi -ClassName BatteryStaticData -ErrorAction SilentlyContinue | Format-List DesignedCapacity",
   "Get-CimInstance -Namespace root/wmi -ClassName BatteryFullChargedCapacity -ErrorAction SilentlyContinue | Format-List FullChargedCapacity",
+  "Get-CimInstance -Namespace root/wmi -ClassName BatteryCycleCount -ErrorAction SilentlyContinue | Format-List CycleCount",
   "Get-CimInstance Win32_StartupCommand | Format-List Command,User,Location",
   // Les 40 processus les plus gourmands en mémoire, regroupés par programme
   // à l'analyse.

@@ -158,6 +158,18 @@ describe("système complet", () => {
     expect(bat(35000).findings[0]).toMatchObject({ id: "battery-worn" });
     expect(bat(35000).severity).toBe("warning");
     expect(bat(25000).severity).toBe("problem");
+    // Cycles de charge, quand Windows les connaît.
+    const withCycles = analyzeSystem(
+      `DesignedCapacity : 50000
+
+FullChargedCapacity : 46000
+
+CycleCount : 412`,
+      { today: TODAY },
+    );
+    expect(withCycles.passed.find((p) => p.id === "battery-ok").label).toBe(
+      "Batterie à 92 % de sa capacité d'origine (412 cycles)",
+    );
   });
 
   it("lit la batterie et la version d'un Mac", () => {

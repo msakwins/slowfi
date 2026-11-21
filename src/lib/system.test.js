@@ -83,3 +83,29 @@ describe("mémoire limitée", () => {
     expect(c(4).findings.map((f) => f.id)).not.toContain("ram-low"); // 8 Go
   });
 });
+
+describe("secteurs illisibles", () => {
+  const raw = (n) => `DeviceId     : 0
+FriendlyName : WDC WD10EZEX
+MediaType    : HDD
+BusType      : SATA
+HealthStatus : Healthy
+
+DeviceId              : 0
+ReadErrorsUncorrected : ${n}
+`;
+  it("signale un disque qui n'a pas pu relire des données", () => {
+    const r = analyzeSystem(raw(12));
+    expect(r.severity).toBe("problem");
+    expect(r.findings.find((f) => f.key === "disk-unreadable")).toMatchObject({
+      key: "disk-unreadable",
+      title: "Secteurs illisibles sur le disque WDC WD10EZEX",
+    });
+    expect(r.passed.map((p) => p.id)).not.toContain("disks-healthy");
+  });
+  it("aucune erreur : disque en bon état", () => {
+    const r = analyzeSystem(raw(0));
+    expect(r.findings.some((f) => f.key === "disk-unreadable")).toBe(false);
+    expect(r.passed.map((p) => p.id)).toContain("disks-healthy");
+  });
+});
