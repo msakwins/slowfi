@@ -163,19 +163,52 @@ function createWindow() {
  * puis quitte (code 1 en cas d'échec).
  */
 function smokeTest(win) {
+  // Le rapport se remplit étape par étape. Une étape en erreur ou trop
+  // longue (machine de CI sans carte graphique ni capteurs) est notée dans
+  // le rapport au lieu de bloquer : sans cela l'application ne quittait
+  // jamais et la CI attendait des heures.
+  const report = {};
+  const finish = (forced) => {
+    const ok =
+      !forced &&
+      report.title &&
+      report.bridge &&
+      report.output === "Réseau ok" &&
+      typeof report.hardware === "string" &&
+      !report.hardware.startsWith("erreur");
+    console.log(JSON.stringify(report), ok ? "OK" : "ÉCHEC");
+    app.exit(ok ? 0 : 1);
+  };
+  // Filet de sécurité : quatre minutes au plus, quoi qu'il arrive.
+  setTimeout(() => {
+    report.timeout = "délai global dépassé";
+    finish(true);
+  }, 240000).unref();
+  const step = (code, ms) =>
+    Promise.race([
+      win.webContents.executeJavaScript(code),
+      new Promise((_, no) =>
+        setTimeout(() => no(new Error(`délai de ${ms / 1000} s dépassé`)), ms),
+      ),
+    ]).catch((e) => `erreur : ${e.message}`);
+
   win.webContents.once("did-finish-load", async () => {
     await new Promise((r) => setTimeout(r, 1500));
     const script =
       process.platform === "win32"
         ? "Write-Output 'Réseau ok'"
         : "echo 'Réseau ok'";
-    const report = await win.webContents.executeJavaScript(`(async () => ({
+    const first = await step(
+      `(async () => ({
       title: document.querySelector("h1")?.textContent ?? null,
       bridge: typeof window.slowfi?.run === "function",
       output: (await window.slowfi.run(${JSON.stringify(script)})).trim(),
-    }))()`);
+    }))()`,
+      30000,
+    );
+    Object.assign(report, typeof first === "string" ? { start: first } : first);
     // Analyse du matériel réelle : ouvrir le menu, lancer, attendre le verdict.
-    report.hardware = await win.webContents.executeJavaScript(`(async () => {
+    report.hardware = await step(`(async () => {
       const button = (text) =>
         [...document.querySelectorAll("button")].find((b) => b.textContent.includes(text));
       // Diagnostic complet, matériel seul : la lecture part d'elle-même.
@@ -191,10 +224,10 @@ function smokeTest(win) {
         if (verdict) return verdict[0];
       }
       return null;
-    })()`);
+    })()`, 90000);
     // Mises à jour des pilotes (Windows) : affichées, sans faire échouer la
     // vérification, car elles dépendent du réseau et du matériel présent.
-    report.drivers = await win.webContents.executeJavaScript(`(async () => {
+    report.drivers = await step(`(async () => {
       for (let i = 0; i < 40; i++) {
         const text = document.body.innerText;
         const at = text.search(/Mises à jour des pilotes/i);
@@ -204,15 +237,17 @@ function smokeTest(win) {
         await new Promise((r) => setTimeout(r, 500));
       }
       return "délai dépassé";
-    })()`);
-    // Capteurs : lecture, puis quelques secondes de suivi.
-    report.sensors = await win.webContents.executeJavaScript(`(async () => {
+    })()`, 30000);
+    // Capteurs : lecture, puis quelques secondes de suivi. Absents sur une
+    // machine de CI : noté, sans faire échouer.
+    report.sensors = await step(`(async () => {
       const section = () =>
         [...document.querySelectorAll("section")].find((s) =>
           s.querySelector("h2")?.textContent === "Capteurs",
         );
       for (let i = 0; i < 60 && section()?.innerText.includes("Lecture des capteurs"); i++)
         await new Promise((r) => setTimeout(r, 500));
+      if (!section()) return null;
       const start = [...section().querySelectorAll("button")].find((b) =>
         b.textContent.includes("Lancer le suivi"),
       );
@@ -220,19 +255,13 @@ function smokeTest(win) {
       await new Promise((r) => setTimeout(r, 6000));
       section().scrollIntoView();
       return section().innerText.split("\\n").filter(Boolean);
-    })()`);
+    })()`, 60000);
     // Capture d'écran, pour vérifier l'affichage : SLOWFI_SHOT=chemin.png
     if (process.env.SLOWFI_SHOT) {
       const image = await win.webContents.capturePage();
       require("node:fs").writeFileSync(process.env.SLOWFI_SHOT, image.toPNG());
     }
-    const ok =
-      report.title &&
-      report.bridge &&
-      report.output === "Réseau ok" &&
-      report.hardware;
-    console.log(JSON.stringify(report), ok ? "OK" : "ÉCHEC");
-    app.exit(ok ? 0 : 1);
+    finish(false);
   });
 }
 

@@ -33,11 +33,15 @@ jobs:
 
       # Vérification de l'application : la page s'affiche, une lecture passe
       # par le shell, et l'analyse du matériel rend un verdict.
+      # L'application s'arrête d'elle-même au bout de 4 minutes ; ce plafond
+      # couvre le cas où elle ne démarrerait même pas.
       - name: Smoke test (Linux)
         if: runner.os == 'Linux'
+        timeout-minutes: 10
         run: xvfb-run -a npx electron . --smoke --no-sandbox
       - name: Smoke test
         if: runner.os != 'Linux'
+        timeout-minutes: 10
         run: npx electron . --smoke
 
       - name: Installateurs
