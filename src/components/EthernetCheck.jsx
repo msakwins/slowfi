@@ -5,7 +5,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useCallback, useEffect, useState } from "react";
 import { analyzeEthernet, diagnoseEthernet } from "../lib/ethernet.js";
-import { ETHERNET_WINDOWS, ETHERNET_MAC } from "../lib/examples.js";
+import {
+  ETHERNET_WINDOWS,
+  ETHERNET_MAC,
+  ETHERNET_LINUX,
+} from "../lib/examples.js";
 import { Subtitle, SEVERITY } from "../ui/theme.js";
 import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
 import {
@@ -18,6 +22,7 @@ import {
 } from "../ui/verdict.jsx";
 import { GuideStep, Fields, Field, Select } from "../ui/Form.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import { windowsCommand, macCommand } from "../lib/commands.js";
 
 const TEXT = {
   fr: {
@@ -51,6 +56,12 @@ const TEXT = {
           : ligne « Vitesse »
         </>
       ),
+      linux: (
+        <>
+          Ouvrir <span className="path">Paramètres › Réseau</span>, puis la roue
+          dentée de la connexion filaire : ligne de vitesse de connexion
+        </>
+      ),
     },
     pick: "Choisir…",
   },
@@ -82,6 +93,12 @@ const TEXT = {
           : “Speed” line
         </>
       ),
+      linux: (
+        <>
+          Open <span className="path">Settings › Network</span>, then the gear
+          of the wired connection: link speed line
+        </>
+      ),
     },
     pick: "Choose…",
   },
@@ -96,9 +113,13 @@ const SPEEDS = [
   ["10000", "10 Gb/s (10000)"],
 ];
 
-const COMMAND_WINDOWS =
-  'powershell -NoProfile -Command "Get-NetAdapter -Physical | Format-List Name,InterfaceDescription,Status,LinkSpeed,FullDuplex"';
-const COMMAND_MAC = "ifconfig";
+const COMMAND_WINDOWS = windowsCommand([
+  "Get-NetAdapter -Physical | Format-List Name,InterfaceDescription,Status,LinkSpeed,FullDuplex",
+]);
+const COMMAND_MAC = macCommand(["ifconfig"]);
+// Cartes filaires (eth0, enp…, eno…) : vitesse, duplex et état, lus dans /sys.
+const COMMAND_LINUX =
+  "grep -sH . /sys/class/net/e*/speed /sys/class/net/e*/duplex /sys/class/net/e*/operstate";
 
 // Saisie guidée : la vitesse lue dans les réglages suffit.
 function EthernetManual({ system, onResult, download }) {
@@ -149,6 +170,11 @@ export default function EthernetCheck({ download }) {
             about: t.about,
           },
           mac: { command: COMMAND_MAC, example: ETHERNET_MAC, about: t.about },
+          linux: {
+            command: COMMAND_LINUX,
+            example: ETHERNET_LINUX,
+            about: t.about,
+          },
         }}
         placeholder={t.placeholder}
         analyze={analyze}

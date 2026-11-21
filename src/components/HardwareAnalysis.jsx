@@ -17,21 +17,27 @@ import { analyzeComponents } from "../lib/components.js";
 import { analyzeSystem } from "../lib/system.js";
 import { analyzeActivity, formatBytes } from "../lib/activity.js";
 import { parseBlocks } from "../lib/powershell.js";
-import { HARDWARE_WINDOWS, HARDWARE_MAC } from "../lib/examples.js";
+import {
+  HARDWARE_WINDOWS,
+  HARDWARE_MAC,
+  HARDWARE_LINUX,
+} from "../lib/examples.js";
 import { SEVERITY } from "../ui/theme.js";
 import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
 import {
   Unfold,
   Verdict,
   VerdictHead,
-  StatGrid,
-  StatCell,
   Findings,
   Passed,
 } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import { windowsCommand, macCommand, linuxCommand } from "../lib/commands.js";
 import HardwareManual from "./HardwareManual.jsx";
 import Arrow from "../ui/Arrow.jsx";
+import CopySummary from "../ui/CopySummary.jsx";
+import { summarizeBlocks } from "../lib/report.js";
+import { localize } from "../lib/en.js";
 
 // Page officielle des pilotes de chaque constructeur. Aucun ne publie de
 // service interrogeable par un site : le lien permet de vérifier en un clic
@@ -79,24 +85,6 @@ function driverPage(name, lang) {
   return hit ? { vendor: hit[1], url: hit[2][lang] } : null;
 }
 
-const VendorLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-
-  .arrow {
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  &:hover .arrow {
-    transform: translateX(3px);
-  }
-`;
-
 const TEXT = {
   fr: {
     placeholder: "Coller ici la sortie des commandes…",
@@ -105,8 +93,28 @@ const TEXT = {
       windows:
         "Cette commande affiche l'état du système et du matériel : version de Windows, disques, mémoire, processeur, carte graphique, BIOS, batterie, programmes ouverts. Elle ne modifie rien, et aucune donnée n'est collectée",
       mac: "Cette commande affiche l'état du système et du matériel : version de macOS, disque, mémoire, processeur, batterie, programmes ouverts. Elle ne modifie rien, et aucune donnée n'est collectée",
+      linux:
+        "Cette commande affiche l'état du système et du matériel : distribution, disques, mémoire, processeur, carte graphique, BIOS, batterie, programmes ouverts. Elle ne modifie rien, et aucune donnée n'est collectée",
     },
     components: "Composants",
+    reportTitle: "Slowfi — analyse du matériel",
+    hardware: "Matériel",
+    detected: "Matériel détecté",
+    results: "Résultats du diagnostic",
+    noIssue: "Aucune anomalie détectée",
+    sticksN: (n) => `${n} barrette${n > 1 ? "s" : ""}`,
+    coresN: (c, th) =>
+      th && th !== c ? `${c} cœurs, ${th} threads` : `${c} cœurs`,
+    freeOf: (free, pct) => `${free} Go libres (${pct} %)`,
+    busy: (cpu, mem) =>
+      [
+        cpu != null && `Processeur à ${cpu} %`,
+        mem != null && `mémoire utilisée à ${mem} %`,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    since: (d) =>
+      d === 0 ? "moins d'un jour" : `${d} jour${d > 1 ? "s" : ""}`,
     os: "Système installé",
     battery: "Batterie",
     startup: "Au démarrage",
@@ -115,6 +123,7 @@ const TEXT = {
     cores: "Cœurs / threads",
     coresOnly: "Cœurs",
     maxFreq: "Fréquence de base",
+    boostFreq: "Fréquence maximale",
     board: "Carte mère",
     computer: "Ordinateur",
     support: (maker) => `Page support ${maker}`,
@@ -152,8 +161,27 @@ const TEXT = {
       windows:
         "This command displays the state of the system and hardware: Windows version, drives, memory, processor, graphics card, BIOS, battery, open programs. It changes nothing, and no data is collected",
       mac: "This command displays the state of the system and hardware: macOS version, drive, memory, processor, battery, open programs. It changes nothing, and no data is collected",
+      linux:
+        "This command displays the state of the system and hardware: distribution, drives, memory, processor, graphics card, BIOS, battery, open programs. It changes nothing, and no data is collected",
     },
     components: "Components",
+    reportTitle: "Slowfi — hardware analysis",
+    hardware: "Hardware",
+    detected: "Detected hardware",
+    results: "Diagnostic results",
+    noIssue: "No issue found",
+    sticksN: (n) => `${n} stick${n > 1 ? "s" : ""}`,
+    coresN: (c, th) =>
+      th && th !== c ? `${c} cores, ${th} threads` : `${c} cores`,
+    freeOf: (free, pct) => `${free} GB free (${pct} %)`,
+    busy: (cpu, mem) =>
+      [
+        cpu != null && `Processor at ${cpu} %`,
+        mem != null && `memory ${mem} % used`,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    since: (d) => (d === 0 ? "less than a day" : `${d} day${d > 1 ? "s" : ""}`),
     os: "Installed system",
     battery: "Battery",
     startup: "At startup",
@@ -162,6 +190,7 @@ const TEXT = {
     cores: "Cores / threads",
     coresOnly: "Cores",
     maxFreq: "Base frequency",
+    boostFreq: "Maximum frequency",
     board: "Motherboard",
     computer: "Computer",
     support: (maker) => `${maker} support page`,
@@ -203,7 +232,7 @@ function useT() {
 // l'Invite de commandes (cmd), elles échouent — et rien ne distingue les deux
 // fenêtres pour l'utilisateur. Enveloppées dans `powershell -Command "…"`, sur
 // une seule ligne, elles s'exécutent pareil depuis cmd, PowerShell ou Terminal.
-const READS = [
+export const HARDWARE_READS = [
   "Get-Volume | Where-Object DriveLetter | Format-List DriveLetter,FileSystemLabel,Size,SizeRemaining,HealthStatus,OperationalStatus",
   "Get-CimInstance Win32_PhysicalMemory | Format-List DeviceLocator,Capacity,Speed,ConfiguredClockSpeed",
   "Get-CimInstance Win32_VideoController | Format-List Name,DriverVersion,DriverDate,Status,ConfigManagerErrorCode",
@@ -231,8 +260,8 @@ const READS = [
   "Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 40 | Format-List ProcessName,WorkingSet64",
   "Get-CimInstance Win32_PnPSignedDriver | Where-Object DeviceClass -eq NET | Format-List DeviceName,DriverVersion,DriverDate",
 ];
-const COMMAND_WINDOWS = `powershell -NoProfile -Command "${READS.join("; ")}"`;
-const COMMAND_MAC = [
+const COMMAND_WINDOWS = windowsCommand(HARDWARE_READS);
+export const HARDWARE_MAC_READS = [
   "diskutil info /",
   "system_profiler SPMemoryDataType SPPowerDataType",
   "uptime",
@@ -242,9 +271,30 @@ const COMMAND_MAC = [
   "pmset -g therm",
   "memory_pressure | tail -1",
   "top -l 2 -o mem -n 5 -stats command,cpu,mem",
-].join(" ; ");
+];
+const COMMAND_MAC = macCommand(HARDWARE_MAC_READS);
 
-function analyzeHardware(raw) {
+// Linux : outils présents sur toutes les distributions courantes, sans droits
+// root. LC_ALL=C pour une sortie en anglais, quelle que soit la langue.
+export const HARDWARE_LINUX_READS = [
+  "export LC_ALL=C",
+  "cat /etc/os-release",
+  "df -B1 --output=target,size,avail / /home",
+  "findmnt -n -o SOURCE /",
+  "lsblk -d -o NAME,ROTA,MODEL",
+  "free -b",
+  "lscpu",
+  "lspci | grep -iE 'vga|3d|display'",
+  "grep -sH . /sys/class/dmi/id/bios_date /sys/class/dmi/id/bios_version /sys/class/dmi/id/bios_vendor /sys/class/dmi/id/board_vendor /sys/class/dmi/id/board_name /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name /sys/class/dmi/id/product_version",
+  "grep -sH . /sys/class/power_supply/BAT*/*_full*",
+  "cat /proc/uptime",
+  "powerprofilesctl get 2>/dev/null",
+  "top -bn1 | head -5",
+  "ps -eo comm,rss --sort=-rss | head -40",
+];
+const COMMAND_LINUX = linuxCommand(HARDWARE_LINUX_READS);
+
+export function analyzeHardware(raw) {
   const storage = diagnoseStorage(raw);
   const c = analyzeComponents(raw);
   const system = analyzeSystem(raw);
@@ -259,6 +309,310 @@ function analyzeHardware(raw) {
     system,
     activity,
   };
+}
+
+/** Blocs de résultats du matériel, suivis du résumé à copier. */
+// Ordre de lecture : ce qui a été détecté, puis les résultats du diagnostic
+// (les plus graves d'abord, chacun avec son niveau et la partie concernée),
+// puis ce qui a été vérifié sans anomalie.
+const RANK = { problem: 0, warning: 1, ok: 2 };
+
+/** Blocs de résultats du matériel, suivis du résumé à copier. */
+export function HardwareResults({
+  data: { volumes, components: c, system: s, activity: a },
+}) {
+  const { t, label } = useT();
+  const { lang } = useLang();
+
+  const blocks = [
+    { name: t.system, engine: "system", result: s },
+    { name: t.activity, engine: "activity", result: a },
+    { name: t.components, engine: "components", result: c },
+    ...volumes.map((v) => ({
+      name: v.name ?? `${v.driveLetter}:`,
+      engine: "storage",
+      result: v,
+    })),
+  ].filter((b) => b.result);
+
+  const severity = blocks.reduce(
+    (worst, b) =>
+      RANK[b.result.severity] < RANK[worst] ? b.result.severity : worst,
+    "ok",
+  );
+  const findings = blocks
+    .flatMap((b) =>
+      b.result.findings
+        .filter((f) => f.id !== "healthy")
+        .map((f) => ({
+          ...localize(f, lang, b.engine),
+          id: `${b.name}-${f.id}`,
+          area: b.name,
+        })),
+    )
+    .sort((x, y) => RANK[x.level ?? "ok"] - RANK[y.level ?? "ok"]);
+  const passed = blocks.flatMap((b) => b.result.passed ?? []);
+  const sev = SEVERITY[severity];
+
+  return (
+    <>
+      <Verdict $color={sev.color} gap={32} first={0}>
+        <VerdictHead
+          color={sev.color}
+        >{`${t.hardware} — ${label[severity]}`}</VerdictHead>
+        <Inventory data={{ volumes, c, s, a }} />
+        <Section2>{t.results}</Section2>
+        {findings.length ? (
+          <Findings findings={findings} />
+        ) : (
+          <p style={{ margin: "12px 0 0", fontSize: 15, color: "#e2e8f0" }}>
+            {t.noIssue}
+          </p>
+        )}
+        <Passed items={passed} />
+      </Verdict>
+      <CopySummary
+        build={() =>
+          summarizeBlocks(t.reportTitle, blocks, lang, {
+            url: window.location.origin,
+          })
+        }
+      />
+    </>
+  );
+}
+
+export const Section2 = styled.p`
+  margin: 32px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748b;
+`;
+
+// Liste à deux colonnes : la partie à gauche, ce qui a été lu à droite.
+export const Table = styled.dl`
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 30%) 1fr;
+
+  dt,
+  dd {
+    margin: 0;
+    padding: 9px 0;
+    border-top: 1px solid #111a2e;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  dt {
+    color: #64748b;
+    padding-right: 16px;
+  }
+  dd {
+    color: #e2e8f0;
+  }
+  dd .sub {
+    color: #94a3b8;
+  }
+  dd a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  li > span:last-child {
+    flex: none;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    dt {
+      padding-bottom: 0;
+    }
+    dd {
+      border-top: none;
+      padding-top: 2px;
+    }
+  }
+`;
+
+/** Ce qui a été lu, partie par partie, sans jugement. */
+function Inventory({ data: { volumes, c, s, a } }) {
+  const { t } = useT();
+  const { lang } = useLang();
+  const n = (v, digits = 1) =>
+    v == null
+      ? null
+      : Number(v).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", {
+          useGrouping: false,
+          maximumFractionDigits: digits,
+        });
+  const join = (...parts) => parts.filter(Boolean).join(" · ");
+  const rows = [];
+
+  if (s?.osLabel) rows.push([t.os, s.osLabel]);
+  if (c?.machine) {
+    rows.push([
+      c.machine.kind === "board" ? t.board : t.computer,
+      <>
+        {[c.machine.maker, c.machine.model].filter(Boolean).join(" ")}
+        {SUPPORT_PAGES[c.machine.maker] && (
+          <>
+            <br />
+            <a
+              href={SUPPORT_PAGES[c.machine.maker]}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t.support(c.machine.maker)}
+              <Arrow />
+            </a>
+          </>
+        )}
+      </>,
+    ]);
+  }
+  if (c?.cpu) {
+    const ghz = c.cpu.maxMHz || c.cpu.boostMHz;
+    rows.push([
+      t.cpu,
+      <>
+        {c.cpu.name}
+        <br />
+        <span className="sub">
+          {join(
+            c.cpu.cores && t.coresN(c.cpu.cores, c.cpu.threads),
+            ghz && `${n(ghz / 1000)} GHz`,
+          )}
+        </span>
+      </>,
+    ]);
+  }
+  if (c?.totalGB) {
+    const first = c.memory[0];
+    rows.push([
+      t.memory,
+      join(
+        `${n(c.totalGB)} ${t.gb}`,
+        !first?.unified && c.memory.length && t.sticksN(c.memory.length),
+        (first?.configured ?? first?.rated) &&
+          `${first.configured ?? first.rated} MHz`,
+      ),
+    ]);
+  }
+  for (const g of c?.gpus ?? []) {
+    const page = driverPage(g.name, lang);
+    const known = g.status != null || g.errorCode != null;
+    const ok = known && /^ok$/i.test(g.status ?? "OK") && !g.errorCode;
+    rows.push([
+      t.gpu,
+      <>
+        {g.name}
+        <br />
+        <span className="sub">
+          {join(
+            g.driverYear &&
+              `${t.driver} ${g.driverMonth ? `${String(g.driverMonth).padStart(2, "0")}/` : ""}${g.driverYear}`,
+            g.driverVersion && `v${g.driverVersion}`,
+            known &&
+              `${t.state} : ${ok ? t.stateOk : t.stateError(g.errorCode)}`,
+          )}
+        </span>
+        {page && (
+          <>
+            <br />
+            <a href={page.url} target="_blank" rel="noreferrer">
+              {t.update(page.vendor)}
+              <Arrow />
+            </a>
+          </>
+        )}
+      </>,
+    ]);
+  }
+  if (c?.bios?.year)
+    rows.push([
+      "BIOS",
+      join(c.bios.vendor, c.bios.version, String(c.bios.year)),
+    ]);
+  if (s?.kind || s?.systemDisk?.name)
+    rows.push([t.diskType, join(s.kind, s.systemDisk?.name)]);
+  for (const v of volumes) {
+    rows.push([
+      v.name ?? `${v.driveLetter}:`,
+      join(
+        v.label,
+        `${n(v.sizeGB)} ${t.gb}`,
+        v.pct != null && t.freeOf(n(v.freeGB), n(v.pct)),
+      ),
+    ]);
+  }
+  if (s?.env?.battery) rows.push([t.battery, `${s.env.battery.pct} %`]);
+  if (s?.env?.startup) {
+    const names = s.env.startup.filter(Boolean);
+    rows.push([
+      t.startup,
+      join(
+        `${s.env.startup.length} ${t.programs(s.env.startup.length)}`,
+        names.join(", "),
+      ),
+    ]);
+  }
+  if (s?.uptimeDays != null) rows.push([t.uptime, t.since(s.uptimeDays)]);
+  if (s?.powerSaver != null)
+    rows.push([t.power, s.powerSaver ? t.saver : t.normal]);
+  if (a && (a.cpuLoad != null || a.memoryPct != null))
+    rows.push([t.activity, t.busy(a.cpuLoad, a.memoryPct)]);
+  if (a?.top?.length) {
+    rows.push([
+      t.topTitle,
+      <ol key="top">
+        {a.top.map((p) => (
+          <li key={p.name}>
+            <span>
+              {p.name}
+              {p.count > 1 && (
+                <span className="sub"> · {t.processes(p.count)}</span>
+              )}
+            </span>
+            <span>{formatBytes(p.bytes, lang)}</span>
+          </li>
+        ))}
+      </ol>,
+    ]);
+  }
+
+  return (
+    <>
+      <Section2 style={{ marginTop: 8 }}>{t.detected}</Section2>
+      <Table>
+        {rows.map(([k, v], i) => (
+          <React.Fragment key={i}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </React.Fragment>
+        ))}
+      </Table>
+    </>
+  );
 }
 
 export default function HardwareAnalysis() {
@@ -288,287 +642,20 @@ export default function HardwareAnalysis() {
               example: HARDWARE_MAC,
               about: t.about.mac,
             },
+            linux: {
+              command: COMMAND_LINUX,
+              example: HARDWARE_LINUX,
+              about: t.about.linux,
+            },
           }}
           placeholder={t.placeholder}
           analyze={analyzeHardware}
           manual={HardwareManual}
           empty={t.empty}
         >
-          {({ volumes, components, system, activity }) => (
-            <>
-              {system && <SystemVerdict s={system} />}
-              {activity && <ActivityVerdict a={activity} />}
-              {components && <ComponentsVerdict c={components} />}
-              {volumes.map((v) => (
-                <VolumeVerdict key={v.name ?? v.driveLetter} v={v} />
-              ))}
-            </>
-          )}
+          {(data) => <HardwareResults data={data} />}
         </PasteStep>
       </Unfold>
     </div>
-  );
-}
-
-function SystemVerdict({ s }) {
-  const sev = SEVERITY[s.severity];
-  const { t, label } = useT();
-  return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color} tag={s.systemDisk?.name}>
-        {`${t.system} — ${label[s.severity]}`}
-      </VerdictHead>
-      <StatGrid $cols={3} $border>
-        <StatCell k={t.diskType} value={s.kind} />
-        <StatCell
-          k={t.uptime}
-          value={
-            s.uptimeDays == null
-              ? null
-              : s.uptimeDays === 0
-                ? "< 1"
-                : s.uptimeDays
-          }
-          unit={s.uptimeDays == null ? null : t.days(s.uptimeDays)}
-        />
-        <StatCell
-          k={t.power}
-          value={
-            s.powerSaver == null ? null : s.powerSaver ? t.saver : t.normal
-          }
-        />
-      </StatGrid>
-      {(s.osLabel || s.env?.battery || s.env?.startup) && (
-        <StatGrid $cols={3} $border style={{ marginTop: 12 }}>
-          <StatCell k={t.os} value={s.osLabel} text />
-          {/* Pas de case « Batterie » sur un PC fixe. */}
-          {s.env?.battery && (
-            <StatCell k={t.battery} value={s.env.battery.pct} unit="%" />
-          )}
-          <StatCell
-            k={t.startup}
-            value={s.env?.startup?.length ?? null}
-            unit={s.env?.startup ? t.programs(s.env.startup.length) : null}
-          />
-        </StatGrid>
-      )}
-      <div style={{ paddingTop: 4 }}>
-        <Findings findings={s.findings} engine="system" />
-        <Passed items={s.passed} />
-      </div>
-    </Verdict>
-  );
-}
-
-const TopList = styled.div`
-  margin-top: 18px;
-
-  .head {
-    margin: 0 0 8px;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: #64748b;
-  }
-  ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: top;
-  }
-  li {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 6px 0;
-    border-top: 1px solid #111a2e;
-    font-size: 14px;
-    color: #cbd5e1;
-  }
-  li > span:last-child {
-    flex: none;
-    font-family: ui-monospace, monospace;
-    font-size: 13px;
-    color: #94a3b8;
-  }
-`;
-
-function ActivityVerdict({ a }) {
-  const sev = SEVERITY[a.severity];
-  const { t, label } = useT();
-  const { lang } = useLang();
-  return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead
-        color={sev.color}
-      >{`${t.activity} — ${label[a.severity]}`}</VerdictHead>
-      <StatGrid $cols={2} $border>
-        <StatCell k={t.cpuLoad} value={a.cpuLoad} unit="%" />
-        <StatCell k={t.memUsed} value={a.memoryPct} unit="%" />
-      </StatGrid>
-      <div style={{ paddingTop: 4 }}>
-        <Findings findings={a.findings} engine="activity" />
-        {a.top.length > 0 && (
-          <TopList>
-            <p className="head">{t.topTitle}</p>
-            <ol>
-              {a.top.map((p) => (
-                <li key={p.name}>
-                  <span>
-                    {p.name}
-                    {p.count > 1 && (
-                      <span style={{ color: "#64748b" }}>
-                        {" "}
-                        · {t.processes(p.count)}
-                      </span>
-                    )}
-                  </span>
-                  <span>{formatBytes(p.bytes, lang)}</span>
-                </li>
-              ))}
-            </ol>
-          </TopList>
-        )}
-        <Passed items={a.passed} />
-      </div>
-    </Verdict>
-  );
-}
-
-function ComponentsVerdict({ c }) {
-  const sev = SEVERITY[c.severity];
-  const { t, label } = useT();
-  const { lang } = useLang();
-  // Mémoire unifiée (Apple Silicon) : pas de barrette, pas de fréquence lue.
-  const unified = c.memory[0]?.unified;
-  return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color}>
-        {`${t.components} — ${label[c.severity]}`}
-      </VerdictHead>
-      <StatGrid $cols={4} $border>
-        <StatCell k={t.memory} value={c.totalGB} unit={t.gb} />
-        <StatCell
-          k={t.sticks}
-          value={unified ? null : c.memory.length || null}
-        />
-        <StatCell
-          k={t.freq}
-          value={c.memory[0]?.configured ?? c.memory[0]?.rated ?? null}
-          unit="MHz"
-        />
-        <StatCell k="BIOS" value={c.bios?.year} />
-      </StatGrid>
-      {/* Une ligne par carte graphique : souvent deux sur un portable
-          (intégrée et dédiée). */}
-      {c.cpu && (
-        <StatGrid $cols={3} $border style={{ marginTop: 12 }}>
-          <StatCell k={t.cpu} value={c.cpu.name} text />
-          <StatCell
-            k={
-              c.cpu.threads && c.cpu.threads !== c.cpu.cores
-                ? t.cores
-                : t.coresOnly
-            }
-            value={
-              c.cpu.cores
-                ? c.cpu.threads && c.cpu.threads !== c.cpu.cores
-                  ? `${c.cpu.cores} / ${c.cpu.threads}`
-                  : c.cpu.cores
-                : null
-            }
-          />
-          <StatCell
-            k={t.maxFreq}
-            value={c.cpu.maxMHz ? Math.round(c.cpu.maxMHz / 100) / 10 : null}
-            unit="GHz"
-          />
-        </StatGrid>
-      )}
-      {c.machine && (
-        <div style={{ marginTop: 12 }}>
-          <StatGrid $cols={1} $border>
-            <StatCell
-              k={c.machine.kind === "board" ? t.board : t.computer}
-              value={[c.machine.maker, c.machine.model]
-                .filter(Boolean)
-                .join(" ")}
-              text
-            />
-          </StatGrid>
-          {SUPPORT_PAGES[c.machine.maker] && (
-            <VendorLink
-              href={SUPPORT_PAGES[c.machine.maker]}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t.support(c.machine.maker)}
-              <Arrow />
-            </VendorLink>
-          )}
-        </div>
-      )}
-      {c.gpus.map((g, i) => {
-        const page = driverPage(g.name, lang);
-        const known = g.status != null || g.errorCode != null;
-        const ok = known && /^ok$/i.test(g.status ?? "OK") && !g.errorCode;
-        return (
-          <div key={i} style={{ marginTop: 12 }}>
-            <StatGrid $cols={3} $border>
-              <StatCell k={t.gpu} value={g.name} text />
-              <StatCell
-                k={t.driver}
-                value={
-                  g.driverMonth
-                    ? `${String(g.driverMonth).padStart(2, "0")}/${g.driverYear}`
-                    : g.driverYear
-                }
-                unit={g.driverVersion ? `v${g.driverVersion}` : null}
-              />
-              <StatCell
-                k={t.state}
-                value={
-                  known ? (ok ? t.stateOk : t.stateError(g.errorCode)) : null
-                }
-              />
-            </StatGrid>
-            {page && (
-              <VendorLink href={page.url} target="_blank" rel="noreferrer">
-                {t.update(page.vendor)}
-                <Arrow />
-              </VendorLink>
-            )}
-          </div>
-        );
-      })}
-      <div style={{ paddingTop: 4 }}>
-        <Findings findings={c.findings} engine="components" />
-        <Passed items={c.passed} />
-      </div>
-    </Verdict>
-  );
-}
-
-function VolumeVerdict({ v }) {
-  const sev = SEVERITY[v.severity];
-  const { t, label } = useT();
-  const name = v.name ?? `${v.driveLetter}:`;
-  const tag = v.label || (v.driveLetter ? `${t.drive} ${v.driveLetter}` : null);
-  return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color} tag={tag}>
-        {`${name} — ${label[v.severity]}`}
-      </VerdictHead>
-      <StatGrid $cols={3} $border>
-        <StatCell k={t.size} value={v.sizeGB} unit={t.gb} />
-        <StatCell k={t.free} value={v.freeGB} unit={t.gb} />
-        <StatCell k={t.freePct} value={v.pct} unit="%" />
-      </StatGrid>
-      <div style={{ paddingTop: 4 }}>
-        <Findings findings={v.findings} engine="storage" />
-        <Passed items={v.passed} />
-      </div>
-    </Verdict>
   );
 }

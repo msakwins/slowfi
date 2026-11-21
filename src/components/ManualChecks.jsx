@@ -14,16 +14,16 @@ const GROUPS = {
       title: "Ethernet",
       items: [
         {
-          q: "Le débit filaire plafonne à ~95 Mb/s ?",
-          a: "Le lien a négocié en 100 Mb/s (Fast Ethernet) au lieu du Gigabit. Câble abîmé, port de switch limité, ou carte réseau bridée. Tester un autre câble Cat 5e/6 et un autre port",
+          q: "Débit filaire bloqué vers 95 Mb/s ?",
+          a: "La carte réseau et la box communiquent à 100 Mb/s au lieu de 1 000. Essayer un autre câble, puis un autre port de la box",
         },
         {
-          q: "Coupures aléatoires en filaire ?",
-          a: "Cause fréquente : connecteur RJ45 mal serti ou câble pincé. Réinsérer les deux extrémités jusqu'au clic, puis essayer un câble neuf",
+          q: "Coupures en filaire ?",
+          a: "Vérifier que les deux prises du câble sont bien enfoncées, jusqu'au clic. Si les coupures continuent, changer de câble",
         },
         {
           q: "Plus lent que le Wi-Fi ?",
-          a: "Une liaison filaire est normalement plus rapide. Mettre à jour le pilote de la carte réseau (Gestionnaire de périphériques), puis régler vitesse/duplex sur « Auto » dans ses propriétés",
+          a: "En filaire, le débit devrait être au moins aussi bon qu'en Wi-Fi. Mettre à jour le pilote de la carte réseau depuis le site du fabricant de l'ordinateur ou de la carte mère",
         },
       ],
     },
@@ -31,16 +31,16 @@ const GROUPS = {
       title: "Câblage",
       items: [
         {
-          q: "Comment savoir si un câble est en cause ?",
-          a: "L'échanger contre un câble neuf et court. Si le problème disparaît, le câble était fautif. Les câbles pliés à angle droit ou écrasés sous un meuble se dégradent avec le temps",
+          q: "Comment savoir si le câble est en cause ?",
+          a: "Le remplacer par un câble neuf le temps d'un test. Si le problème disparaît, c'était le câble. Un câble plié ou écrasé sous un meuble s'abîme avec le temps",
         },
         {
-          q: "Quelle catégorie de câble choisir ?",
-          a: "Cat 5e suffit pour du Gigabit. Cat 6/6a pour du 2,5–10 Gb/s. Éviter les câbles « plats » bas de gamme sur les longues distances",
+          q: "Quel câble choisir ?",
+          a: "Un câble Cat 5e ou Cat 6 suffit jusqu'à 1 Gb/s. Pour une fibre plus rapide, prendre du Cat 6a",
         },
         {
-          q: "Longueur maximale ?",
-          a: "100 m par segment en cuivre. Au-delà, le signal se dégrade : passer par un switch intermédiaire ou de la fibre",
+          q: "Quelle longueur au maximum ?",
+          a: "100 mètres. Pour aller plus loin, placer un switch entre les deux",
         },
       ],
     },
@@ -48,20 +48,20 @@ const GROUPS = {
       title: "Box et équipements réseau",
       items: [
         {
-          q: "La box chauffe ou ralentit en fin de journée ?",
-          a: "Débrancher la box 30 secondes. Le redémarrage vide les tables saturées et corrige une bonne partie des lenteurs",
+          q: "La box ralentit au fil de la journée ?",
+          a: "La débrancher 30 secondes, puis la rebrancher. Ce redémarrage règle beaucoup de lenteurs de la box",
         },
         {
-          q: "Un répéteur ou un CPL divise le débit ?",
-          a: "Les répéteurs Wi-Fi coupent souvent le débit de moitié, et les CPL dépendent de la qualité du circuit électrique. Privilégier un point d'accès relié par câble",
+          q: "Un répéteur ou un boîtier CPL ralentit la connexion ?",
+          a: "Un répéteur Wi-Fi divise souvent le débit par deux. Un boîtier CPL passe par les prises électriques et dépend de leur état. Quand c'est possible, relier un point d'accès Wi-Fi à la box par câble",
         },
         {
           q: "Trop d'appareils connectés ?",
-          a: "Une box d'entrée de gamme sature au-delà de ~20 appareils actifs. Consulter la liste des clients dans l'interface de la box et déconnecter les appareils inconnus",
+          a: "Une box d'entrée de gamme ralentit au-delà d'une vingtaine d'appareils actifs. Ouvrir la liste des appareils dans l'interface de la box et déconnecter ceux qui ne sont pas reconnus",
         },
         {
-          q: "Firmware à jour ?",
-          a: "Vérifier les mises à jour de firmware de la box ou du routeur, qui corrigent souvent des défauts de performance et de stabilité",
+          q: "La box est-elle à jour ?",
+          a: "Vérifier dans l'interface de la box si une mise à jour est proposée : elle corrige souvent des problèmes de vitesse et de stabilité",
         },
       ],
     },
@@ -71,16 +71,16 @@ const GROUPS = {
       title: "Ethernet",
       items: [
         {
-          q: "Wired speed capped at ~95 Mb/s?",
-          a: "The link negotiated 100 Mb/s (Fast Ethernet) instead of Gigabit. Damaged cable, limited switch port, or a throttled network card. Try another Cat 5e/6 cable and another port",
+          q: "Wired speed stuck around 95 Mb/s?",
+          a: "The network card and the router talk at 100 Mb/s instead of 1,000. Try another cable, then another router port",
         },
         {
-          q: "Random drops on a wired connection?",
-          a: "Common cause: a badly crimped RJ45 connector or a pinched cable. Reseat both ends until they click, then try a new cable",
+          q: "Drops on a wired connection?",
+          a: "Check that both ends of the cable are pushed fully in, until they click. If the drops continue, change the cable",
         },
         {
           q: "Slower than Wi-Fi?",
-          a: "A wired link is normally faster. Update the network card driver (Device Manager), then set speed/duplex to “Auto” in its properties",
+          a: "Wired should be at least as fast as Wi-Fi. Update the network card driver from the computer or motherboard maker's website",
         },
       ],
     },
@@ -88,16 +88,16 @@ const GROUPS = {
       title: "Cabling",
       items: [
         {
-          q: "How to tell if a cable is the problem?",
-          a: "Swap it for a new, short cable. If the problem goes away, the cable was at fault. Cables bent at right angles or crushed under furniture degrade over time",
+          q: "How to tell if the cable is the problem?",
+          a: "Replace it with a new cable for a test. If the problem goes away, it was the cable. A cable that is bent or crushed under furniture wears out over time",
         },
         {
-          q: "Which cable category to choose?",
-          a: "Cat 5e is enough for Gigabit. Cat 6/6a for 2.5–10 Gb/s. Avoid cheap “flat” cables over long distances",
+          q: "Which cable to choose?",
+          a: "A Cat 5e or Cat 6 cable is enough up to 1 Gb/s. For faster fibre, choose Cat 6a",
         },
         {
-          q: "Maximum length?",
-          a: "100 m per copper segment. Beyond that the signal degrades: go through an intermediate switch or fibre",
+          q: "How long can it be?",
+          a: "100 metres. To go further, put a switch in between",
         },
       ],
     },
@@ -105,20 +105,20 @@ const GROUPS = {
       title: "Router and network equipment",
       items: [
         {
-          q: "Router hot or slowing down at the end of the day?",
-          a: "Unplug the router for 30 seconds. The restart clears saturated tables and fixes a good share of slowdowns",
+          q: "Router slowing down over the day?",
+          a: "Unplug it for 30 seconds, then plug it back in. This restart fixes many router slowdowns",
         },
         {
-          q: "A repeater or powerline adapter halving the speed?",
-          a: "Wi-Fi repeaters often halve the speed, and powerline adapters depend on the quality of the electrical wiring. Favour an access point connected by cable",
+          q: "A repeater or powerline adapter slowing the connection?",
+          a: "A Wi-Fi repeater often halves the speed. A powerline adapter goes through the power sockets and depends on their condition. When possible, connect a Wi-Fi access point to the router with a cable",
         },
         {
           q: "Too many connected devices?",
-          a: "An entry-level router saturates beyond ~20 active devices. Check the client list in the router interface and disconnect unknown devices",
+          a: "An entry-level router slows down beyond about twenty active devices. Open the device list in the router interface and disconnect those you don't recognise",
         },
         {
-          q: "Firmware up to date?",
-          a: "Check for router firmware updates, which often fix performance and stability issues",
+          q: "Is the router up to date?",
+          a: "Check in the router interface whether an update is offered: it often fixes speed and stability problems",
         },
       ],
     },
@@ -142,6 +142,10 @@ const Wrap = styled.div`
 // Pas de cadre : une ligne fine sépare les questions, comme une liste.
 const Item = styled.details`
   border-bottom: 1px solid #1e293b;
+  /* Pas de trait sous la dernière question : le pied de page suit. */
+  &:last-child {
+    border-bottom: none;
+  }
 
   summary {
     display: flex;

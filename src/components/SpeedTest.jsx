@@ -7,18 +7,20 @@ import React, { useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { runSpeedTest } from "../lib/speedtest.js";
 import { gradeConnection } from "../lib/connection.js";
-import { Button, Ghost, SEVERITY } from "../ui/theme.js";
+import { Button, Ghost, NeonButton, SEVERITY } from "../ui/theme.js";
 import { Unfold, Verdict, VerdictHead, Findings } from "../ui/verdict.jsx";
 import { useCountUp } from "../ui/useCountUp.js";
 import Arrow from "../ui/Arrow.jsx";
 import { useLang } from "../ui/i18n.jsx";
-import {
-  loadHistory,
-  addToHistory,
-  clearHistory,
-  summarize,
-} from "../lib/history.js";
-import History from "./History.jsx";
+import { summarize } from "../lib/summary.js";
+
+// L'historique des tests a été retiré : on efface ce qu'une version
+// précédente avait pu garder dans le navigateur.
+try {
+  localStorage.removeItem("slowfi-history");
+} catch {
+  // Stockage indisponible : rien à effacer.
+}
 
 // Les mentions de la note s'accordent avec « connexion » : elles sont
 // propres au speed test, les autres analyses nomment leurs niveaux elles-mêmes.
@@ -208,9 +210,17 @@ const fillInverse = (v, worst) =>
  * @param {{
  *   onDiagnostic?: () => void,     ouvre l'analyse du réseau local
  *   onMeasured?: (m: object) => void, transmet les mesures d'un test terminé
+ *   onStart?: () => void,             appelé au lancement du test
+ *   startLabel?: string,              texte du bouton de départ, à la place de « Tester la connexion »
  * }} props
  */
-export default function SpeedTest({ onDiagnostic, onMeasured }) {
+export default function SpeedTest({
+  onDiagnostic,
+  onMeasured,
+  onStart,
+  startLabel,
+  neon,
+}) {
   const [phase, setPhase] = useState("idle");
   const [live, setLive] = useState({
     download: null,
@@ -227,7 +237,6 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
   );
   const { lang } = useLang();
   const t = TEXT[lang];
-  const [history, setHistory] = useState(loadHistory);
   const [summaryCopied, setSummaryCopied] = useState(false);
   const abortRef = useRef(null);
   const lastPush = useRef(0);
@@ -236,6 +245,7 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
     phase === "latency" || phase === "download" || phase === "upload";
 
   const start = async () => {
+    onStart?.();
     const controller = new AbortController();
     abortRef.current = controller;
     setMeasures(null);
@@ -267,7 +277,6 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
       setLive(final);
       // La date du test accompagne les mesures, pour le résumé.
       setMeasures({ ...final, at: new Date().toISOString() });
-      setHistory(addToHistory(final));
       onMeasured?.(final);
       setPhase("done");
     } catch (err) {
@@ -355,9 +364,14 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
     <div>
       {running ? (
         <Button onClick={stop}>{t.stop}</Button>
+      ) : // Le diagnostic complet a son bouton aux trois couleurs.
+      neon && !result ? (
+        <NeonButton onClick={start}>
+          <span className="neon">{startLabel ?? t.start}</span>
+        </NeonButton>
       ) : (
         <Button $primary={!result} onClick={start}>
-          {result ? t.again : t.start}
+          {result ? t.again : (startLabel ?? t.start)}
         </Button>
       )}
 
@@ -442,10 +456,6 @@ export default function SpeedTest({ onDiagnostic, onMeasured }) {
             <Arrow />
           </Button>
         </Unfold>
-      )}
-
-      {!running && (
-        <History entries={history} onClear={() => setHistory(clearHistory())} />
       )}
     </div>
   );

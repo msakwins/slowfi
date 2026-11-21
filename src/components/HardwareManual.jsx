@@ -111,6 +111,33 @@ const TEXT = {
       ["normal", "Jamais ou Sur batterie uniquement"],
     ],
     pick: "Choisir…",
+    linux: {
+      disks: (
+        <>
+          Ouvrir <span className="path">Fichiers › Autres emplacements</span> :
+          sous « Ordinateur », l'espace disponible et la taille
+        </>
+      ),
+      about: (
+        <>
+          Ouvrir <span className="path">Paramètres › À propos</span> (Système ›
+          À propos sur les versions récentes) : nom du système et mémoire
+        </>
+      ),
+      activity: (
+        <>
+          Ouvrir le <span className="path">Moniteur système › Ressources</span>{" "}
+          : pourcentages du processeur et de la mémoire. Puis{" "}
+          <span className="path">Paramètres › Alimentation</span> : mode
+          d'alimentation
+        </>
+      ),
+      osName: "Nom du système",
+      powerModes: [
+        ["saver", "Économie d'énergie"],
+        ["normal", "Équilibré ou Performance"],
+      ],
+    },
     boardMaker: "Fabricant de la carte mère",
     boardModel: "Produit de la carte mère",
     osWhere: {
@@ -244,6 +271,32 @@ const TEXT = {
       ["normal", "Never or Only on Battery"],
     ],
     pick: "Choose…",
+    linux: {
+      disks: (
+        <>
+          Open <span className="path">Files › Other Locations</span>: under
+          “Computer”, the available space and the size
+        </>
+      ),
+      about: (
+        <>
+          Open <span className="path">Settings › About</span> (System › About on
+          recent versions): OS name and memory
+        </>
+      ),
+      activity: (
+        <>
+          Open <span className="path">System Monitor › Resources</span>: CPU and
+          memory percentages. Then{" "}
+          <span className="path">Settings › Power</span>: power mode
+        </>
+      ),
+      osName: "OS name",
+      powerModes: [
+        ["saver", "Power Saver"],
+        ["normal", "Balanced or Performance"],
+      ],
+    },
     boardMaker: "BaseBoard Manufacturer",
     boardModel: "BaseBoard Product",
     osWhere: {
@@ -299,7 +352,7 @@ const DiskRow = styled.div`
   }
 `;
 
-/** @param {{ system: "windows"|"mac", onResult: (r: object|null) => void }} props */
+/** @param {{ system: "windows"|"mac"|"linux", onResult: (r: object|null) => void }} props */
 export default function HardwareManual({ system, onResult }) {
   const { lang } = useLang();
   const t = TEXT[lang];
@@ -315,7 +368,7 @@ export default function HardwareManual({ system, onResult }) {
     onResult(
       hardwareFromForm({
         platform: system,
-        disks: mac ? disks.slice(0, 1) : disks,
+        disks: mac || system === "linux" ? disks.slice(0, 1) : disks,
         ...(mac
           ? {
               memory: f.memory,
@@ -329,6 +382,81 @@ export default function HardwareManual({ system, onResult }) {
   }, [disks, f, system, mac, onResult]);
 
   const shown = mac ? disks.slice(0, 1) : disks;
+
+  // Linux (GNOME : Ubuntu, Fedora…) : trois fenêtres suffisent.
+  if (system === "linux") {
+    const l = t.linux;
+    return (
+      <>
+        <GuideStep n="1" where={l.disks}>
+          <Fields>
+            <Field label={t.free} hint={t.gb}>
+              <NumberInput
+                value={disks[0]?.free}
+                onChange={setDisk(0, "free")}
+                placeholder="120"
+              />
+            </Field>
+            <Field label={t.total} hint={t.gb}>
+              <NumberInput
+                value={disks[0]?.total}
+                onChange={setDisk(0, "total")}
+                placeholder="512"
+              />
+            </Field>
+          </Fields>
+        </GuideStep>
+        <GuideStep n="2" where={l.about}>
+          <Fields>
+            <Field label={l.osName}>
+              <input
+                type="text"
+                autoComplete="off"
+                placeholder={
+                  lang === "fr" ? "ex. Ubuntu 24.04" : "e.g. Ubuntu 24.04"
+                }
+                value={f.osVersion ?? ""}
+                onChange={(e) => set("osVersion")(e.target.value)}
+              />
+            </Field>
+            <Field label={t.memTotalMac} hint={t.gb}>
+              <NumberInput
+                value={f.memory}
+                onChange={set("memory")}
+                placeholder="16"
+              />
+            </Field>
+          </Fields>
+        </GuideStep>
+        <GuideStep n="3" where={l.activity}>
+          <Fields>
+            <Field label={t.cpuLoad} hint="%">
+              <NumberInput
+                value={f.cpuLoad}
+                onChange={set("cpuLoad")}
+                placeholder="12"
+              />
+            </Field>
+            <Field label={t.memoryPct} hint="%">
+              <NumberInput
+                value={f.memoryPct}
+                onChange={set("memoryPct")}
+                placeholder="45"
+              />
+            </Field>
+            <Field label={t.power}>
+              <Select
+                value={f.power}
+                onChange={set("power")}
+                options={l.powerModes}
+                placeholder={t.pick}
+              />
+            </Field>
+          </Fields>
+        </GuideStep>
+      </>
+    );
+  }
 
   return (
     <>

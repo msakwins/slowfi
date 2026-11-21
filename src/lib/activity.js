@@ -11,6 +11,7 @@
 // regrouper par programme). macOS : top et memory_pressure.
 // ─────────────────────────────────────────────────────────────────────────────
 import { field, number } from "./powershell.js";
+import { isLinux, parseLinuxActivity } from "./linux.js";
 
 const MEMORY_FULL_PCT = 90;
 const CPU_BUSY_PCT = 90;
@@ -51,6 +52,11 @@ export function parseActivity(blocks, raw) {
           : null,
       top: [...byName.values()].sort((a, b) => b.bytes - a.bytes).slice(0, 5),
     };
+  }
+
+  if (isLinux(raw)) {
+    const linux = parseLinuxActivity(raw);
+    if (linux) return linux;
   }
 
   // macOS : « System-wide memory free percentage: 23% » (memory_pressure) et
@@ -112,6 +118,7 @@ export function diagnoseActivity(a) {
   if (a.memoryPct != null && a.memoryPct >= MEMORY_FULL_PCT) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "memory-full",
       vars: { pct: a.memoryPct, top: a.top.slice(0, 3) },
       title: `Mémoire presque pleine (${a.memoryPct} % utilisés)`,
@@ -123,6 +130,7 @@ export function diagnoseActivity(a) {
   if (a.cpuLoad != null && a.cpuLoad >= CPU_BUSY_PCT) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "cpu-busy",
       vars: { pct: a.cpuLoad },
       title: `Processeur très sollicité (${a.cpuLoad} %)`,

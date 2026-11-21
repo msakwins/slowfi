@@ -411,3 +411,71 @@ Graphics/Displays:
           Display Type: Built-in Liquid Retina XDR Display
         DELL U2720Q:
           Resolution: 3840 x 2160 (2160p/4K UHD 1 - Ultra High Definition)`;
+
+// Linux — portable sous Ubuntu 24.04 (GNOME), sorties en anglais
+// (export LC_ALL=C) : système sur SSD NVMe, batterie à 74 %, Wi-Fi 5 GHz.
+export const HARDWARE_LINUX = `PRETTY_NAME="Ubuntu 24.04.1 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+ID=ubuntu
+Mounted on        1B-blocks        Avail
+/              502468108288  41234567168
+/home          502468108288  41234567168
+/dev/nvme0n1p2
+NAME      ROTA MODEL
+nvme0n1      0 SAMSUNG MZVLB512HBJQ-000L7
+sda          1 ST1000LM035-1RK172
+               total        used        free      shared  buff/cache   available
+Mem:     16541065216  9234567168  1234567168   512345678  6071930880  6721234944
+Swap:     4294963200           0  4294963200
+Architecture:             x86_64
+CPU(s):                   8
+Model name:               Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz
+Thread(s) per core:       2
+Core(s) per socket:       4
+Socket(s):                1
+CPU max MHz:              4600.0000
+00:02.0 VGA compatible controller: Intel Corporation WhiskeyLake-U GT2 [UHD Graphics 620] (rev 02)
+/sys/class/dmi/id/bios_date:06/14/2019
+/sys/class/dmi/id/bios_vendor:LENOVO
+/sys/class/dmi/id/bios_version:N2HET45W (1.28 )
+/sys/class/dmi/id/board_name:20N2CTO1WW
+/sys/class/dmi/id/board_vendor:LENOVO
+/sys/class/dmi/id/product_name:20N2CTO1WW
+/sys/class/dmi/id/product_version:ThinkPad T490
+/sys/class/dmi/id/sys_vendor:LENOVO
+/sys/class/power_supply/BAT0/energy_full:37000000
+/sys/class/power_supply/BAT0/energy_full_design:50000000
+734221.48 5123456.12
+balanced
+top - 17:42:01 up 8 days,  3:58,  1 user,  load average: 0.52, 0.61, 0.70
+Tasks: 312 total,   1 running, 311 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  4.5 us,  1.6 sy,  0.0 ni, 93.5 id,  0.3 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :  15774.6 total,   1177.4 free,   8806.9 used,   5790.6 buff/cache
+MiB Swap:   4096.0 total,   4096.0 free,      0.0 used.   6410.0 avail Mem
+COMMAND           RSS
+firefox        1432344
+firefox         823412
+gnome-shell     512340
+code            498212
+Isolated Web Co 301244
+slack           288120`;
+
+export const WIFI_LINUX = `wifi:connected
+ethernet:unavailable
+loopback:connected (externally)
+*:Livebox-A030_5GHz:36:540 Mbit/s:71
+ :Freebox-7C21:6:130 Mbit/s:42`;
+
+export const ETHERNET_LINUX = `/sys/class/net/enp0s31f6/duplex:full
+/sys/class/net/enp0s31f6/operstate:up
+/sys/class/net/enp0s31f6/speed:100`;
+
+export const DEVICES_LINUX = `Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 001 Device 004: ID 046d:c52b Logitech, Inc. Unifying Receiver
+Bus 001 Device 003: ID 046d:0893 Logitech, Inc. StreamCam
+Bus 001 Device 005: ID 8087:0aaa Intel Corp. Bluetooth 9460/9560 Jefferson Peak (JfP)
+Bus 001 Device 006: ID 0951:16c4 Kingston Technology HyperX Cloud Alpha Wireless Headset
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+ 0 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xea230000 irq 148`;

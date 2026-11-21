@@ -18,7 +18,7 @@ import {
   diagnose,
   compareWithLine,
 } from "../lib/diagnostic.js";
-import { WIFI_WINDOWS, WIFI_MAC } from "../lib/examples.js";
+import { WIFI_WINDOWS, WIFI_MAC, WIFI_LINUX } from "../lib/examples.js";
 import { Subtitle, SEVERITY } from "../ui/theme.js";
 import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
 import { Link } from "../ui/router.jsx";
@@ -32,6 +32,7 @@ import {
   Findings,
 } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import { windowsCommand, macCommand } from "../lib/commands.js";
 import EthernetCheck from "./EthernetCheck.jsx";
 import WifiManual from "./WifiManual.jsx";
 
@@ -103,12 +104,76 @@ const More = styled(Link)`
 // Rien de reconnu : soit la machine est en filaire (la sortie le dit), soit
 // le texte n'a rien à voir. Dans ce dernier cas, null, pour que l'étape
 // affiche son message au lieu d'un faux verdict « sain ».
-function analyzeWifi(raw) {
+export function analyzeWifi(raw) {
   const d = parseWifi(raw);
   if (d.radio == null && d.channel == null && d.signal == null) {
     return isWired(raw) ? { wired: true } : null;
   }
   return diagnose(d);
+}
+
+// Commandes de lecture du Wi-Fi, reprises par l'analyse complète.
+export const WIFI_COMMANDS = {
+  windows: "netsh wlan show interfaces",
+  mac: "system_profiler SPAirPortDataType",
+  // Sortie en anglais quelle que soit la langue du système, au format « terse ».
+  linux:
+    "export LC_ALL=C ; nmcli -t -f TYPE,STATE dev ; nmcli -t -f IN-USE,SSID,CHAN,RATE,SIGNAL dev wifi",
+};
+
+/** Verdict Wi-Fi (ou filaire), comparé au débit mesuré par le test. */
+export function WifiResult({ parsed, download }) {
+  const { lang } = useLang();
+  const t = TEXT[lang];
+
+  if (parsed.wired) {
+    const sev = SEVERITY.ok;
+    return (
+      <>
+        <Verdict $color={sev.color} gap={32} first={0}>
+          <VerdictHead color={sev.color}>{t.wiredHead}</VerdictHead>
+          <Findings findings={[t.wired]} />
+          <More to="/verifications">
+            {t.wiredLink}
+            <Arrow />
+          </More>
+        </Verdict>
+        {/* En filaire, c'est la liaison Ethernet qui compte. */}
+        <EthernetCheck download={download} />
+      </>
+    );
+  }
+
+  const result = compareWithLine(parsed, download);
+  const sev = SEVERITY[result.severity];
+  return (
+    <Verdict $color={sev.color} gap={32} first={0}>
+      <VerdictHead color={sev.color} tag={result.ssid}>
+        {SEVERITY_LABEL[lang][result.severity]}
+      </VerdictHead>
+      <StatGrid $cols={4} $border>
+        <StatCell
+          k={t.band}
+          value={lang === "fr" ? result.band?.replace(".", ",") : result.band}
+        />
+        <StatCell k={t.radio} value={result.radio} />
+        <StatCell k={t.signal} value={result.signal} unit="%" />
+        <StatCell k={t.channel} value={result.channel} />
+      </StatGrid>
+      {/* Les deux débits côte à côte : ce que le Wi-Fi peut porter,
+                    et ce que le test a obtenu. */}
+      <StatGrid $cols={result.measured != null ? 3 : 2}>
+        <StatCell k={t.link} value={result.linkRate} unit="Mb/s" />
+        <StatCell k={t.real} value={result.estimatedReal} unit="Mb/s" />
+        {result.measured != null && (
+          <StatCell k={t.measured} value={result.measured} unit="Mb/s" />
+        )}
+      </StatGrid>
+      <div style={{ paddingTop: 4 }}>
+        <Findings findings={result.findings} engine="wifi" />
+      </div>
+    </Verdict>
+  );
 }
 
 /** @param {{ download?: number|null }} props débit descendant mesuré par le test */
@@ -134,13 +199,18 @@ export default function NetworkAnalysis({ download }) {
         <PasteStep
           variants={{
             windows: {
-              command: "netsh wlan show interfaces",
+              command: windowsCommand([WIFI_COMMANDS.windows]),
               example: WIFI_WINDOWS,
               about: t.about,
             },
             mac: {
-              command: "system_profiler SPAirPortDataType",
+              command: macCommand([WIFI_COMMANDS.mac]),
               example: WIFI_MAC,
+              about: t.about,
+            },
+            linux: {
+              command: WIFI_COMMANDS.linux,
+              example: WIFI_LINUX,
               about: t.about,
             },
           }}
@@ -149,68 +219,7 @@ export default function NetworkAnalysis({ download }) {
           manual={WifiManual}
           empty={t.empty}
         >
-          {(parsed) => {
-            if (parsed.wired) {
-              const sev = SEVERITY.ok;
-              return (
-                <>
-                  <Verdict $color={sev.color} gap={32} first={0}>
-                    <VerdictHead color={sev.color}>{t.wiredHead}</VerdictHead>
-                    <Findings findings={[t.wired]} />
-                    <More to="/verifications">
-                      {t.wiredLink}
-                      <Arrow />
-                    </More>
-                  </Verdict>
-                  {/* En filaire, c'est la liaison Ethernet qui compte. */}
-                  <EthernetCheck download={download} />
-                </>
-              );
-            }
-
-            const result = compareWithLine(parsed, download);
-            const sev = SEVERITY[result.severity];
-            return (
-              <Verdict $color={sev.color} gap={32} first={0}>
-                <VerdictHead color={sev.color} tag={result.ssid}>
-                  {SEVERITY_LABEL[lang][result.severity]}
-                </VerdictHead>
-                <StatGrid $cols={4} $border>
-                  <StatCell
-                    k={t.band}
-                    value={
-                      lang === "fr"
-                        ? result.band?.replace(".", ",")
-                        : result.band
-                    }
-                  />
-                  <StatCell k={t.radio} value={result.radio} />
-                  <StatCell k={t.signal} value={result.signal} unit="%" />
-                  <StatCell k={t.channel} value={result.channel} />
-                </StatGrid>
-                {/* Les deux débits côte à côte : ce que le Wi-Fi peut porter,
-                    et ce que le test a obtenu. */}
-                <StatGrid $cols={result.measured != null ? 3 : 2}>
-                  <StatCell k={t.link} value={result.linkRate} unit="Mb/s" />
-                  <StatCell
-                    k={t.real}
-                    value={result.estimatedReal}
-                    unit="Mb/s"
-                  />
-                  {result.measured != null && (
-                    <StatCell
-                      k={t.measured}
-                      value={result.measured}
-                      unit="Mb/s"
-                    />
-                  )}
-                </StatGrid>
-                <div style={{ paddingTop: 4 }}>
-                  <Findings findings={result.findings} engine="wifi" />
-                </div>
-              </Verdict>
-            );
-          }}
+          {(parsed) => <WifiResult parsed={parsed} download={download} />}
         </PasteStep>
       </Unfold>
     </div>

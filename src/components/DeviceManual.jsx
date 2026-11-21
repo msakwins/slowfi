@@ -25,6 +25,13 @@ const TEXT = {
         associé doit y apparaître
       </>
     ),
+    linux: (
+      <>
+        Ouvrir <span className="path">Paramètres › Son</span>, puis{" "}
+        <span className="path">Bluetooth</span> : chaque appareil branché ou
+        associé doit y apparaître
+      </>
+    ),
     state: "Icônes affichées",
     states: [
       ["none", "Aucune icône"],
@@ -57,6 +64,13 @@ const TEXT = {
         device should appear there
       </>
     ),
+    linux: (
+      <>
+        Open <span className="path">Settings › Sound</span>, then{" "}
+        <span className="path">Bluetooth</span>: every plugged-in or paired
+        device should appear there
+      </>
+    ),
     state: "Icons shown",
     states: [
       ["none", "No icon"],
@@ -79,7 +93,8 @@ const TEXT = {
 export default function DeviceManual({ system, onResult }) {
   const { lang } = useLang();
   const t = TEXT[lang];
-  const mac = system === "mac";
+  // Mac et Linux : aucun état d'erreur affiché, on relève les appareils absents.
+  const mac = system !== "windows";
   const [f, setF] = useState({});
   const set = (k) => (v) => setF((prev) => ({ ...prev, [k]: v }));
 
@@ -97,7 +112,7 @@ export default function DeviceManual({ system, onResult }) {
   );
 
   return (
-    <GuideStep n="1" where={mac ? t.mac : t.windows}>
+    <GuideStep n="1" where={t[system]}>
       <Fields>
         <Field label={mac ? t.macState : t.state}>
           <Select

@@ -174,9 +174,9 @@ export const EN = {
       fix: "Open Device Manager › Display adapters, then reinstall the driver from the maker's website",
     }),
     "gpu-driver-old": ({ year, month }) => ({
-      title: `Graphics driver from ${monthEn(year, month)}, over 6 months old`,
+      title: `Graphics driver from ${monthEn(year, month)}, over a year old`,
       detail:
-        "NVIDIA, AMD and Intel release a new driver about once a month: a newer version almost certainly exists, with fixes and optimisations",
+        "NVIDIA, AMD and Intel release a new driver about once a month: a dozen versions have come out since, with fixes and optimisations",
       fix: "Update the driver from the maker's app (NVIDIA App, AMD Adrenalin, Intel Arc Control) or its download page",
     }),
     "ram-low": ({ total }) => ({
@@ -234,8 +234,8 @@ export const EN = {
     "ethernet-slow-link": ({ speed }) => ({
       title: `Ethernet link limited to ${speed}`,
       detail:
-        "The network card and the router agreed on 100 Mb/s instead of Gigabit: the speed stays capped at ~95 Mb/s, whatever the plan. Usual cause: a damaged or old cable, a badly crimped connector, a limited port",
-      fix: "Replace the cable with a Cat 5e or Cat 6 one, reseat both ends until they click, and try another router port",
+        "The network card and the router talk at 100 Mb/s instead of 1,000: the speed stays below about 95 Mb/s, whatever the plan",
+      fix: "Try another cable (Cat 5e or Cat 6), pushed in until it clicks at both ends, then another router port",
     }),
     "ethernet-half-duplex": () => ({
       title: "Half-duplex link",
@@ -256,6 +256,24 @@ export const EN = {
   },
 
   system: {
+    "system-hdd-other": () => ({
+      title: "System installed on a mechanical hard drive",
+      detail:
+        "A hard drive is much slower than an SSD to start up, open applications or install updates. It is the most common cause of slowness on a computer more than five years old",
+      fix: "Replace the system drive with an SSD, by cloning the current drive or reinstalling the system. It is the most visible improvement on an older computer",
+    }),
+    "uptime-long-linux": ({ days }) => ({
+      title: `No restart for ${days} days`,
+      detail:
+        "Pending kernel updates and cluttered memory pile up as long as the computer is not restarted",
+      fix: "Restart the computer at least once a week, and after every kernel update",
+    }),
+    "power-saver-linux": () => ({
+      title: "Power saving mode on",
+      detail:
+        "The processor is deliberately held back to save energy: applications respond more slowly",
+      fix: "Choose the “Balanced” profile in the power settings, or run powerprofilesctl set balanced",
+    }),
     "windows10-unsupported": ({ label, end }) => ({
       title: `${label}: no more security updates`,
       detail: `Support ended on ${dateEn(end)}: no more security or reliability fixes`,
@@ -354,14 +372,14 @@ export const EN = {
     }),
     "device-missing-mac": ({ name }) => ({
       title: `Device not working: ${name}`,
-      detail: "Device reported missing or faulty in System Settings",
-      fix: "Unplug and plug the device back in (for Bluetooth: forget it, then pair it again), then restart the Mac",
+      detail: "Device reported missing or faulty in the system settings",
+      fix: "Unplug and plug the device back in (for Bluetooth: forget it, then pair it again), then restart the computer",
     }),
     healthy: () => ({ title: "No device in error" }),
     "healthy-mac": () => ({
       title: "No device in error",
       detail:
-        "macOS does not report device errors: only recognised devices are listed",
+        "This system does not report device errors: only recognised devices are listed",
     }),
   },
 
@@ -450,6 +468,7 @@ const GROUPS_EN = {
   bluetooth: "Bluetooth",
   monitor: "Display",
   printer: "Printer",
+  usb: "USB",
 };
 
 export const PASSED_EN = {
@@ -472,13 +491,13 @@ export const PASSED_EN = {
   "ram-speed": ({ mhz }) => `Memory at its rated frequency (${mhz} MHz)`,
   "ram-dual": ({ n }) => `Dual channel (${n} sticks)`,
   "ram-amount": ({ total }) => `${total} GB of memory`,
-  "gpu-driver": ({ year, month, name }) =>
-    `Recent graphics driver, from ${monthEn(year, month)}${name ? ` (${name})` : ""}`,
+  "gpu-driver": ({ year, month, name, recent }) =>
+    `${recent ? "Recent graphics driver, from" : "Graphics driver from"} ${monthEn(year, month)}${name ? ` (${name})` : ""}`,
   "gpu-ok": ({ name }) =>
     `Graphics card working, no error reported by Windows${name ? ` (${name})` : ""}`,
   "bios-recent": ({ year }) => `BIOS from ${year}`,
-  "system-ssd": ({ kind }) =>
-    kind === "NVMe" ? "Windows on an NVMe SSD" : "Windows on an SSD",
+  "system-ssd": ({ kind, windows = true }) =>
+    `${windows ? "Windows" : "System"} on an${kind === "NVMe" ? " NVMe" : ""} SSD`,
   "disks-healthy": ({ n, names }) =>
     `${n > 1 ? `${n} physical drives in good condition` : "Physical drive in good condition"}: ${names}`,
   "uptime-ok": ({ days }) =>

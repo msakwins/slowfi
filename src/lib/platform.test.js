@@ -172,3 +172,26 @@ describe("système complet", () => {
     expect(r.severity).toBe("problem");
   });
 });
+
+describe("versions récentes de Windows 11", () => {
+  it("connaît 26H2 et 26H1, avec les dates publiées par Microsoft", () => {
+    const h2 = windowsSupport(
+      { caption: "Windows 11 Famille", build: 26300, displayVersion: "26H2" },
+      TODAY,
+    );
+    expect(h2).toMatchObject({
+      label: "Windows 11 26H2",
+      end: "2028-10-09",
+      supported: true,
+    });
+    const h1 = windowsSupport(
+      {
+        caption: "Windows 11 Entreprise",
+        build: 28000,
+        displayVersion: "26H1",
+      },
+      TODAY,
+    );
+    expect(h1).toMatchObject({ end: "2029-03-13", supported: true });
+  });
+});

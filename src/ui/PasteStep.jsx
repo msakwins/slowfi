@@ -11,7 +11,7 @@
 // Tout le reste est automatique — l'analyse part dès que le résultat est collé,
 // sans bouton à presser.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { Command, Textarea, Ghost } from "./theme.js";
 import { useText, Segmented } from "./i18n.jsx";
@@ -21,8 +21,10 @@ const TEXT = {
   fr: {
     open: {
       windows:
-        "Ouvrir le Terminal, PowerShell ou l'Invite de commandes depuis le menu Démarrer, puis y coller cette commande",
-      mac: "Ouvrir le Terminal (Applications › Utilitaires), puis y coller cette commande",
+        "Ouvrir le Terminal, PowerShell ou l'Invite de commandes depuis le menu Démarrer, y coller cette commande et appuyer sur Entrée. Le résultat est placé dans le presse-papiers",
+      mac: "Ouvrir le Terminal (Applications › Utilitaires), y coller cette commande et appuyer sur Entrée. Le résultat est placé dans le presse-papiers",
+      linux:
+        "Ouvrir un terminal (Ctrl + Alt + T sur Ubuntu), puis y coller cette commande",
     },
     system: "Système",
     method: "Façon de procéder",
@@ -32,15 +34,23 @@ const TEXT = {
     about: "Que fait cette commande ?",
     copy: "Copier",
     copied: "Copiée",
-    paste: "Coller ici le résultat",
+    paste: {
+      windows: "Coller ici le résultat (Ctrl + V)",
+      mac: "Coller ici le résultat (⌘ + V)",
+      linux:
+        "Sélectionner tout le texte du terminal (clic droit › Tout sélectionner), le copier (Ctrl + Maj + C), puis le coller ici",
+    },
+    pasteButton: "Coller depuis le presse-papiers",
     example: "Voir un exemple",
     clear: "Effacer",
   },
   en: {
     open: {
       windows:
-        "Open Terminal, PowerShell or Command Prompt from the Start menu, then paste this command",
-      mac: "Open Terminal (Applications › Utilities), then paste this command",
+        "Open Terminal, PowerShell or Command Prompt from the Start menu, paste this command and press Enter. The result is placed in the clipboard",
+      mac: "Open Terminal (Applications › Utilities), paste this command and press Enter. The result is placed in the clipboard",
+      linux:
+        "Open a terminal (Ctrl + Alt + T on Ubuntu), then paste this command",
     },
     system: "System",
     method: "How to proceed",
@@ -50,7 +60,13 @@ const TEXT = {
     about: "What does this command do?",
     copy: "Copy",
     copied: "Copied",
-    paste: "Paste the result here",
+    paste: {
+      windows: "Paste the result here (Ctrl + V)",
+      mac: "Paste the result here (⌘ + V)",
+      linux:
+        "Select all the terminal text (right-click › Select All), copy it (Ctrl + Shift + C), then paste it here",
+    },
+    pasteButton: "Paste from clipboard",
     example: "Show an example",
     clear: "Clear",
   },
@@ -59,16 +75,20 @@ const TEXT = {
 const SYSTEMS = [
   ["windows", "Windows"],
   ["mac", "macOS"],
+  ["linux", "Linux"],
 ];
 
 // Le système du visiteur, d'après le navigateur. Windows par défaut : c'est
-// le cas le plus courant, et le seul choix possible ailleurs (Linux, mobile).
+// le cas le plus courant, et le seul choix possible sur mobile.
 function detectSystem() {
   const p =
     navigator.userAgentData?.platform ||
     navigator.platform ||
     navigator.userAgent;
-  return /mac/i.test(p) ? "mac" : "windows";
+  if (/mac/i.test(p)) return "mac";
+  // Android se déclare aussi « Linux » : écarté, une commande n'y a pas de sens.
+  if (/linux/i.test(p) && !/android/i.test(navigator.userAgent)) return "linux";
+  return "windows";
 }
 
 const Systems = styled.div`
@@ -195,9 +215,13 @@ export default function PasteStep({
   empty,
   manual: Manual,
   manualProps,
+  onResult,
   children,
 }) {
-  const [system, setSystem] = useState(detectSystem);
+  const [system, setSystem] = useState(() => {
+    const detected = detectSystem();
+    return variants[detected] ? detected : "windows";
+  });
   const [method, setMethod] = useState("command");
   const [manualResult, setManualResult] = useState(null);
   const { command, example, about } = variants[system];
@@ -213,6 +237,12 @@ export default function PasteStep({
     [raw, analyze],
   );
   const result = method === "manual" ? manualResult : pasted;
+
+  // Pour qui affiche les résultats ailleurs (le diagnostic complet, étape par
+  // étape) : chaque nouveau résultat lui est transmis.
+  useEffect(() => {
+    onResult?.(result);
+  }, [result, onResult]);
 
   const copy = async () => {
     try {
@@ -234,7 +264,7 @@ export default function PasteStep({
       <Systems>
         <div className="choice">
           <Segmented role="group" aria-label={t.system}>
-            {SYSTEMS.map(([code, name]) => (
+            {SYSTEMS.filter(([code]) => variants[code]).map(([code, name]) => (
               <button
                 key={code}
                 type="button"
@@ -299,7 +329,7 @@ export default function PasteStep({
           <Step>
             <Label>
               <span className="n">2</span>
-              {t.paste}
+              {t.paste[system]}
             </Label>
             <Textarea
               value={raw}
@@ -308,6 +338,22 @@ export default function PasteStep({
               spellCheck={false}
             />
             <Links>
+              {/* Lecture du presse-papiers : le navigateur demande l'accord du
+                  visiteur ; en cas de refus, Ctrl + V reste possible. */}
+              {navigator.clipboard?.readText && (
+                <Ghost
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) setRaw(text);
+                    } catch {
+                      // Accès refusé : rien à faire, le collage au clavier marche.
+                    }
+                  }}
+                >
+                  {t.pasteButton}
+                </Ghost>
+              )}
               <Ghost onClick={() => setRaw(example)}>{t.example}</Ghost>
               {raw && <Ghost onClick={() => setRaw("")}>{t.clear}</Ghost>}
             </Links>
@@ -318,7 +364,7 @@ export default function PasteStep({
       {method === "command" && raw.trim() && !result && <Empty>{empty}</Empty>}
       {/* Conteneur neutre : le verdict garde sa propre animation d'ouverture,
           même placé dans un bloc qui anime déjà ses enfants. */}
-      {result && <div>{children(result)}</div>}
+      {result && children && <div>{children(result)}</div>}
     </>
   );
 }

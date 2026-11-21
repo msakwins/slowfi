@@ -6,7 +6,8 @@
 import React from "react";
 import styled, { keyframes, css } from "styled-components";
 import Arrow from "./Arrow.jsx";
-import { useLang } from "./i18n.jsx";
+import { useLang, SEVERITY_LABEL } from "./i18n.jsx";
+import { SEVERITY } from "./theme.js";
 import { localize, passedLabel } from "../lib/en.js";
 
 // Le verdict arrive en deux temps, parce qu'un bloc qui surgit d'un coup est
@@ -172,8 +173,25 @@ const Stat = styled.div`
 
 // Ni cadre ni filet : l'espacement et le titre suffisent à séparer deux
 // constats. Multiplier les traits gris alourdissait l'écran.
+// Un constat à signaler porte un trait de couleur à gauche et son niveau en
+// tête : on voit d'un coup d'œil lequel pose problème.
 const FindingCard = styled.div`
   margin-top: 26px;
+  ${(p) =>
+    p.$color ? `padding-left: 14px; border-left: 3px solid ${p.$color};` : ""}
+
+  .lvl {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .lvl .area {
+    color: #64748b;
+    font-weight: 600;
+  }
 
   h3 {
     margin: 0;
@@ -238,7 +256,16 @@ export function Findings({ findings, engine }) {
   return findings
     .map((raw) => localize(raw, lang, engine))
     .map((f) => (
-      <FindingCard key={f.id}>
+      <FindingCard
+        key={f.id}
+        $color={f.level && f.level !== "ok" ? SEVERITY[f.level].color : null}
+      >
+        {f.level && f.level !== "ok" && (
+          <span className="lvl" style={{ color: SEVERITY[f.level].color }}>
+            {SEVERITY_LABEL[lang][f.level]}
+            {f.area && <span className="area"> · {f.area}</span>}
+          </span>
+        )}
         <h3>{f.title}</h3>
         {f.detail && <p className="detail">{f.detail}</p>}
         {/* Certains constats n'appellent pas de correctif écrit — la suite est

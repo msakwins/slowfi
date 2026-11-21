@@ -22,6 +22,8 @@ const BUILDS = {
   "23H2": 22631,
   "24H2": 26100,
   "25H2": 26200,
+  "26H1": 28000,
+  "26H2": 26300,
 };
 
 const GIB = 1024 ** 3;
@@ -84,20 +86,24 @@ export function wifiFromForm(f) {
  */
 export function hardwareFromForm(f, opts) {
   const mac = f.platform === "mac";
-  // L'Explorateur Windows compte en Go binaires, macOS en Go décimaux.
-  const unit = mac ? 1e9 : GIB;
+  const linux = f.platform === "linux";
+  // L'Explorateur Windows compte en Go binaires, macOS et GNOME en Go décimaux.
+  const unit = mac || linux ? 1e9 : GIB;
 
   const volumes = (f.disks || [])
     .map((d, i) => {
       const total = num(d.total);
       const free = num(d.free);
       if (total == null || free == null || total <= 0) return null;
-      const letter = mac
-        ? null
-        : (d.name || (i === 0 ? "C" : "")).replace(/[:\s]/g, "").toUpperCase();
+      const letter =
+        mac || linux
+          ? null
+          : (d.name || (i === 0 ? "C" : ""))
+              .replace(/[:\s]/g, "")
+              .toUpperCase();
       return gradeVolume(
         {
-          name: mac ? d.name || "Macintosh HD" : `${letter}:`,
+          name: mac ? d.name || "Macintosh HD" : linux ? "/" : `${letter}:`,
           driveLetter: letter,
           label: null,
           size: total * unit,
@@ -105,7 +111,7 @@ export function hardwareFromForm(f, opts) {
           health: null,
           operational: null,
         },
-        { system: mac || letter === "C" },
+        { system: mac || linux || letter === "C" },
       );
     })
     .filter(Boolean);
@@ -177,7 +183,9 @@ export function hardwareFromForm(f, opts) {
   // Version du système, batterie, programmes au démarrage.
   const version = (f.osVersion || "").trim().toUpperCase();
   let os = null;
-  if (f.platform === "mac" && version) {
+  if (linux && f.osVersion) {
+    os = { kind: "linux", label: f.osVersion.trim() };
+  } else if (f.platform === "mac" && version) {
     const m = version.match(/(\d+)(?:\.(\d+))?/);
     if (m)
       os = {
@@ -265,7 +273,7 @@ export function devicesFromForm(f) {
       .map((x) => x.trim())
       .filter(Boolean);
   const devices =
-    f.platform === "mac"
+    f.platform !== "windows"
       ? names(f.missing).map((name) => ({
           name,
           group: null,

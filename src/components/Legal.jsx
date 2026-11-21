@@ -72,11 +72,6 @@ function LegalEn() {
           any connection to a website, Cloudflare receives the IP address and
           browser type. No result is sent to Slowfi
         </p>
-        <p>
-          The results are kept in this browser&apos;s storage to build the test
-          history. They never leave the device, and the “Clear history” button
-          deletes them
-        </p>
 
         <h2>Local network and hardware analyses</h2>
         <p>
@@ -138,11 +133,6 @@ function LegalFr() {
           serveurs de <strong>Cloudflare</strong> (speed.cloudflare.com). Comme
           pour toute connexion à un site, Cloudflare reçoit l'adresse IP et le
           type de navigateur. Aucun résultat n'est transmis à Slowfi
-        </p>
-        <p>
-          Les résultats sont gardés dans le stockage de ce navigateur pour
-          constituer l'historique des tests. Ils ne quittent jamais l'appareil,
-          et le bouton « Effacer l'historique » les supprime
         </p>
 
         <h2>Analyses du réseau local et du matériel</h2>

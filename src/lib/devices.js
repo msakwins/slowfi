@@ -11,6 +11,7 @@
 // liste les appareils sans état d'erreur.
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number } from "./powershell.js";
+import { isLinux, parseLinuxDevices } from "./linux.js";
 
 // Catégories affichées, dans l'ordre, et les classes Windows qui les
 // alimentent. AudioEndpoint donne les entrées et sorties telles que
@@ -24,6 +25,7 @@ export const GROUPS = [
   ["bluetooth", ["Bluetooth"]],
   ["monitor", ["Monitor"]],
   ["printer", ["Printer", "PrintQueue"]],
+  ["usb", []],
 ];
 
 export const GROUP_LABEL = {
@@ -34,6 +36,7 @@ export const GROUP_LABEL = {
   bluetooth: "Bluetooth",
   monitor: "Écran",
   printer: "Imprimante",
+  usb: "USB",
   other: "Périphérique",
 };
 
@@ -51,6 +54,9 @@ export function parsePnp(raw) {
   const out = [];
   for (const f of parseBlocks(raw)) {
     if (!("PNPClass" in f) && !("ConfigManagerErrorCode" in f)) continue;
+    // Bloc de la carte graphique (analyse du matériel collée en même temps) :
+    // elle a aussi un code d'erreur, mais son verdict est déjà ailleurs.
+    if ("DriverVersion" in f) continue;
     const name = field(f, "Name");
     if (!name) continue;
     const cls = field(f, "PNPClass");
@@ -148,7 +154,7 @@ export function diagnoseDevices(d) {
     const disabled = x.code === 22;
     bump(disabled ? "warning" : "problem");
     const kind =
-      d.platform === "mac"
+      d.platform !== "windows"
         ? "missing-mac"
         : x.code === 28
           ? "no-driver"
@@ -158,6 +164,7 @@ export function diagnoseDevices(d) {
               ? "stopped"
               : "error";
     findings.push({
+      level: disabled ? "warning" : "problem",
       id: `device-${kind}-${x.name}`,
       key: `device-${kind}`,
       vars: { name: x.name, code: x.code },
@@ -179,7 +186,7 @@ export function diagnoseDevices(d) {
           ? `Windows signale l'erreur ${x.code} sur ce périphérique : il ne fonctionne pas normalement`
           : "Le périphérique est signalé en erreur et ne fonctionne pas normalement",
         "missing-mac":
-          "Appareil signalé absent ou défaillant dans les Réglages Système",
+          "Appareil signalé absent ou défaillant dans les réglages du système",
       }[kind],
       fix: {
         "no-driver":
@@ -191,7 +198,7 @@ export function diagnoseDevices(d) {
         error:
           "Clic droit sur le menu Démarrer › Gestionnaire de périphériques › clic droit sur l'appareil › Désinstaller, puis redémarrer pour que Windows le réinstalle",
         "missing-mac":
-          "Débrancher puis rebrancher l'appareil (en Bluetooth : l'oublier, puis l'associer à nouveau), puis redémarrer le Mac",
+          "Débrancher puis rebrancher l'appareil (en Bluetooth : l'oublier, puis l'associer à nouveau), puis redémarrer l'ordinateur",
       }[kind],
     });
   }
@@ -199,11 +206,11 @@ export function diagnoseDevices(d) {
   if (findings.length === 0) {
     findings.push({
       id: "healthy",
-      key: d.platform === "mac" ? "healthy-mac" : "healthy",
+      key: d.platform === "windows" ? "healthy" : "healthy-mac",
       title: "Aucun périphérique en erreur",
       detail:
-        d.platform === "mac"
-          ? "macOS ne signale pas d'erreur de périphérique : seuls les appareils reconnus sont listés"
+        d.platform !== "windows"
+          ? "Ce système ne signale pas d'erreur de périphérique : seuls les appareils reconnus sont listés"
           : undefined,
     });
   }
@@ -241,6 +248,11 @@ export function analyzeDevices(raw) {
       for (const x of devices) if (x.cls === "MEDIA") x.group = "audio";
     }
     return diagnoseDevices({ platform: "windows", devices });
+  }
+  if (isLinux(raw)) {
+    const linux = parseLinuxDevices(raw);
+    if (linux.length > 0)
+      return diagnoseDevices({ platform: "linux", devices: linux });
   }
   const mac = parseMacDevices(raw);
   if (mac.length > 0) {

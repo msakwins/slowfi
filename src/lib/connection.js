@@ -32,6 +32,7 @@ export function gradeConnection(m) {
     if (m.download < 10) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: "down-very-low",
         vars: { v: m.download },
         title: `Débit descendant très faible (${fr(m.download)} Mb/s)`,
@@ -42,6 +43,7 @@ export function gradeConnection(m) {
     } else if (m.download < 25) {
       bump("warning");
       findings.push({
+        level: "warning",
         id: "down-low",
         vars: { v: m.download },
         title: `Débit descendant modeste (${fr(m.download)} Mb/s)`,
@@ -57,6 +59,7 @@ export function gradeConnection(m) {
   if (m.latency != null && m.latency > 100) {
     bump(m.latency > 200 ? "problem" : "warning");
     findings.push({
+      level: m.latency > 200 ? "problem" : "warning",
       id: "high-latency",
       vars: { v: m.latency },
       title: `Latence élevée (${m.latency} ms)`,
@@ -71,6 +74,7 @@ export function gradeConnection(m) {
   if (m.jitter != null && m.jitter > 50) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "high-jitter",
       vars: { v: m.jitter },
       title: `Connexion instable (variation ${m.jitter} ms)`,

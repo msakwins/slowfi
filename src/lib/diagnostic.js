@@ -8,6 +8,7 @@
 // Ton expertise réseau vit dans `diagnose()`, sous forme de règles
 // symptôme → coupable → correctif. Tu en ajoutes une par cas rencontré.
 // ─────────────────────────────────────────────────────────────────────────────
+import { parseNmcli, linuxWired } from "./linux.js";
 
 /**
  * Extrait les champs utiles de la sortie de `netsh wlan show interfaces`.
@@ -15,6 +16,8 @@
  * @param {string} raw
  */
 export function parseNetsh(raw) {
+  // Espace insécable (ou caractère abîmé) avant les deux-points : toléré par
+  // les motifs ci-dessous.
   const grab = (...patterns) => {
     for (const p of patterns) {
       const m = raw.match(p);
@@ -23,18 +26,24 @@ export function parseNetsh(raw) {
     return null;
   };
 
-  const radio = grab(/Type de radio\s*:\s*(.+)/i, /Radio type\s*:\s*(.+)/i);
-  const channelStr = grab(/Canal\s*:\s*(\d+)/i, /Channel\s*:\s*(\d+)/i);
-  const signalStr = grab(/Signal\s*:\s*(\d+)\s*%/i);
+  const radio = grab(
+    /Type de radio[^\w:\n]*:\s*(.+)/i,
+    /Radio type[^\w:\n]*:\s*(.+)/i,
+  );
+  const channelStr = grab(
+    /Canal[^\w:\n]*:\s*(\d+)/i,
+    /Channel[^\w:\n]*:\s*(\d+)/i,
+  );
+  const signalStr = grab(/Signal[^\w:\n]*:\s*(\d+)\s*%/i);
   const rxStr = grab(
-    /R[ée]ception\s*\(Mbits?\/s\)\s*:\s*([\d.]+)/i,
+    /R\S{0,2}ception\s*\(Mbits?\/s\)[^\w:\n]*:\s*([\d.]+)/i,
     /Receive rate\s*\(Mbps\)\s*:\s*([\d.]+)/i,
   );
   const txStr = grab(
-    /Transmission\s*\(Mbits?\/s\)\s*:\s*([\d.]+)/i,
+    /Transmission\s*\(Mbits?\/s\)[^\w:\n]*:\s*([\d.]+)/i,
     /Transmit rate\s*\(Mbps\)\s*:\s*([\d.]+)/i,
   );
-  const ssid = grab(/(?:^|\n)\s*SSID\s*:\s*(.+)/i);
+  const ssid = grab(/(?:^|\n)\s*SSID[^\w:\n]*:\s*(.+)/i);
 
   return {
     radio,
@@ -90,6 +99,7 @@ export function diagnose(d) {
   if (band === "2.4 GHz" || (isOldStandard && band == null)) {
     bump("problem");
     findings.push({
+      level: "problem",
       id: "band-2ghz",
       title: "Connexion en bande 2,4 GHz",
       detail:
@@ -102,6 +112,7 @@ export function diagnose(d) {
   if (d.signal != null && d.signal < 40) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "weak-signal",
       vars: { v: d.signal },
       title: `Signal faible (${d.signal} %)`,
@@ -121,6 +132,7 @@ export function diagnose(d) {
   ) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "low-link-5ghz",
       title: "Débit de lien bas malgré un bon signal en 5 GHz",
       detail:
@@ -191,6 +203,9 @@ export function parseAirport(raw) {
  * @param {string} raw
  */
 export function parseWifi(raw) {
+  // Linux : réseau utilisé, marqué « * » par nmcli.
+  const nm = parseNmcli(raw);
+  if (nm) return nm;
   if (/Current Network Information:|PHY Mode:/i.test(raw)) {
     const mac = parseAirport(raw);
     if (mac) return mac;
@@ -209,6 +224,7 @@ export function parseWifi(raw) {
  */
 export function isWired(raw) {
   return (
+    linuxWired(raw) ||
     /aucune interface sans fil|no wireless interface|wlansvc|service de réseau local sans fil automatique|wireless autoconfig service/i.test(
       raw,
     ) ||
@@ -257,6 +273,7 @@ export function compareWithLine(wifi, download) {
   } else if (measured >= capacity * WIFI_LIMIT_RATIO) {
     if (severity === "ok") severity = "warning";
     finding = {
+      level: "warning",
       id: "wifi-limits-line",
       vars,
       title: `Le Wi-Fi plafonne le débit (${measured} Mb/s mesurés pour ~${capacity} Mb/s possibles)`,

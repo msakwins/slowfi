@@ -8,6 +8,7 @@
 // Windows : Get-NetAdapter (Format-List). macOS : ifconfig, ligne « media ».
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field } from "./powershell.js";
+import { parseSysNet } from "./linux.js";
 
 /** « 1 Gbps », « 100 Mbps », « 2.5 Gbps » → Mb/s. */
 export function toMbps(text) {
@@ -67,6 +68,8 @@ export function parseIfconfig(raw) {
 
 /** Les deux formats, reconnus au contenu. */
 export function parseEthernet(raw) {
+  // Linux : /sys/class/net/<carte>/speed, duplex et operstate.
+  if (/\/sys\/class\/net\//.test(raw)) return parseSysNet(raw);
   return /LinkSpeed\s*:/i.test(raw)
     ? parseNetAdapters(raw)
     : parseIfconfig(raw);
@@ -94,12 +97,13 @@ export function diagnoseEthernet(link, download) {
   if (speed != null && speed <= 100) {
     bump("problem");
     findings.push({
+      level: "problem",
       id: "ethernet-slow-link",
       vars: { speed: labelEn },
       title: `Liaison Ethernet limitée à ${label}`,
       detail:
-        "La carte réseau et la box se sont accordées sur 100 Mb/s au lieu du Gigabit : le débit reste plafonné à ~95 Mb/s, quelle que soit l'offre. Cause habituelle : câble abîmé ou ancien, connecteur mal serti, port limité",
-      fix: "Remplacer le câble par un Cat 5e ou Cat 6, réinsérer les deux extrémités jusqu'au clic, et essayer un autre port de la box",
+        "La carte réseau et la box communiquent à 100 Mb/s au lieu de 1 000 : le débit ne dépasse pas 95 Mb/s environ, quelle que soit l'offre",
+      fix: "Essayer un autre câble (Cat 5e ou Cat 6), enfoncé jusqu'au clic des deux côtés, puis un autre port de la box",
     });
   }
 
@@ -107,6 +111,7 @@ export function diagnoseEthernet(link, download) {
   if (link.fullDuplex === false) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "ethernet-half-duplex",
       title: "Liaison en semi-duplex",
       detail:
@@ -120,6 +125,7 @@ export function diagnoseEthernet(link, download) {
   if (speed > 100 && download != null && download >= speed * 0.85) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "ethernet-limits-line",
       vars: { speed: labelEn, measured: Math.round(download) },
       title: `Le débit mesuré atteint la vitesse du lien (${Math.round(download)} Mb/s sur ${label})`,

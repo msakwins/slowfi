@@ -10,6 +10,7 @@
 // Deux pannes invisibles qui se manifestent comme « l'ordi est lent ».
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number } from "./powershell.js";
+import { parseDf } from "./linux.js";
 
 const GIB = 1024 ** 3;
 
@@ -80,6 +81,7 @@ export function gradeVolume(v, { system = false } = {}) {
     if (pct < CRITICAL_PCT) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: "disk-critical",
         vars: { where, freeGB, pct },
         title: `${where} saturé (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
@@ -90,6 +92,7 @@ export function gradeVolume(v, { system = false } = {}) {
     } else if (pct < LOW_PCT) {
       bump("warning");
       findings.push({
+        level: "warning",
         id: "disk-low",
         vars: { where, freeGB, pct },
         title: `${where} presque plein (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
@@ -110,6 +113,7 @@ export function gradeVolume(v, { system = false } = {}) {
   ) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "no-update-headroom",
       vars: { freeGB },
       title: `Marge insuffisante pour les mises à jour (${fr(freeGB)} Go)`,
@@ -128,6 +132,7 @@ export function gradeVolume(v, { system = false } = {}) {
   if (healthBad || repairNeeded) {
     bump("problem");
     findings.push({
+      level: "problem",
       id: "fs-damaged",
       vars: { where, state: v.operational || v.health },
       title: `Système de fichiers endommagé sur ${where}`,
@@ -140,6 +145,7 @@ export function gradeVolume(v, { system = false } = {}) {
   if (v.smart && /fail/i.test(v.smart)) {
     bump("problem");
     findings.push({
+      level: "problem",
       id: "smart-failing",
       vars: { where },
       title: `Disque signalé défaillant (${where})`,
@@ -197,6 +203,8 @@ export function diagnoseStorage(raw) {
     ),
     // Sur Mac, la commande ne décrit que le volume de démarrage.
     ...parseMacDisk(raw).map((v) => gradeVolume(v, { system: true })),
+    // Linux : « / » porte le système, « /home » les données.
+    ...parseDf(raw).map((v) => gradeVolume(v, { system: v.name === "/" })),
   ];
 
   const rank = { ok: 0, warning: 1, problem: 2 };

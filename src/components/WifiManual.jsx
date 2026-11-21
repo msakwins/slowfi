@@ -61,6 +61,24 @@ const TEXT = {
       rate: "Débit Tx",
       rssi: "RSSI",
     },
+    linux: {
+      where: (
+        <>
+          Ouvrir <span className="path">Paramètres › Wi-Fi</span>, puis la roue
+          dentée du réseau connecté : lignes de vitesse de connexion, de
+          fréquence et de force du signal
+        </>
+      ),
+      band: "Fréquence",
+      rate: "Vitesse de connexion",
+      signal: "Force du signal",
+      signals: [
+        ["4", "Excellente"],
+        ["3", "Bonne"],
+        ["2", "Correcte"],
+        ["1", "Faible"],
+      ],
+    },
     pick: "Choisir…",
   },
   en: {
@@ -107,6 +125,23 @@ const TEXT = {
       rate: "Tx Rate",
       rssi: "RSSI",
     },
+    linux: {
+      where: (
+        <>
+          Open <span className="path">Settings › Wi-Fi</span>, then the gear of
+          the connected network: link speed, frequency and signal strength lines
+        </>
+      ),
+      band: "Frequency",
+      rate: "Link speed",
+      signal: "Signal strength",
+      signals: [
+        ["4", "Excellent"],
+        ["3", "Good"],
+        ["2", "Ok"],
+        ["1", "Weak"],
+      ],
+    },
     pick: "Choose…",
   },
 };
@@ -132,6 +167,40 @@ export default function WifiManual({ system, onResult }) {
       ),
     );
   }, [f, system, onResult]);
+
+  // GNOME n'affiche ni la norme ni le canal : fréquence, vitesse et force
+  // du signal suffisent à l'analyse.
+  if (system === "linux") {
+    return (
+      <GuideStep n="1" where={t.where}>
+        <Fields>
+          <Field label={t.band}>
+            <Select
+              value={f.band}
+              onChange={set("band")}
+              options={BANDS}
+              placeholder={pick}
+            />
+          </Field>
+          <Field label={t.rate} hint="Mb/s">
+            <NumberInput
+              value={f.rate}
+              onChange={set("rate")}
+              placeholder="866"
+            />
+          </Field>
+          <Field label={t.signal}>
+            <Select
+              value={f.bars}
+              onChange={set("bars")}
+              options={t.signals}
+              placeholder={pick}
+            />
+          </Field>
+        </Fields>
+      </GuideStep>
+    );
+  }
 
   return (
     <>

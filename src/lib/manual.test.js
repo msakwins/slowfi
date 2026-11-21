@@ -139,7 +139,7 @@ describe("carte graphique saisie à la main", () => {
       {
         platform: "windows",
         disks: [],
-        gpuYear: "10/03/2026",
+        gpuYear: "10/09/2025",
         gpuState: "error",
       },
       { year: 2026, month: 11 },
@@ -266,5 +266,38 @@ describe("système et activité saisis à la main", () => {
       "macos-unsupported",
       "battery-worn",
     ]);
+  });
+});
+
+describe("saisie guidée sous Linux", () => {
+  it("lit le disque, le système, l'activité et l'alimentation", () => {
+    const r = hardwareFromForm(
+      {
+        platform: "linux",
+        disks: [{ free: "40", total: "512" }],
+        osVersion: "Ubuntu 24.04",
+        memory: "16",
+        cpuLoad: "8",
+        memoryPct: "92",
+        power: "saver",
+      },
+      { year: 2026, today: "2026-11-20" },
+    );
+    expect(r.volumes[0].name).toBe("/");
+    expect(r.volumes[0].findings[0].id).toBe("disk-low");
+    expect(r.system.osLabel).toBe("Ubuntu 24.04");
+    expect(r.system.findings.map((f) => f.key)).toContain("power-saver-linux");
+    expect(r.activity.findings[0].id).toBe("memory-full");
+  });
+
+  it("Wi-Fi et périphériques sans commande", async () => {
+    const { devicesFromForm } = await import("./manual.js");
+    expect(wifiFromForm({ band: "5 GHz", rate: "540", bars: "3" }).signal).toBe(
+      75,
+    );
+    expect(
+      devicesFromForm({ platform: "linux", state: "some", missing: "Casque" })
+        .findings[0].key,
+    ).toBe("device-missing-mac");
   });
 });

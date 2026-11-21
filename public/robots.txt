@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://slowfi.vercel.app/sitemap.xml
+Sitemap: https://www.slowfi.app/sitemap.xml

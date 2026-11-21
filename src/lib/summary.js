@@ -1,62 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Historique des tests de débit et résumé à partager.
-//
-// L'historique reste dans le navigateur (localStorage) : rien n'est envoyé.
-// Il sert à voir si la ligne ralentit à certaines heures. Les fonctions de
-// mise en forme sont pures ; seules load/save touchent au stockage, et
-// tolèrent qu'il soit bloqué (navigation privée stricte).
+// Résumé du test de débit, en texte brut, à coller dans un message au support
+// du fournisseur d'accès ou à un proche.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const KEY = "slowfi-history";
-export const MAX_ENTRIES = 30;
-
-/** @typedef {{at:string, download:number|null, upload:number|null, latency:number|null, jitter:number|null}} Entry */
-
-/** @returns {Entry[]} du plus récent au plus ancien */
-export function loadHistory() {
-  try {
-    const list = JSON.parse(localStorage.getItem(KEY) || "[]");
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
-}
-
-function save(list) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {
-    // Stockage indisponible : l'historique vaut pour la visite en cours.
-  }
-}
-
-/**
- * Ajoute un test en tête et garde les MAX_ENTRIES plus récents.
- * @param {Entry[]} list
- * @param {Omit<Entry,"at">} m
- * @param {Date} [now]
- */
-export function withEntry(list, m, now = new Date()) {
-  const entry = {
-    at: now.toISOString(),
-    download: m.download ?? null,
-    upload: m.upload ?? null,
-    latency: m.latency ?? null,
-    jitter: m.jitter ?? null,
-  };
-  return [entry, ...list].slice(0, MAX_ENTRIES);
-}
-
-export function addToHistory(m) {
-  const list = withEntry(loadHistory(), m);
-  save(list);
-  return list;
-}
-
-export function clearHistory() {
-  save([]);
-  return [];
-}
 
 const LABELS = {
   fr: {

@@ -2,7 +2,7 @@
 // Briques d'UI partagées par toute l'application.
 // Un seul endroit pour la charte : fond, couleurs, boutons, titres.
 // ─────────────────────────────────────────────────────────────────────────────
-import styled, { createGlobalStyle } from "styled-components";
+import styled, { createGlobalStyle, keyframes } from "styled-components";
 
 // Couleurs des niveaux de gravité, partagées par tous les verdicts. Les
 // libellés, traduits, sont dans i18n.jsx (SEVERITY_LABEL).
@@ -132,6 +132,46 @@ export const Button = styled.button`
     color: #475569;
     border-color: #1e293b;
     cursor: not-allowed;
+  }
+`;
+
+// Bouton du diagnostic complet : les trois couleurs des analyses (cyan,
+// orange, violet) sur le contour.
+const NEON =
+  "linear-gradient(90deg, #22d3ee, #f97316, #a78bfa, #22d3ee, #f97316, #a78bfa, #22d3ee)";
+
+const neonFlow = keyframes`
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, -200% 0; }
+`;
+export const NeonButton = styled.button`
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 26px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #f1f5f9;
+  /* Contour aux trois couleurs : un dégradé sous un fond uni, découpé à la
+     bordure. */
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#020617, #020617) padding-box,
+    ${NEON} border-box;
+  background-size:
+    100% 100%,
+    200% 100%;
+  animation: ${neonFlow} 6s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  &:hover {
+    background-image: linear-gradient(#0b1220, #0b1220), ${NEON};
+  }
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35);
   }
 `;
 

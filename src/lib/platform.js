@@ -13,14 +13,20 @@ import { field, number } from "./powershell.js";
 
 // Fin du support de chaque version de Windows 11 (numéro de build), pour les
 // éditions Famille et Professionnel, puis Entreprise et Éducation, qui ont
-// douze mois de plus. Source : cycle de vie publié par Microsoft. À compléter
-// à chaque nouvelle version.
+// douze mois de plus. Dernier jour de support, heure du Pacifique.
+// Source, vérifiée le 20 novembre 2026 :
+//   https://learn.microsoft.com/lifecycle/products/windows-11-home-and-pro
+//   https://learn.microsoft.com/lifecycle/products/windows-11-enterprise-and-education
+// À compléter à chaque nouvelle version. 26H1 (build 28000) est réservée aux
+// nouveaux PC Arm ; 26H2 (build 26300) suit 25H2 sur les autres.
 const WINDOWS_11 = [
   [22000, "21H2", "2023-10-10", "2024-10-08"],
   [22621, "22H2", "2024-10-08", "2025-10-14"],
   [22631, "23H2", "2025-11-11", "2026-11-10"],
   [26100, "24H2", "2026-10-13", "2027-10-12"],
   [26200, "25H2", "2027-10-12", "2028-10-10"],
+  [26300, "26H2", "2028-10-09", "2029-10-08"],
+  [28000, "26H1", "2028-03-14", "2029-03-13"],
 ];
 const WINDOWS_10_END = "2025-10-14";
 
@@ -235,6 +241,8 @@ export function platformRules(p, today) {
       });
     }
   }
+
+  if (p.os?.kind === "linux") osLabel = p.os.label;
 
   if (p.os?.kind === "mac") {
     const s = macSupport(p.os, today);

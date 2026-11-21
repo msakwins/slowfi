@@ -50,8 +50,14 @@ symptôme → coupable → correctif.
 | `storage.js` | Stockage : `Get-Volume` (Windows) ou `diskutil` (macOS) |
 | `components.js` | Mémoire, carte graphique, firmware (mémoire seule sur macOS) |
 | `powershell.js` | Lecture commune des sorties `Format-List` de PowerShell |
-| `history.js` | Historique des tests (stockage du navigateur) et résumé à copier |
+| `summary.js` | Résumé du test de débit, à copier |
 | `en.js` | Version anglaise des constats, par identifiant |
+| `linux.js` | Lecture des sorties Linux, appelée par chaque moteur |
+| `platform.js` | Version du système et fin de support, batterie, démarrage |
+| `activity.js` | Charge du processeur et de la mémoire, programmes gourmands |
+| `devices.js` | Périphériques et appareils en erreur |
+| `ethernet.js` | Vitesse et duplex de la liaison filaire |
+| `report.js` | Résumé en texte d'une analyse, à copier |
 | `examples.js` | Sorties d'exemple, affichées sur la page et reprises par les tests |
 
 **`src/components/` — l'interface** (styled-components). L'application tient
@@ -76,7 +82,10 @@ Les textes ne tutoient pas l'utilisateur : infinitif ou impératif
 
 - [x] Cas filaire : vitesse de la liaison Ethernet (`Get-NetAdapter`, `ifconfig`).
 - [x] Support macOS (Wi-Fi, disque, mémoire).
-- [ ] Support Linux.
+- [x] Support Linux (commandes sans droits root, sortie forcée en anglais par
+      `LC_ALL=C`, saisie guidée pour GNOME).
+- [x] Analyse complète : une seule commande pour la connexion, le matériel et
+      les périphériques, au choix.
 - [ ] Version desktop (Tauri) capable de lancer les commandes automatiquement,
       sans copier-coller manuel.
 

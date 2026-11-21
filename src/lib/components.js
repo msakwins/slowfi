@@ -9,6 +9,7 @@
 // parce que l'utilisateur ne peut pas la voir.
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number, yearOf, monthOf } from "./powershell.js";
+import { isLinux, parseLinuxComponents } from "./linux.js";
 
 const GIB = 1024 ** 3;
 
@@ -80,6 +81,28 @@ export function parseComponents(raw) {
     }
   }
 
+  // Rien de Windows : peut-être la sortie d'un Linux (free, lscpu, lspci, /sys).
+  let platform = "windows";
+  if (
+    memory.length === 0 &&
+    gpus.length === 0 &&
+    !bios &&
+    !cpu &&
+    isLinux(raw)
+  ) {
+    const lin = parseLinuxComponents(raw);
+    if (lin) {
+      memory.push(...lin.memory);
+      gpus.push(...lin.gpus);
+      bios = lin.bios;
+      cpu = lin.cpu;
+      cpuLimit = null;
+      computer = lin.computer.model ? { ...lin.computer, laptop: false } : null;
+      board = lin.board.model ? lin.board : null;
+      platform = "linux";
+    }
+  }
+
   if (cpu) cpu.limit = cpuLimit;
 
   // Le modèle de l'ordinateur, sauf s'il est générique (PC monté à la main) :
@@ -126,7 +149,7 @@ export function parseComponents(raw) {
     }
   }
 
-  return { memory, gpus, bios, cpu, machine, network, platform: "windows" };
+  return { memory, gpus, bios, cpu, machine, network, platform };
 }
 
 /** Total de mémoire installée, en Go. */
@@ -160,7 +183,10 @@ function parseMacCpu(raw) {
     limit: limit ? Number(limit[1]) : null,
   };
 }
-const GPU_DRIVER_OLD_MONTHS = 6;
+// Au-delà d'un an, une douzaine de versions sont sorties : on le signale.
+// En deçà, le pilote reste correct, même si une version plus récente existe.
+const GPU_DRIVER_OLD_MONTHS = 12;
+const GPU_DRIVER_RECENT_MONTHS = 6;
 
 // Pilote d'affichage générique de Windows : aucune accélération graphique.
 const BASIC_DISPLAY =
@@ -185,10 +211,10 @@ const MONTHS = [
 // (« ASUSTeK COMPUTER INC. » → « ASUS »).
 const MAKERS = [
   [/asus/i, "ASUS"],
-  [/micro-star|msi/i, "MSI"],
+  [/micro-star|\bmsi\b/i, "MSI"],
   [/gigabyte/i, "Gigabyte"],
   [/asrock/i, "ASRock"],
-  [/hewlett|^hp/i, "HP"],
+  [/hewlett|^hp\b/i, "HP"],
   [/dell/i, "Dell"],
   [/lenovo/i, "Lenovo"],
   [/acer/i, "Acer"],
@@ -200,7 +226,9 @@ export function shortMaker(maker) {
   if (!maker) return null;
   return (
     MAKERS.find(([re]) => re.test(maker))?.[1] ??
-    maker.replace(/[s,]*(inc|corp|corporation|co|ltd|gmbh).?s*$/gi, "").trim()
+    maker
+      .replace(/[\s,]*\b(inc|corp|corporation|co|ltd|gmbh)\.?\s*$/gi, "")
+      .trim()
   );
 }
 
@@ -252,6 +280,7 @@ export function diagnoseComponents(
     const loss = Math.round(((rated - configured) / rated) * 100);
     bump("warning");
     findings.push({
+      level: "warning",
       id: "ram-underclocked",
       vars: { configured, rated, loss },
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
@@ -267,6 +296,7 @@ export function diagnoseComponents(
     bump(total < 4 ? "problem" : "warning");
     const fixed = c.memory[0]?.unified;
     findings.push({
+      level: total < 4 ? "problem" : "warning",
       id: "ram-low",
       key: fixed ? "ram-low-unified" : "ram-low",
       vars: { total },
@@ -287,6 +317,7 @@ export function diagnoseComponents(
   if (c.memory.length === 1 && !c.memory[0].unified) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "ram-single-channel",
       title: "Une seule barrette de mémoire",
       detail:
@@ -306,6 +337,7 @@ export function diagnoseComponents(
     if (gpu.name && BASIC_DISPLAY.test(gpu.name)) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: `gpu-no-driver-${gpu.name}`,
         key: "gpu-no-driver",
         title: "Carte graphique sans pilote",
@@ -316,6 +348,7 @@ export function diagnoseComponents(
     } else if (gpu.errorCode === 22) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: `gpu-disabled-${gpu.name}`,
         key: "gpu-disabled",
         vars: { name: gpu.name },
@@ -327,6 +360,7 @@ export function diagnoseComponents(
     } else if (gpu.errorCode) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: `gpu-error-${gpu.name}`,
         key: "gpu-error",
         vars: { code: gpu.errorCode, name: gpu.name },
@@ -340,6 +374,7 @@ export function diagnoseComponents(
     } else if (gpu.status && !/^ok$/i.test(gpu.status)) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: `gpu-status-${gpu.name}`,
         key: "gpu-status",
         vars: { status: gpu.status, name: gpu.name },
@@ -367,10 +402,11 @@ export function diagnoseComponents(
       findings.push({
         id: `gpu-driver-old-${gpu.name || "gpu"}`,
         key: "gpu-driver-old",
+        level: "warning",
         vars: { year: gpu.driverYear, month: gpu.driverMonth, name: gpu.name },
-        title: `Pilote graphique de ${when}, plus de 6 mois`,
+        title: `Pilote graphique de ${when}, plus d'un an`,
         detail:
-          "NVIDIA, AMD et Intel publient un nouveau pilote environ une fois par mois : une version plus récente existe très probablement, avec des corrections et des optimisations",
+          "NVIDIA, AMD et Intel publient un nouveau pilote environ une fois par mois : une douzaine de versions sont sorties depuis, avec des corrections et des optimisations",
         fix: "Mettre à jour le pilote depuis l'application du constructeur (NVIDIA App, AMD Adrenalin, Intel Arc Control) ou sa page de téléchargement",
       });
     }
@@ -380,6 +416,7 @@ export function diagnoseComponents(
     ) {
       bump("warning");
       findings.push({
+        level: "warning",
         id: `gpu-driver-stale-${gpu.name || "gpu"}`,
         key: "gpu-driver-stale",
         vars: { year: gpu.driverYear, name: gpu.name },
@@ -398,6 +435,7 @@ export function diagnoseComponents(
     if (age >= BIOS_ANCIENT_YEARS) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: "bios-ancient",
         vars: { year: c.bios.year, age, machine: c.machine },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
@@ -408,6 +446,7 @@ export function diagnoseComponents(
     } else if (age >= BIOS_STALE_YEARS) {
       bump("warning");
       findings.push({
+        level: "warning",
         id: "bios-stale",
         vars: { year: c.bios.year, age, machine: c.machine },
         title: `BIOS de ${c.bios.year}, soit ${age} ans`,
@@ -441,6 +480,7 @@ export function diagnoseComponents(
   if (c.cpu?.limit != null && c.cpu.limit < CPU_LIMIT_PCT) {
     bump("warning");
     findings.push({
+      level: "warning",
       id: "cpu-limited",
       key: c.platform === "mac" ? "cpu-limited-mac" : "cpu-limited",
       vars: { pct: c.cpu.limit, name: c.cpu.name },
@@ -460,6 +500,7 @@ export function diagnoseComponents(
     if (year - d.year >= NET_DRIVER_STALE_YEARS) {
       bump("warning");
       findings.push({
+        level: "warning",
         id: `net-driver-old-${d.name}`,
         key: "net-driver-old",
         vars: { year: d.year, name: d.name },
@@ -506,8 +547,16 @@ export function diagnoseComponents(
     if (gpu.driverYear != null && ageMonths(gpu) < GPU_DRIVER_OLD_MONTHS) {
       passed.push({
         id: "gpu-driver",
-        vars: { year: gpu.driverYear, month: gpu.driverMonth, name: gpu.name },
-        label: `Pilote graphique récent, de ${monthLabel(gpu.driverYear, gpu.driverMonth)}${name}`,
+        vars: {
+          year: gpu.driverYear,
+          month: gpu.driverMonth,
+          name: gpu.name,
+          recent: ageMonths(gpu) < GPU_DRIVER_RECENT_MONTHS,
+        },
+        label:
+          ageMonths(gpu) < GPU_DRIVER_RECENT_MONTHS
+            ? `Pilote graphique récent, de ${monthLabel(gpu.driverYear, gpu.driverMonth)}${name}`
+            : `Pilote graphique de ${monthLabel(gpu.driverYear, gpu.driverMonth)}${name}`,
       });
     }
     if (

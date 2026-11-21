@@ -186,12 +186,38 @@ describe("carte graphique : état et pilote", () => {
     expect(c.passed.map((p) => p.id)).toEqual(["gpu-driver", "gpu-ok"]);
   });
 
-  it("signale un pilote de plus de 6 mois", () => {
-    const c = gpu("10/03/2026 01:00:00");
+  it("signale un pilote de plus d'un an", () => {
+    const c = gpu("10/09/2025 01:00:00");
     expect(c.findings[0].key).toBe("gpu-driver-old");
+    expect(c.findings[0].level).toBe("warning");
     expect(c.findings[0].title).toBe(
-      "Pilote graphique de mars 2026, plus de 6 mois",
+      "Pilote graphique de septembre 2025, plus d'un an",
     );
+  });
+
+  it("ne signale pas un pilote de 6 à 12 mois", () => {
+    const c = gpu(
+      "10/03/2026 01:00:00",
+      "Status : OK\nConfigManagerErrorCode : 0",
+    );
+    expect(c.findings.map((f) => f.id)).toEqual(["healthy"]);
+    expect(c.passed[0].label).toBe(
+      "Pilote graphique de mars 2026 (NVIDIA GeForce GTX 1660 Ti)",
+    );
+  });
+
+  it("un pilote mis à jour le 26 novembre 2026 est récent", () => {
+    for (const date of [
+      "26/11/2026 01:00:00",
+      "11/26/2026 1:00:00 AM",
+      "2026-11-26",
+    ]) {
+      const c = gpu(date, "Status : OK\nConfigManagerErrorCode : 0");
+      expect(c.findings.map((f) => f.id)).toEqual(["healthy"]);
+      expect(c.passed[0].label).toMatch(
+        /^Pilote graphique récent, de novembre 2026/,
+      );
+    }
   });
 
   it("garde l'alerte des 2 ans", () => {
@@ -216,5 +242,18 @@ describe("carte graphique : état et pilote", () => {
     );
     expect(c.findings[0].key).toBe("gpu-no-driver");
     expect(c.passed.map((p) => p.id)).not.toContain("gpu-ok");
+  });
+});
+
+describe("noms de fabricants", () => {
+  it("raccourcit les raisons sociales", async () => {
+    const { shortMaker } = await import("./components.js");
+    expect(shortMaker("ASUSTeK COMPUTER INC.")).toBe("ASUS");
+    expect(shortMaker("Micro-Star International Co., Ltd.")).toBe("MSI");
+    expect(shortMaker("MSI")).toBe("MSI");
+    expect(shortMaker("HP")).toBe("HP");
+    expect(shortMaker("Hewlett-Packard")).toBe("HP");
+    expect(shortMaker("Framework Computer Inc.")).toBe("Framework Computer");
+    expect(shortMaker("Gigabyte Technology Co., Ltd.")).toBe("Gigabyte");
   });
 });

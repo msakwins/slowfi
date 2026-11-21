@@ -357,3 +357,29 @@ describe("nouveaux constats en anglais", () => {
     }
   });
 });
+
+describe("niveau de chaque constat", () => {
+  it("tout constat autre que « healthy » porte un niveau", async () => {
+    const ex = await import("./examples.js");
+    const { analyzeComponents } = await import("./components.js");
+    const { analyzeSystem } = await import("./system.js");
+    const { analyzeActivity } = await import("./activity.js");
+    const { diagnoseStorage } = await import("./storage.js");
+    const { analyzeDevices } = await import("./devices.js");
+    const { parseBlocks } = await import("./powershell.js");
+    const all = [
+      ...analyzeComponents(ex.HARDWARE_WINDOWS, { year: 2026, month: 11 })
+        .findings,
+      ...analyzeSystem(ex.HARDWARE_WINDOWS, { today: "2026-11-20" }).findings,
+      ...analyzeSystem(ex.HARDWARE_LINUX, { today: "2026-11-20" }).findings,
+      ...analyzeActivity(parseBlocks(ex.HARDWARE_WINDOWS), ex.HARDWARE_WINDOWS)
+        .findings,
+      ...diagnoseStorage(ex.HARDWARE_WINDOWS).volumes.flatMap(
+        (v) => v.findings,
+      ),
+      ...analyzeDevices(ex.DEVICES_WINDOWS).findings,
+    ].filter((f) => f.id !== "healthy");
+    expect(all.length).toBeGreaterThan(8);
+    for (const f of all) expect(["warning", "problem"]).toContain(f.level);
+  });
+});

@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number } from "./powershell.js";
 import { parsePlatform, platformRules } from "./platform.js";
+import { isLinux, parseLinuxSystem } from "./linux.js";
 
 // Mode « Économies d'énergie » de Windows : identifiant fixe, quelle que soit
 // la langue du système.
@@ -64,6 +65,11 @@ export function parseSystem(raw) {
     };
   }
 
+  if (isLinux(raw)) {
+    const linux = parseLinuxSystem(raw);
+    if (linux) return linux;
+  }
+
   // macOS : « up 12 days, 3:04 » ; moins d'un jour, « up 3:04 » ou « up 5 mins ».
   const up = raw.match(/\bup\s+(?:(\d+)\s+days?,?|\d+:\d+|\d+\s+mins?)/i);
   const lowPower = raw.match(/lowpowermode\s+(\d)/i);
@@ -103,14 +109,19 @@ export function diagnoseSystem(
   };
 
   // Règle A — Windows sur un disque dur mécanique.
+  const windows = s.platform === "windows";
   if (diskKind(s.systemDisk) === "HDD") {
     bump("problem");
     findings.push({
+      level: "problem",
       id: "system-hdd",
-      title: "Windows installé sur un disque dur mécanique",
+      key: windows ? "system-hdd" : "system-hdd-other",
+      title: windows
+        ? "Windows installé sur un disque dur mécanique"
+        : "Système installé sur un disque dur mécanique",
       detail:
         "Un disque dur est bien plus lent qu'un SSD pour démarrer, ouvrir des applications ou installer des mises à jour. C'est la cause de lenteur la plus fréquente sur un PC de plus de cinq ans",
-      fix: "Remplacer le disque système par un SSD, en clonant le disque actuel ou en réinstallant Windows. C'est l'amélioration la plus visible sur un PC ancien",
+      fix: `Remplacer le disque système par un SSD, en clonant le disque actuel ou en réinstallant ${windows ? "Windows" : "le système"}. C'est l'amélioration la plus visible sur un PC ancien`,
     });
   }
 
@@ -119,6 +130,7 @@ export function diagnoseSystem(
     if (d.health && !/^(healthy|sain|ok)$/i.test(d.health)) {
       bump("problem");
       findings.push({
+        level: "problem",
         id: `disk-unhealthy-${d.id ?? d.name}`,
         key: "disk-unhealthy",
         vars: { name: d.name || "?", state: d.health },
@@ -134,16 +146,25 @@ export function diagnoseSystem(
     bump("warning");
     const mac = s.platform === "mac";
     findings.push({
+      level: "warning",
       id: "uptime-long",
-      key: mac ? "uptime-long-mac" : "uptime-long",
+      key: mac
+        ? "uptime-long-mac"
+        : s.platform === "linux"
+          ? "uptime-long-linux"
+          : "uptime-long",
       vars: { days: s.uptimeDays },
       title: `Pas de redémarrage depuis ${s.uptimeDays} jours`,
       detail: mac
         ? "Mémoire encombrée et mises à jour en attente s'accumulent tant que le Mac n'est pas redémarré"
-        : "Avec le démarrage rapide de Windows, « Arrêter » ne remet pas le système à zéro : seul « Redémarrer » le fait. Mémoire encombrée et mises à jour en attente s'accumulent",
+        : s.platform === "linux"
+          ? "Mises à jour du noyau en attente et mémoire encombrée s'accumulent tant que l'ordinateur n'est pas redémarré"
+          : "Avec le démarrage rapide de Windows, « Arrêter » ne remet pas le système à zéro : seul « Redémarrer » le fait. Mémoire encombrée et mises à jour en attente s'accumulent",
       fix: mac
         ? "Redémarrer le Mac (Menu Pomme › Redémarrer) au moins une fois par semaine"
-        : "Utiliser « Redémarrer », et non « Arrêter », au moins une fois par semaine",
+        : s.platform === "linux"
+          ? "Redémarrer l'ordinateur au moins une fois par semaine, et après chaque mise à jour du noyau"
+          : "Utiliser « Redémarrer », et non « Arrêter », au moins une fois par semaine",
     });
   }
 
@@ -152,21 +173,28 @@ export function diagnoseSystem(
     bump("warning");
     const mac = s.platform === "mac";
     findings.push({
+      level: "warning",
       id: "power-saver",
-      key: mac ? "power-saver-mac" : "power-saver",
+      key: mac
+        ? "power-saver-mac"
+        : s.platform === "linux"
+          ? "power-saver-linux"
+          : "power-saver",
       title: "Mode économie d'énergie actif",
       detail:
         "Le processeur est volontairement bridé pour économiser l'énergie : les applications répondent plus lentement",
       fix: mac
         ? "Régler « Mode économie d'énergie » sur « Jamais » ou « Sur batterie uniquement » dans Réglages Système › Batterie"
-        : "Choisir « Équilibré » dans Paramètres › Système › Alimentation › Mode d'alimentation, ou dans les Options d'alimentation du Panneau de configuration",
+        : s.platform === "linux"
+          ? "Choisir le profil « Équilibré » dans les paramètres d'alimentation, ou lancer powerprofilesctl set balanced"
+          : "Choisir « Équilibré » dans Paramètres › Système › Alimentation › Mode d'alimentation, ou dans les Options d'alimentation du Panneau de configuration",
     });
   }
 
   // Règles E à G — version du système, batterie, démarrage.
   const env = platformRules(s.env ?? {}, today);
-  for (const { level, ...finding } of env.findings) {
-    bump(level);
+  for (const finding of env.findings) {
+    bump(finding.level);
     // La version du système passe en tête : c'est le point le plus grave.
     if (/windows|macos/.test(finding.id)) findings.unshift(finding);
     else findings.push(finding);
@@ -185,8 +213,8 @@ export function diagnoseSystem(
   if (kind === "SSD" || kind === "NVMe") {
     passed.push({
       id: "system-ssd",
-      vars: { kind },
-      label: kind === "NVMe" ? "Windows sur un SSD NVMe" : "Windows sur un SSD",
+      vars: { kind, windows },
+      label: `${windows ? "Windows" : "Système"} sur un SSD${kind === "NVMe" ? " NVMe" : ""}`,
     });
   }
   const healthy = s.disks.filter(
