@@ -1,7 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Mises à jour de l'application, depuis les releases GitHub publiées.
 //
-// - Windows et Linux (AppImage) : la nouvelle version se télécharge en fond,
+// - Windows, installation Squirrel (actuelle) : updater intégré d'Electron et
+//   update.electronjs.org (voir setupSquirrelUpdates).
+// - Windows (ancien installateur NSIS) et Linux (AppImage) : la nouvelle
+//   version se télécharge en fond,
 //   puis la page propose de redémarrer ; sinon, elle s'installe à la fermeture.
 // - macOS : Apple n'autorise la mise à jour automatique que pour une
 //   application signée. En attendant, la page annonce la version et renvoie
@@ -24,10 +27,53 @@ function notify(next) {
     win.webContents.send("slowfi:update", state);
 }
 
+/**
+ * Installée par Squirrel (Windows) : Update.exe se trouve un dossier au-dessus
+ * de l'application.
+ */
+function installedBySquirrel() {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  return (
+    process.platform === "win32" &&
+    fs.existsSync(
+      path.resolve(path.dirname(process.execPath), "..", "Update.exe"),
+    )
+  );
+}
+
+/**
+ * Windows, installation Squirrel : l'updater intégré d'Electron, nourri par
+ * update.electronjs.org (gratuit pour les projets libres hébergés sur
+ * GitHub), qui lit les releases du dépôt.
+ */
+function setupSquirrelUpdates() {
+  const { autoUpdater } = require("electron");
+  autoUpdater.setFeedURL({
+    url: `https://update.electronjs.org/msakwins/slowfi/${process.platform}-${process.arch}/${app.getVersion()}`,
+  });
+  autoUpdater.on("update-downloaded", (_event, _notes, name) => {
+    notify({
+      status: "ready",
+      version: String(name ?? "").replace(/^v/, "") || "",
+    });
+  });
+  autoUpdater.on("error", () => {});
+  ipcMain.handle("slowfi:install-update", () => {
+    if (state?.status === "ready") autoUpdater.quitAndInstall();
+  });
+  try {
+    autoUpdater.checkForUpdates();
+  } catch {
+    // Hors ligne : nouvel essai au prochain lancement.
+  }
+}
+
 function setupUpdates() {
   ipcMain.handle("slowfi:update-state", () => state);
 
   if (!app.isPackaged || process.argv.includes("--smoke")) return;
+  if (installedBySquirrel()) return setupSquirrelUpdates();
   // Paquet .deb : electron-updater ne peut pas le remplacer lui-même.
   if (process.platform === "linux" && !process.env.APPIMAGE) return;
 
@@ -51,7 +97,9 @@ function setupUpdates() {
   autoUpdater.on("error", () => {});
 
   ipcMain.handle("slowfi:install-update", () => {
-    if (state?.status === "ready") autoUpdater.quitAndInstall();
+    // Installation silencieuse, puis relance : les étapes de l'installateur
+    // ne servent qu'à la première installation, pas aux mises à jour.
+    if (state?.status === "ready") autoUpdater.quitAndInstall(true, true);
   });
 
   autoUpdater.checkForUpdates().catch(() => {});

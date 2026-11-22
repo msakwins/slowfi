@@ -185,9 +185,7 @@ const SERIES = [
 
 const SECONDS = 60;
 
-const Section = styled.section`
-  margin-top: 64px;
-`;
+const Section = styled.section``;
 
 const Group = styled.p`
   margin: 28px 0 0;
@@ -410,7 +408,7 @@ export default function Sensors() {
 
   return (
     <Section style={HARDWARE}>
-      <Title as="h2">{t.title}</Title>
+      <Title>{t.title}</Title>
       <Lead>{t.lead}</Lead>
 
       {!data ? (

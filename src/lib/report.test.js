@@ -27,7 +27,7 @@ describe("résumé d'une analyse", () => {
     });
     const lines = text.split("\n");
     expect(lines[0]).toBe("Slowfi — analyse du matériel — 20/11/2026 17:30");
-    expect(text).toContain("Système : Point d'attention");
+    expect(text).toContain("Système : À surveiller");
     expect(text).toContain("- Pas de redémarrage depuis 12 jours");
     expect(text).toContain("  Correctif : Utiliser « Redémarrer »");
     expect(text).toContain(
@@ -44,7 +44,7 @@ describe("résumé d'une analyse", () => {
     const text = summarizeBlocks("Slowfi — hardware analysis", en, "en", {
       date,
     });
-    expect(text).toContain("System: Worth a look");
+    expect(text).toContain("System: To watch");
     expect(text).toContain("- No restart for 12 days");
     expect(text).toContain("Fix: Use “Restart”");
     expect(text).not.toMatch(/undefined/);

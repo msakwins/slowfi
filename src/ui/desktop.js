@@ -8,3 +8,8 @@ export const desktop =
 
 /** Système de la machine, quand la page tourne dans l'application. */
 export const desktopSystem = desktop ? appSystem(desktop.platform) : null;
+
+// Dans l'application, la page porte data-app sur <html> : les styles propres à
+// l'application (logo plus petit…) s'y accrochent.
+if (desktop && typeof document !== "undefined")
+  document.documentElement.dataset.app = "";

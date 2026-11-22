@@ -21,8 +21,8 @@ const SOURCE = "https://github.com/msakwins/slowfi";
 const TEXT = {
   fr: {
     title: "Application",
-    lead: "Les analyses du site, et d'autres en plus, lancées directement par l'application : pas de commande à copier ni de résultat à coller",
-    more: "En plus du site",
+    lead: "Diagnostic de connexion, de matériel et de périphériques pour Windows, macOS et Linux",
+    more: "Uniquement dans l'application",
     items: [
       "Températures de la carte graphique, de la carte mère et des disques",
       "Usure des SSD",
@@ -54,13 +54,13 @@ const TEXT = {
       "macOS : clic droit sur Slowfi dans le dossier Applications, puis « Ouvrir », et confirmer",
     privacy: "Confidentialité",
     privacyText:
-      "Aucune donnée n'est collectée. Les analyses s'exécutent localement, comme sur le site",
+      "Aucune donnée personnelle n'est collectée. Les analyses s'exécutent localement, comme sur le site",
     sourceText: "Le code est public sur",
   },
   en: {
     title: "App",
-    lead: "The website's analyses and more, run directly by the app: no command to copy and no result to paste",
-    more: "On top of the website",
+    lead: "Connection, hardware and device diagnostics for Windows, macOS and Linux",
+    more: "Only in the app",
     items: [
       "Graphics card, motherboard and drive temperatures",
       "SSD wear",
@@ -90,7 +90,7 @@ const TEXT = {
       "macOS: right-click Slowfi in the Applications folder, then “Open”, and confirm",
     privacy: "Privacy",
     privacyText:
-      "No data is collected. Analyses run locally, as on the website",
+      "No personal data is collected. Analyses run locally, as on the website",
     sourceText: "The code is public on",
   },
 };
@@ -272,7 +272,7 @@ export default function AppPage() {
         </p>
         {/* Mention demandée par SignPath sur la page de téléchargement. */}
         <p>
-          Free code signing provided by{" "}
+          Code signing provided by{" "}
           <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
             SignPath.io
           </a>

@@ -18,6 +18,10 @@ import AppPage from "./AppPage.jsx";
 import { desktop } from "../ui/desktop.js";
 import UpdateBanner from "../ui/UpdateBanner.jsx";
 import TitleBar, { TITLE_BAR_HEIGHT } from "../ui/TitleBar.jsx";
+import Sidebar, { SIDEBAR_WIDTH } from "../ui/Sidebar.jsx";
+import Sensors from "./Sensors.jsx";
+import DiagnosticPage from "./DiagnosticPage.jsx";
+import HistoryPage from "./HistoryPage.jsx";
 
 export { GlobalStyle };
 
@@ -28,6 +32,14 @@ const PAGES = {
   "/verifications": ManualChecks,
   "/confidentialite": Legal,
   "/application": AppPage,
+  // Capteurs : page de l'application seulement.
+  ...(desktop
+    ? {
+        "/diagnostic": DiagnosticPage,
+        "/historique": HistoryPage,
+        "/capteurs": Sensors,
+      }
+    : {}),
 };
 
 const TEXT = {
@@ -37,6 +49,9 @@ const TEXT = {
       "/verifications": "Vérifications manuelles — Slowfi",
       "/confidentialite": "Confidentialité et mentions légales — Slowfi",
       "/application": "Application — Slowfi",
+      "/capteurs": "Capteurs — Slowfi",
+      "/diagnostic": "Diagnostic approfondi — Slowfi",
+      "/historique": "Historique — Slowfi",
     },
     nav: {
       "/": "Analyses",
@@ -45,11 +60,10 @@ const TEXT = {
     },
     home: "Slowfi, accueil",
     source: "Code source",
-    note: "Aucune donnée collectée · Analyses exécutées dans le navigateur",
+    note: "Aucune donnée personnelle collectée · Analyses exécutées dans le navigateur",
     download: "Télécharger l'application",
     downloadShort: "Télécharger",
     app: "Application",
-    appNote: "Aucune donnée collectée · Analyses exécutées sur cet ordinateur",
   },
   en: {
     titles: {
@@ -57,6 +71,9 @@ const TEXT = {
       "/verifications": "Manual checks — Slowfi",
       "/confidentialite": "Privacy and legal notice — Slowfi",
       "/application": "App — Slowfi",
+      "/capteurs": "Sensors — Slowfi",
+      "/diagnostic": "In-depth diagnostic — Slowfi",
+      "/historique": "History — Slowfi",
     },
     nav: {
       "/": "Analyses",
@@ -65,11 +82,10 @@ const TEXT = {
     },
     home: "Slowfi, home",
     source: "Source code",
-    note: "No data collected · Analyses run in the browser",
+    note: "No personal data collected · Analyses run in the browser",
     download: "Download the app",
     downloadShort: "Download",
     app: "App",
-    appNote: "No data collected · Analyses run on this computer",
   },
 };
 
@@ -126,7 +142,8 @@ const DownloadLink = styled.a`
 const ScrollArea = styled.div`
   position: fixed;
   top: ${TITLE_BAR_HEIGHT}px;
-  left: 0;
+  /* À droite de la barre latérale. */
+  left: ${SIDEBAR_WIDTH}px;
   right: 3px;
   bottom: 3px;
   overflow-y: auto;
@@ -210,41 +227,48 @@ export default function Slowfi() {
       </Header>
       <Current />
       {desktop && <UpdateBanner />}
-      <Footer>
-        <nav>
-          {Object.keys(PAGES)
-            .filter((to) => to !== "/application")
-            .map((to) => (
-              <Link
-                key={to}
-                to={to}
-                aria-current={path === to ? "page" : undefined}
+      {/* Dans l'application, ni liens ni mention en bas de page : la barre
+          latérale mène à la confidentialité. */}
+      {!desktop && (
+        <Footer>
+          {/* Dans l'application, la barre latérale remplace ces liens. */}
+          {!desktop && (
+            <nav>
+              {Object.keys(PAGES)
+                .filter((to) => to !== "/application")
+                .map((to) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    aria-current={path === to ? "page" : undefined}
+                  >
+                    {t.nav[to]}
+                  </Link>
+                ))}
+              <a
+                href="https://github.com/msakwins/slowfi"
+                target="_blank"
+                rel="noreferrer"
               >
-                {t.nav[to]}
+                {t.source}
+              </a>
+            </nav>
+          )}
+          {!desktop && (
+            <nav aria-label={t.app}>
+              <Link
+                to="/application"
+                aria-current={path === "/application" ? "page" : undefined}
+              >
+                {t.app}
               </Link>
-            ))}
-          <a
-            href="https://github.com/msakwins/slowfi"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t.source}
-          </a>
-        </nav>
-        {!desktop && (
-          <nav aria-label={t.app}>
-            <Link
-              to="/application"
-              aria-current={path === "/application" ? "page" : undefined}
-            >
-              {t.app}
-            </Link>
-            {/* Pas de lien direct vers les fichiers : la page Application
+              {/* Pas de lien direct vers les fichiers : la page Application
                 vérifie qu'une version est publiée avant de les lier. */}
-          </nav>
-        )}
-        <p>{desktop ? t.appNote : t.note}</p>
-      </Footer>
+            </nav>
+          )}
+          <p>{t.note}</p>
+        </Footer>
+      )}
     </Page>
   );
 
@@ -255,6 +279,7 @@ export default function Slowfi() {
   return (
     <>
       <TitleBar />
+      <Sidebar path={path} top={TITLE_BAR_HEIGHT} />
       <ScrollArea id="scroll-root">{page}</ScrollArea>
     </>
   );

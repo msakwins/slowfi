@@ -63,6 +63,7 @@ jobs:
           name: slowfi-${{ runner.os }}
           path: |
             release/*.exe
+            release/squirrel-windows/*
             release/*.dmg
             release/*.AppImage
             release/*.deb

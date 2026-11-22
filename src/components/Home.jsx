@@ -8,7 +8,6 @@ import styled from "styled-components";
 import { Title, Lead, NeonText } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import CombinedAnalysis from "./CombinedAnalysis.jsx";
-import Sensors from "./Sensors.jsx";
 import { desktop } from "../ui/desktop.js";
 import { useText } from "../ui/i18n.jsx";
 
@@ -56,11 +55,9 @@ export default function Home() {
         <Title as="h2">
           <NeonText>{t.allTitle}</NeonText>
         </Title>
-        <CombinedAnalysis download={download} />
+        {/* Dans l'application, le bouton ouvre la page « Diagnostic ». */}
+        <CombinedAnalysis download={download} launcher={Boolean(desktop)} />
       </Section>
-
-      {/* Application desktop : capteurs et suivi, hors de portée du site. */}
-      {desktop && <Sensors />}
     </>
   );
 }

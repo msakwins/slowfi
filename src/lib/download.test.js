@@ -46,3 +46,19 @@ describe("téléchargements de l'application", () => {
     expect(visitorOs("Mozilla/5.0 (X11; Linux x86_64)")).toBe("linux");
   });
 });
+
+describe("installateur Windows", () => {
+  it("préfère l'installateur Squirrel à l'ancien", () => {
+    const asset = (name) => ({ name, browser_download_url: `u/${name}` });
+    expect(
+      pickDownloads({
+        assets: [
+          asset("Slowfi-win-x64.exe"),
+          asset("Slowfi-win-x64.exe.blockmap"),
+          asset("Slowfi-Setup.exe"),
+          asset("slowfi-0.1.8-full.nupkg"),
+        ],
+      }).windows,
+    ).toBe("u/Slowfi-Setup.exe");
+  });
+});

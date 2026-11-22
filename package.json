@@ -1,7 +1,7 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Diagnostic de connexion, de matériel et de périphériques",
   "author": "Slowfi",
   "homepage": "https://www.slowfi.app",
@@ -23,6 +23,8 @@
     "@vitejs/plugin-react": "^6.0.3",
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0",
+    "electron-builder-squirrel-windows": "^26.18.0",
+    "gifenc": "^1.0.3",
     "oxlint": "^1.71.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -60,6 +62,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "squirrel",
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -92,6 +100,12 @@
       "owner": "msakwins",
       "repo": "slowfi",
       "releaseType": "release"
+    },
+    "squirrelWindows": {
+      "loadingGif": "electron/install-splash.gif",
+      "iconUrl": "https://raw.githubusercontent.com/msakwins/slowfi/main/electron/icon.ico",
+      "artifactName": "Slowfi-Setup.${ext}",
+      "useAppIdAsId": false
     }
   },
   "repository": {

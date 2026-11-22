@@ -60,8 +60,8 @@ function LegalEn() {
     <>
       <Title>Privacy and legal notice</Title>
       <Lead>
-        No account, no cookies, no audience tracking. The analyses run in the
-        browser
+        No personal data is collected: no account, no cookies, no audience
+        tracking. On the website as in the app, the analyses run on the device
       </Lead>
 
       <Body>
@@ -81,7 +81,7 @@ function LegalEn() {
         </p>
         <p>
           One exception, to check for driver updates on Windows: the identifier
-          of each component (for example PCIVEN_10DE&DEV_2182, the same for
+          of each component (for example PCI\VEN_10DE&DEV_2182, the same for
           every card of that model) is sent to Slowfi, which looks it up in the{" "}
           <strong>Microsoft Update Catalog</strong>. Nothing else from the text
           is sent, and nothing is stored
@@ -136,6 +136,25 @@ function LegalEn() {
           </a>
           , under the MIT licence
         </p>
+        <p>
+          Code signing provided by{" "}
+          <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
+            SignPath.io
+          </a>
+          , certificate by{" "}
+          <a href="https://signpath.org/" target="_blank" rel="noreferrer">
+            SignPath Foundation
+          </a>{" "}
+          (
+          <a
+            href="https://github.com/msakwins/slowfi/blob/main/CODE_SIGNING_POLICY.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            code signing policy
+          </a>
+          )
+        </p>
 
         <h2>Publisher</h2>
         <p>
@@ -160,8 +179,9 @@ function LegalFr() {
     <>
       <Title>Confidentialité et mentions légales</Title>
       <Lead>
-        Aucun compte, aucun cookie, aucun outil de mesure d'audience. Les
-        analyses s'exécutent dans le navigateur
+        Aucune donnée personnelle n'est collectée : aucun compte, aucun cookie,
+        aucun outil de mesure d'audience. Sur le site comme dans l'application,
+        les analyses s'exécutent sur l'appareil
       </Lead>
 
       <Body>
@@ -181,10 +201,11 @@ function LegalFr() {
         </p>
         <p>
           Une exception, pour vérifier les mises à jour de pilotes sous Windows
-          : l'identifiant de chaque composant (par exemple PCIVEN_10DE&DEV_2182,
-          le même pour toutes les cartes de ce modèle) est envoyé à Slowfi, qui
-          le cherche dans le <strong>catalogue Microsoft Update</strong>. Rien
-          d'autre du texte n'est transmis, et rien n'est conservé
+          : l'identifiant de chaque composant (par exemple
+          PCI\VEN_10DE&DEV_2182, le même pour toutes les cartes de ce modèle)
+          est envoyé à Slowfi, qui le cherche dans le{" "}
+          <strong>catalogue Microsoft Update</strong>. Rien d'autre du texte
+          n'est transmis, et rien n'est conservé
         </p>
         <p>
           Seulement à la demande, avec le bouton « Chercher sur les sites » : le
@@ -237,6 +258,25 @@ function LegalFr() {
             GitHub
           </a>
           , sous licence MIT
+        </p>
+        <p>
+          Code signing provided by{" "}
+          <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
+            SignPath.io
+          </a>
+          , certificate by{" "}
+          <a href="https://signpath.org/" target="_blank" rel="noreferrer">
+            SignPath Foundation
+          </a>{" "}
+          (
+          <a
+            href="https://github.com/msakwins/slowfi/blob/main/CODE_SIGNING_POLICY.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            code signing policy
+          </a>
+          )
         </p>
 
         <h2>Éditeur</h2>

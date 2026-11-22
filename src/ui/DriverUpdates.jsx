@@ -26,8 +26,7 @@ const AI_API = desktop
 const TEXT = {
   fr: {
     title: "Mises à jour des pilotes",
-    intro:
-      "Version installée comparée à la dernière publiée par NVIDIA sur son site, et pour les autres composants à la dernière distribuée par Windows Update. Pour une carte AMD, la dernière version d'AMD est indiquée à titre de repère",
+    intro: "Version installée comparée à la dernière disponible",
     sources: {
       nvidia: "Site NVIDIA",
       amd: "Site AMD",
@@ -66,8 +65,7 @@ const TEXT = {
   },
   en: {
     title: "Driver updates",
-    intro:
-      "Installed version compared with the latest one NVIDIA publishes on its site, and for other components with the latest one distributed by Windows Update. For an AMD card, AMD's latest version is shown for reference",
+    intro: "Installed version compared with the latest available",
     sources: {
       nvidia: "NVIDIA site",
       amd: "AMD site",

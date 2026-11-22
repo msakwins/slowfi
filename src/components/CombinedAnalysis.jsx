@@ -17,6 +17,7 @@ import { Unfold } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
 import HistoryPanel from "../ui/HistoryPanel.jsx";
 import { desktop } from "../ui/desktop.js";
+import { navigate } from "../ui/router.jsx";
 import { windowsCommand, macCommand, linuxCommand } from "../lib/commands.js";
 import { analyzeDevices } from "../lib/devices.js";
 import {
@@ -204,24 +205,35 @@ const Missing = styled.p`
   color: #64748b;
 `;
 
+// Choix et débit transmis de l'accueil à la page « Diagnostic »
+// (application) : le bouton de l'accueil les dépose, la page les reprend.
+const carried = { chosen: null, download: null };
+
 /**
  * @param {{
  *   download?: number|null,  débit mesuré par le test de l'accueil
+ *   launcher?: boolean,      accueil de l'application : le bouton ouvre la
+ *                            page « Diagnostic » au lieu de lancer sur place
+ *   autoStart?: boolean,     page « Diagnostic » : démarre aussitôt
  * }} props
  */
-export default function CombinedAnalysis({ download }) {
+export default function CombinedAnalysis({ download, launcher, autoStart }) {
   const { lang } = useLang();
   const t = TEXT[lang];
-  const [chosen, setChosen] = useState({
-    network: true,
-    hardware: true,
-    devices: true,
-  });
+  const [chosen, setChosen] = useState(
+    () =>
+      (autoStart && carried.chosen) || {
+        network: true,
+        hardware: true,
+        devices: true,
+      },
+  );
+  const measured = download ?? (autoStart ? carried.download : null);
   const keys = KEYS.filter((k) => chosen[k]);
 
   // Une étape après l'autre : la commande, puis les résultats.
   //   idle → command
-  const [phase, setPhase] = useState("idle");
+  const [phase, setPhase] = useState(autoStart ? "command" : "idle");
   // Une étape terminée se replie en une ligne de résumé ; un clic la rouvre.
   const [open, setOpen] = useState({ command: true });
   const [res, setRes] = useState(null);
@@ -339,7 +351,12 @@ export default function CombinedAnalysis({ download }) {
             ))}
           </Launch>
           <NeonButton
-            onClick={() => setPhase("command")}
+            onClick={() => {
+              if (!launcher) return setPhase("command");
+              carried.chosen = chosen;
+              carried.download = download ?? null;
+              navigate("/diagnostic");
+            }}
             disabled={keys.length === 0}
           >
             <span className="neon">{t.start}</span>
@@ -394,7 +411,7 @@ export default function CombinedAnalysis({ download }) {
                 {!res[k] ? (
                   <Missing>{t.missing}</Missing>
                 ) : k === "network" ? (
-                  <WifiResult parsed={res.network} download={download} />
+                  <WifiResult parsed={res.network} download={measured} />
                 ) : k === "hardware" ? (
                   <HardwareResults data={res.hardware} />
                 ) : (
@@ -403,7 +420,7 @@ export default function CombinedAnalysis({ download }) {
               </Group>
             ))}
             {/* Comparaison avec l'analyse précédente, et copie en ligne. */}
-            <HistoryPanel res={res} download={download} />
+            <HistoryPanel res={res} download={measured} />
           </StepBox>
         </Unfold>
       )}

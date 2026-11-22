@@ -123,8 +123,8 @@ function runScript(script) {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 780,
-    height: 860,
+    width: 840,
+    height: 760,
     minWidth: 420,
     minHeight: 500,
     backgroundColor: "#020617",
@@ -300,9 +300,12 @@ function smokeTest(win) {
     // machine de CI : noté, sans faire échouer.
     report.sensors = await step(
       `(async () => {
+      // Page « Capteurs », ouverte depuis la barre latérale.
+      document.querySelector('a[href="/capteurs"]')?.click();
+      await new Promise((r) => setTimeout(r, 800));
       const section = () =>
         [...document.querySelectorAll("section")].find((s) =>
-          s.querySelector("h2")?.textContent === "Capteurs",
+          s.querySelector("h1")?.textContent === "Capteurs",
         );
       for (let i = 0; i < 60 && section()?.innerText.includes("Lecture des capteurs"); i++)
         await new Promise((r) => setTimeout(r, 500));
@@ -327,6 +330,42 @@ function smokeTest(win) {
 }
 
 // Une seule instance : relancer l'application ramène la fenêtre ouverte.
+// Installateur Windows (Squirrel) : il lance l'application avec un drapeau
+// à l'installation, à la mise à jour et à la désinstallation, pour créer ou
+// retirer les raccourcis (bureau, menu Démarrer), puis attend qu'elle quitte.
+function handleSquirrelEvent() {
+  if (process.platform !== "win32") return false;
+  const flag = process.argv[1];
+  if (!flag?.startsWith("--squirrel-")) return false;
+  const updateExe = path.resolve(
+    path.dirname(process.execPath),
+    "..",
+    "Update.exe",
+  );
+  const exe = path.basename(process.execPath);
+  const run = (args) => {
+    try {
+      spawn(updateExe, args, { detached: true }).on("close", () => app.quit());
+    } catch {
+      app.quit();
+    }
+  };
+  if (flag === "--squirrel-install" || flag === "--squirrel-updated") {
+    run([`--createShortcut=${exe}`]);
+    return true;
+  }
+  if (flag === "--squirrel-uninstall") {
+    run([`--removeShortcut=${exe}`]);
+    return true;
+  }
+  if (flag === "--squirrel-obsolete") {
+    app.quit();
+    return true;
+  }
+  return false;
+}
+const squirrelEvent = handleSquirrelEvent();
+
 // Copie de développement (npm run app) : dossier de données à part, pour
 // tourner à côté de l'application installée sans se heurter au verrou
 // d'instance unique.
@@ -341,7 +380,9 @@ if (!app.isPackaged) {
   );
 }
 
-if (!app.requestSingleInstanceLock()) {
+if (squirrelEvent) {
+  // Raccourcis en cours : l'application quitte d'elle-même ensuite.
+} else if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", () => {

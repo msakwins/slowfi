@@ -18,6 +18,13 @@ const Word = styled.div`
   margin-bottom: 44px;
   font-size: clamp(34px, 5.6vw, 44px);
   font-weight: 700;
+
+  /* Application : le nom est déjà dans la barre de titre, le logo se fait
+     plus discret. */
+  [data-app] & {
+    font-size: 28px;
+    margin-bottom: 32px;
+  }
   letter-spacing: 0.09em;
   line-height: 1;
   color: #f1f5f9;

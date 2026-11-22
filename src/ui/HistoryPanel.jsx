@@ -23,6 +23,7 @@ import {
 const TEXT = {
   fr: {
     title: "Historique",
+    empty: "Aucune analyse enregistrée : lancer un diagnostic approfondi",
     first:
       "Première analyse enregistrée sur cet appareil. La prochaine sera comparée à celle-ci",
     since: (d) => `Depuis l'analyse du ${d}`,
@@ -34,7 +35,7 @@ const TEXT = {
       `${n} analyse${n > 1 ? "s" : ""} enregistrée${n > 1 ? "s" : ""}`,
     levels: {
       ok: "Bon état",
-      warning: "Point d'attention",
+      warning: "À surveiller",
       problem: "Problème détecté",
     },
     local:
@@ -59,6 +60,7 @@ const TEXT = {
   },
   en: {
     title: "History",
+    empty: "No analysis saved: run an in-depth diagnostic",
     first:
       "First analysis saved on this device. The next one will be compared with it",
     since: (d) => `Since the analysis of ${d}`,
@@ -69,7 +71,7 @@ const TEXT = {
     past: (n) => `${n} analys${n > 1 ? "es" : "is"} saved`,
     levels: {
       ok: "Good condition",
-      warning: "Needs attention",
+      warning: "To watch",
       problem: "Problem detected",
     },
     local:
@@ -212,7 +214,7 @@ const Row = styled.div`
 /**
  * @param {{ res: object, download?: number|null }} props
  */
-export default function HistoryPanel({ res, download }) {
+export default function HistoryPanel({ res, download, page }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   const [list, setList] = useState(loadHistory);
@@ -268,8 +270,11 @@ export default function HistoryPanel({ res, download }) {
 
   return (
     <Box>
-      <Head>{t.title}</Head>
-      {!previous ? (
+      {/* Sur la page « Historique », le titre de la page suffit. */}
+      {!page && <Head>{t.title}</Head>}
+      {!current ? (
+        <Line>{t.empty}</Line>
+      ) : !previous ? (
         <Line>{t.first}</Line>
       ) : (
         <>

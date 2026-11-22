@@ -60,12 +60,12 @@ export function useText(table) {
 export const SEVERITY_LABEL = {
   fr: {
     ok: "Bon état",
-    warning: "Point d'attention",
+    warning: "À surveiller",
     problem: "Problème détecté",
   },
   en: {
     ok: "Good condition",
-    warning: "Worth a look",
+    warning: "To watch",
     problem: "Problem found",
   },
 };
