@@ -119,27 +119,6 @@ function LegalEn() {
           making them
         </p>
 
-        <h2>Code signing</h2>
-        <p>
-          Code signing provided by{" "}
-          <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
-            SignPath.io
-          </a>
-          , certificate by{" "}
-          <a href="https://signpath.org/" target="_blank" rel="noreferrer">
-            SignPath Foundation
-          </a>{" "}
-          (
-          <a
-            href="https://github.com/msakwins/slowfi/blob/main/CODE_SIGNING_POLICY.md"
-            target="_blank"
-            rel="noreferrer"
-          >
-            code signing policy
-          </a>
-          )
-        </p>
-
         <h2 id="editeur">Publisher</h2>
         <p>
           Site published by a private individual, on a non-professional basis.
@@ -230,27 +209,6 @@ function LegalFr() {
           Les correctifs sont donnés à titre indicatif. Les manipulations (mise
           à jour de firmware, de BIOS, réglages de la box) restent sous la
           responsabilité de la personne qui les effectue
-        </p>
-
-        <h2>Signature du code</h2>
-        <p>
-          Code signing provided by{" "}
-          <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
-            SignPath.io
-          </a>
-          , certificate by{" "}
-          <a href="https://signpath.org/" target="_blank" rel="noreferrer">
-            SignPath Foundation
-          </a>{" "}
-          (
-          <a
-            href="https://github.com/msakwins/slowfi/blob/main/CODE_SIGNING_POLICY.md"
-            target="_blank"
-            rel="noreferrer"
-          >
-            code signing policy
-          </a>
-          )
         </p>
 
         <h2 id="editeur">Éditeur</h2>

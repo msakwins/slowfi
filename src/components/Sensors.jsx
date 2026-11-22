@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Title, Lead, Button, SEVERITY } from "../ui/theme.js";
+import { Title, Lead, Button, SEVERITY, Pending } from "../ui/theme.js";
 import { useText } from "../ui/i18n.jsx";
 import { desktop } from "../ui/desktop.js";
 import PartsToBuy from "../ui/PartsToBuy.jsx";
@@ -21,7 +21,7 @@ const TEXT = {
   fr: {
     title: "Capteurs",
     lead: "Températures, usure des SSD et ventilateurs, lus directement sur cet ordinateur",
-    reading: "Lecture des capteurs…",
+    reading: "Lecture des capteurs",
     temps: "Températures",
     wear: "Usure des SSD",
     fans: "Ventilateurs",
@@ -93,7 +93,7 @@ const TEXT = {
   en: {
     title: "Sensors",
     lead: "Temperatures, SSD wear and fans, read directly on this computer",
-    reading: "Reading sensors…",
+    reading: "Reading sensors",
     temps: "Temperatures",
     wear: "SSD wear",
     fans: "Fans",
@@ -412,7 +412,7 @@ export default function Sensors() {
       <Lead>{t.lead}</Lead>
 
       {!data ? (
-        <Note>{t.reading}</Note>
+        <Pending>{t.reading}</Pending>
       ) : (
         <>
           {rows.length === 0 && <Note>{t.noSensors}</Note>}

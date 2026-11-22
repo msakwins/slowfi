@@ -198,7 +198,7 @@ export const EN = {
     }),
     "ram-underclocked": ({ configured, rated, loss }) => ({
       title: `Memory held back (${configured} MHz instead of ${rated} MHz)`,
-      detail: `Memory running below its rated frequency, about ${loss} % less bandwidth. Without an XMP or EXPO profile enabled, the motherboard applies the base frequency`,
+      detail: `Memory running below its rated frequency: about ${loss}% less bandwidth. Without an XMP or EXPO profile enabled, the motherboard applies the base frequency`,
       fix: "Enable the XMP (Intel) or EXPO/DOCP (AMD) profile in the BIOS, then run the analysis again to check the frequency. Free and reversible",
     }),
     "ram-single-channel": () => ({
@@ -213,14 +213,14 @@ export const EN = {
         "Optimisations and fixes released since are not applied. Graphics performance may be reduced",
       fix: "Update the driver from the manufacturer's app (NVIDIA App, AMD Adrenalin, Intel Arc Control). Windows Update often lags behind on graphics drivers",
     }),
-    "bios-ancient": ({ year, age, machine }) => ({
-      title: `BIOS from ${year}, ${age} years old`,
+    "bios-ancient": ({ year, machine }) => ({
+      title: `BIOS not updated since ${year}`,
       detail:
         "Processor microcode updates and stability fixes released since are not applied. Possible impact on performance",
       fix: `Download the latest BIOS from ${supportPageEn(machine)}, and flash it from the utility built into the BIOS, with the file on a FAT32 USB stick. Never from a Windows tool`,
     }),
-    "bios-stale": ({ year, age, machine }) => ({
-      title: `BIOS from ${year}, ${age} years old`,
+    "bios-stale": ({ year, machine }) => ({
+      title: `BIOS not updated since ${year}`,
       detail:
         "Firmware updates, including processor microcode, have probably been released since",
       fix: `Check ${supportPageEn(machine)} for a newer version. Not an urgent update`,

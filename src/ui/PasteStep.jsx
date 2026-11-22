@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import { Command, Textarea, Ghost, Button } from "./theme.js";
+import { Command, Textarea, Ghost, Button, Pending } from "./theme.js";
 import { desktop, desktopSystem } from "./desktop.js";
 import { appScript } from "../lib/commands.js";
 import { useText, Segmented } from "./i18n.jsx";
@@ -134,52 +134,6 @@ const Label = styled.p`
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     font-size: 12px;
     color: var(--accent);
-  }
-`;
-
-// Analyse en cours, dans l'application : le texte, suivi de trois petits
-// points qui s'allument tour à tour.
-const Running = styled.p`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #94a3b8;
-
-  .dots {
-    display: inline-flex;
-    gap: 3px;
-  }
-  .dots i {
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: fade 1.2s ease-in-out infinite;
-  }
-  .dots i:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  .dots i:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-
-  @keyframes fade {
-    0%,
-    100% {
-      opacity: 0.25;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .dots i {
-      animation: none;
-      opacity: 0.6;
-    }
   }
 `;
 
@@ -339,14 +293,7 @@ export default function PasteStep({
       <>
         <Step>
           {running ? (
-            <Running role="status">
-              <span className="text">{t.running}</span>
-              <span className="dots" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            </Running>
+            <Pending>{t.running}</Pending>
           ) : (
             <Button onClick={run}>{t.rerun}</Button>
           )}

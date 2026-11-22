@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Page « Application » : ce que l'application ajoute au site, le
-// téléchargement pour chaque système, et comment l'ouvrir tant qu'elle n'est
-// pas signée.
+// téléchargement pour chaque système, et comment l'ouvrir la première fois.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -15,8 +14,6 @@ import {
   pickDownloads,
   mainDownload,
 } from "../lib/download.js";
-
-const SOURCE = "https://github.com/msakwins/slowfi";
 
 const TEXT = {
   fr: {
@@ -47,14 +44,14 @@ const TEXT = {
     releasesPage: "la page des versions",
     open: "Première ouverture",
     unsigned:
-      "L'application n'est pas encore signée. Le système affiche donc un avertissement la première fois",
+      "Au premier lancement, Windows et macOS peuvent afficher un avertissement de sécurité",
     openWindows:
       "Windows : dans la fenêtre « Windows a protégé votre ordinateur », cliquer sur « Informations complémentaires », puis « Exécuter quand même »",
     openMac:
       "macOS : clic droit sur Slowfi dans le dossier Applications, puis « Ouvrir », et confirmer",
     privacy: "Confidentialité",
     privacyText:
-      "Aucune donnée personnelle n'est collectée. Les analyses s'exécutent localement, comme sur le site",
+      "Aucune donnée personnelle n'est collectée",
   },
   en: {
     title: "App",
@@ -82,14 +79,14 @@ const TEXT = {
     releasesPage: "the releases page",
     open: "First launch",
     unsigned:
-      "The app is not signed yet, so the system shows a warning the first time",
+      "On first launch, Windows and macOS may display a security warning",
     openWindows:
       "Windows: in the “Windows protected your PC” window, click “More info”, then “Run anyway”",
     openMac:
       "macOS: right-click Slowfi in the Applications folder, then “Open”, and confirm",
     privacy: "Privacy",
     privacyText:
-      "No personal data is collected. Analyses run locally, as on the website",
+      "No personal data is collected",
   },
 };
 
@@ -281,7 +278,7 @@ export default function AppPage() {
           </a>{" "}
           (
           <a
-            href={`${SOURCE}/blob/main/CODE_SIGNING_POLICY.md`}
+            href="https://github.com/msakwins/slowfi/blob/main/CODE_SIGNING_POLICY.md"
             target="_blank"
             rel="noreferrer"
           >

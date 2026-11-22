@@ -75,6 +75,36 @@ export const Subtitle = styled.h3`
 
 // Un <div> plutôt qu'un <p> : une introduction peut compter plusieurs
 // paragraphes, et des <p> imbriqués dans un <p> sont invalides.
+// Attente en cours (« Lecture des capteurs », « Analyse en cours ») : une
+// ligne de texte gris, la même partout. Les points de suspension s'écrivent
+// un à un ; le texte passé ne les contient pas.
+export const Pending = styled.p.attrs({ role: "status" })`
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+
+  &::after {
+    content: "…";
+    display: inline-block;
+    vertical-align: bottom;
+    overflow: hidden;
+    width: 0;
+    animation: pending-dots 1.4s steps(4, end) infinite;
+  }
+  @keyframes pending-dots {
+    to {
+      width: 1.25em;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      width: auto;
+    }
+  }
+`;
+
 export const Lead = styled.div`
   color: #94a3b8;
   line-height: 1.8;

@@ -300,7 +300,7 @@ export function diagnoseComponents(
       id: "ram-underclocked",
       vars: { configured, rated, loss },
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
-      detail: `Mémoire utilisée sous sa fréquence nominale, soit environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
+      detail: `Mémoire utilisée sous sa fréquence nominale : environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
       fix: "Activer le profil XMP (Intel) ou EXPO/DOCP (AMD) dans le BIOS, puis relancer l'analyse pour vérifier la fréquence. Gratuit et réversible",
     });
   }
@@ -454,7 +454,7 @@ export function diagnoseComponents(
         level: "problem",
         id: "bios-ancient",
         vars: { year: c.bios.year, age, machine: c.machine },
-        title: `BIOS de ${c.bios.year}, soit ${age} ans`,
+        title: `BIOS non mis à jour depuis ${c.bios.year}`,
         detail:
           "Les mises à jour de microcode processeur et les correctifs de stabilité publiés depuis ne sont pas appliqués. Impact possible sur les performances",
         fix: `Télécharger le dernier BIOS sur ${supportPage(c.machine)}, et l'appliquer depuis l'utilitaire intégré au BIOS, avec le fichier sur une clé USB en FAT32. Jamais depuis un outil Windows`,
@@ -465,7 +465,7 @@ export function diagnoseComponents(
         level: "warning",
         id: "bios-stale",
         vars: { year: c.bios.year, age, machine: c.machine },
-        title: `BIOS de ${c.bios.year}, soit ${age} ans`,
+        title: `BIOS non mis à jour depuis ${c.bios.year}`,
         detail:
           "Des mises à jour de firmware, dont du microcode processeur, ont probablement été publiées depuis",
         fix: `Vérifier sur ${supportPage(c.machine)} si une version plus récente existe. Mise à jour non urgente`,

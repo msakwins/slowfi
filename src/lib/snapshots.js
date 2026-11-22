@@ -8,6 +8,8 @@
 // mémoire, batterie). Rien d'autre : ni le texte collé, ni les noms de fichiers.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { localize } from "./en.js";
+
 export const MAX_SNAPSHOTS = 50;
 
 const LEVELS = { ok: 0, warning: 1, problem: 2 };
@@ -27,10 +29,19 @@ function worst(findings) {
  */
 export function makeSnapshot(res, extra = {}) {
   const findings = [];
-  const add = (area, list) => {
+  // engine : table de traduction du constat (lib/en.js), pour l'afficher
+  // plus tard dans l'autre langue.
+  const add = (area, list, engine = area) => {
     for (const f of list ?? []) {
       if (!f || f.id === "healthy" || !f.level || f.level === "ok") continue;
-      findings.push({ id: `${area}:${f.id}`, level: f.level, title: f.title });
+      findings.push({
+        id: `${area}:${f.id}`,
+        level: f.level,
+        title: f.title,
+        engine,
+        key: f.key,
+        vars: f.vars,
+      });
     }
   };
   const values = {};
@@ -59,7 +70,7 @@ export function makeSnapshot(res, extra = {}) {
     add("activity", h.activity?.findings);
     add("events", h.events?.findings);
     for (const v of h.volumes ?? []) {
-      add(`disk-${v.driveLetter}`, v.findings);
+      add(`disk-${v.driveLetter}`, v.findings, "storage");
       if (v.size && v.free != null)
         set(
           `free:${v.driveLetter}`,
@@ -112,4 +123,34 @@ export function compareSnapshots(before, after) {
 /** Ajoute un relevé en tête, au plus MAX_SNAPSHOTS. */
 export function pushSnapshot(list, snap) {
   return [snap, ...(list ?? [])].slice(0, MAX_SNAPSHOTS);
+}
+
+/** Titre d'un constat enregistré, dans la langue demandée. */
+export function findingTitle(f, lang) {
+  if (lang !== "en" || !f.engine) return f.title;
+  const key = f.key ?? f.id.slice(f.id.indexOf(":") + 1);
+  return localize({ ...f, id: key }, "en", f.engine).title ?? f.title;
+}
+
+// Libellés anglais des valeurs enregistrées (le français est dans le relevé).
+const VALUE_EN = {
+  download: "Download speed",
+  upload: "Upload speed",
+  "wifi:signal": "Wi-Fi signal",
+  "wifi:link": "Wi-Fi link speed",
+  "wifi:band": "Wi-Fi band",
+  memory: "Memory",
+  battery: "Battery",
+};
+
+/** Libellé et unité d'une valeur enregistrée, dans la langue demandée. */
+export function valueLabel(key, v, lang) {
+  if (lang !== "en") return { label: v.label, unit: v.unit };
+  const unit = v.unit === "Go" ? "GB" : v.unit;
+  if (VALUE_EN[key]) return { label: VALUE_EN[key], unit };
+  if (key.startsWith("free:"))
+    return { label: `Free space on ${key.slice(5)}:`, unit };
+  if (key.startsWith("driver:"))
+    return { label: `${v.label.replace(/^Pilote /, "")} driver`, unit };
+  return { label: v.label, unit };
 }

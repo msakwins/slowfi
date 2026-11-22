@@ -139,7 +139,7 @@ describe("diagnoseComponents", () => {
     const r = analyzeComponents(RAW, { year: 2026 });
     expect(r.severity).toBe("problem");
     const f = r.findings.find((x) => x.id === "bios-ancient");
-    expect(f.title).toContain("7 ans");
+    expect(f.title).toBe("BIOS non mis à jour depuis 2019");
   });
 
   it("se contente d'un avertissement entre quatre et six ans", () => {
