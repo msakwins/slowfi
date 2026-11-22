@@ -286,7 +286,9 @@ function smokeTest(win) {
         const text = document.body.innerText;
         const at = text.search(/Mises à jour des pilotes/i);
         if (at < 0) return null;
-        const part = text.slice(at, text.indexOf("Vérifié", at));
+        // Jusqu'à la liste des points vérifiés (en capitales à l'écran).
+        const end = text.slice(at).search(/points vérifiés/i);
+        const part = end < 0 ? text.slice(at) : text.slice(at, at + end);
         if (!part.includes("Recherche…")) return part.split("\\n").slice(2);
         await new Promise((r) => setTimeout(r, 500));
       }

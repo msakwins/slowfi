@@ -21,7 +21,7 @@ const LEVEL = {
 };
 
 const WORDS = {
-  fr: { checked: "Vérifié", fix: "Correctif" },
+  fr: { checked: "Points vérifiés", fix: "Correctif" },
   en: { checked: "Checked", fix: "Fix" },
 };
 

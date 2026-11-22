@@ -319,7 +319,7 @@ export function Passed({ items }) {
   return (
     <PassedList>
       <p className="head">
-        {lang === "fr" ? "Vérifié, sans anomalie" : "Checked, no issue"}
+        {lang === "fr" ? "Points vérifiés" : "Checked"}
       </p>
       <ul>
         {items.map((p) => (

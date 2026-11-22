@@ -15,6 +15,7 @@ import { Subtitle, NeonButton, Lead } from "../ui/theme.js";
 import { diagnosticIntro } from "../lib/intro.js";
 import { Unfold } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
+import HistoryPanel from "../ui/HistoryPanel.jsx";
 import { desktop } from "../ui/desktop.js";
 import { windowsCommand, macCommand, linuxCommand } from "../lib/commands.js";
 import { analyzeDevices } from "../lib/devices.js";
@@ -88,7 +89,7 @@ const TEXT = {
       network:
         "Une analyse approfondie du Wi-Fi, de la box et du câblage permet de comparer le débit mesuré au débit maximal atteignable",
       hardware:
-        "Contrôle du système, des disques, de la mémoire, du processeur, de la carte graphique, du firmware et de la batterie, avec un correctif pour chaque problème détecté",
+        "Contrôle du système, des disques, de la mémoire, du processeur, de la carte graphique, du firmware et de la batterie",
       devices:
         "Contrôle des appareils branchés : audio, caméra, clavier, souris, Bluetooth et écrans",
     },
@@ -124,7 +125,7 @@ const TEXT = {
       network:
         "An in-depth analysis of the Wi-Fi, router and cabling compares the measured speed with the maximum achievable speed",
       hardware:
-        "Checks the system, drives, memory, processor, graphics card, firmware and battery, with a fix for every problem detected",
+        "Checks the system, drives, memory, processor, graphics card, firmware and battery",
       devices:
         "Checks connected devices: audio, camera, keyboard, mouse, Bluetooth and displays",
     },
@@ -384,10 +385,7 @@ export default function CombinedAnalysis({ download }) {
       {/* Étape 2 — résultats. */}
       {res && phase === "command" && (
         <Unfold gap={8} first={0.1}>
-          <StepBox
-            head={{ label: t.step(2), name: t.steps.results }}
-            open
-          >
+          <StepBox head={{ label: t.step(2), name: t.steps.results }} open>
             {keys.map((k) => (
               <Group key={k} style={accentVars(k)}>
                 <Subtitle style={{ color: "var(--accent)" }}>
@@ -404,6 +402,8 @@ export default function CombinedAnalysis({ download }) {
                 )}
               </Group>
             ))}
+            {/* Comparaison avec l'analyse précédente, et copie en ligne. */}
+            <HistoryPanel res={res} download={download} />
           </StepBox>
         </Unfold>
       )}
@@ -597,9 +597,7 @@ function CombinedManual({ system, onResult, keys }) {
 
   return keys.map((k) => (
     <Group key={k} style={{ ...accentVars(k), marginTop: 28 }}>
-      <Subtitle style={{ color: "var(--accent)" }}>
-        {t.labels[k]}
-      </Subtitle>
+      <Subtitle style={{ color: "var(--accent)" }}>{t.labels[k]}</Subtitle>
       {k === "network" ? (
         <WifiManual system={system} onResult={setNetwork} />
       ) : k === "hardware" ? (

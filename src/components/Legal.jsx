@@ -97,6 +97,21 @@ function LegalEn() {
           The suggested commands only read information: they change no settings
         </p>
 
+        <h2>History of analyses</h2>
+        <p>
+          After each full diagnostic, a short record (findings, measured speeds,
+          driver versions, free space) is saved on the device itself, to compare
+          with the next analysis. It never leaves the device unless you choose «
+          Keep the history online »
+        </p>
+        <p>
+          In that case, the history is encrypted in the browser with a private
+          code before being sent to Slowfi's storage (<strong>Upstash</strong>,
+          Europe). Slowfi only receives encrypted data it cannot read, kept two
+          years after the last save. « Stop keeping it online » deletes it
+          immediately
+        </p>
+
         <h2>Links to Amazon</h2>
         <p>
           When the analysis finds a worn or failing part, Slowfi suggests a
@@ -181,6 +196,21 @@ function LegalFr() {
         <p>
           Les commandes proposées se contentent de lire des informations : elles
           ne modifient aucun réglage
+        </p>
+
+        <h2>Historique des analyses</h2>
+        <p>
+          Après chaque diagnostic complet, un court relevé (constats, débits
+          mesurés, versions des pilotes, espace libre) est enregistré sur
+          l'appareil lui-même, pour le comparer à l'analyse suivante. Il ne
+          quitte l'appareil qu'avec « Garder l'historique en ligne »
+        </p>
+        <p>
+          Dans ce cas, l'historique est chiffré dans le navigateur avec un code
+          privé avant d'être envoyé au stockage de Slowfi (
+          <strong>Upstash</strong>, Europe). Slowfi ne reçoit que des données
+          chiffrées qu'il ne peut pas lire, gardées deux ans après le dernier
+          enregistrement. « Ne plus garder en ligne » les supprime aussitôt
         </p>
 
         <h2>Liens vers Amazon</h2>

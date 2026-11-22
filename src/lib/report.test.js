@@ -31,7 +31,7 @@ describe("résumé d'une analyse", () => {
     expect(text).toContain("- Pas de redémarrage depuis 12 jours");
     expect(text).toContain("  Correctif : Utiliser « Redémarrer »");
     expect(text).toContain(
-      "Vérifié : Windows 11 25H2, suivi jusqu'au 12 octobre 2027 ; Windows sur un SSD",
+      "Points vérifiés : Windows 11 25H2, suivi jusqu'au 12 octobre 2027 ; Windows sur un SSD",
     );
     expect(lines.at(-1)).toBe("https://www.slowfi.app");
   });
