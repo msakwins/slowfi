@@ -146,6 +146,10 @@ function LegalEn() {
           In accordance with article 6, III, 2 of the French law of 21 June 2004
           (LCEN), their identity has been provided to the host
         </p>
+        <p>
+          Contact:{" "}
+          <a href="mailto:contact@slowfi.app">contact@slowfi.app</a>
+        </p>
 
         <h2>Hosting</h2>
         <p>
@@ -254,6 +258,10 @@ function LegalFr() {
           Site édité par un particulier, à titre non professionnel. Conformément
           à l'article 6, III, 2 de la loi du 21 juin 2004 (LCEN), son identité
           est communiquée à l'hébergeur
+        </p>
+        <p>
+          Contact :{" "}
+          <a href="mailto:contact@slowfi.app">contact@slowfi.app</a>
         </p>
 
         <h2>Hébergement</h2>

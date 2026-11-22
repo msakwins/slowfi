@@ -52,6 +52,7 @@ const TEXT = {
       "/confidentialite": "Confidentialité",
       "/confidentialite#editeur": "Mentions légales",
     },
+    contact: "Contact",
     home: "Slowfi, accueil",
     note: "Aucune donnée personnelle n'est collectée",
     download: "Télécharger l'application",
@@ -71,6 +72,7 @@ const TEXT = {
       "/confidentialite": "Privacy",
       "/confidentialite#editeur": "Legal notice",
     },
+    contact: "Contact",
     home: "Slowfi, home",
     note: "No personal data is collected",
     download: "Download the app",
@@ -281,6 +283,7 @@ export default function Slowfi() {
                 {t.nav[to]}
               </Link>
             ))}
+            <a href="mailto:contact@slowfi.app">{t.contact}</a>
           </nav>
           <p>{t.note}</p>
         </Footer>

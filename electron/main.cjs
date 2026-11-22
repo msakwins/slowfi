@@ -168,6 +168,16 @@ function createWindow() {
 
   win.loadURL(home);
   if (process.argv.includes("--smoke")) smokeTest(win);
+  // Démo animée (record-demo.cjs, développement seulement).
+  if (process.env.SLOWFI_RECORD && !app.isPackaged) {
+    win.webContents.once("did-finish-load", () =>
+      require("./record-demo.cjs")(
+        win,
+        process.env.SLOWFI_RECORD,
+        process.env.SLOWFI_RECORD_LANG,
+      ).finally(() => app.exit(0)),
+    );
+  }
   // Capture de la fenêtre au démarrage, pour vérifier son allure :
   // SLOWFI_SHOT_START=chemin.png (l'application quitte ensuite).
   // SLOWFI_SHOT_PAGE=/diagnostic ouvre d'abord cette page par la barre
@@ -384,7 +394,8 @@ const squirrelEvent = handleSquirrelEvent();
 // copie de développement est ouverte.
 if (!app.isPackaged) {
   const check =
-    process.argv.includes("--smoke") || Boolean(process.env.SLOWFI_SHOT_START);
+    process.argv.includes("--smoke") ||
+    Boolean(process.env.SLOWFI_SHOT_START || process.env.SLOWFI_RECORD);
   app.setPath(
     "userData",
     path.join(app.getPath("appData"), check ? "slowfi-check" : "slowfi-dev"),
