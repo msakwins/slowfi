@@ -1,49 +1,91 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Langue de l'interface : français ou anglais.
 //
-// Au premier passage, la langue du navigateur décide (français s'il est en
-// français, anglais sinon). Le choix fait avec le sélecteur est ensuite gardé
-// dans le navigateur. Chaque composant porte ses textes dans les deux langues,
-// à côté de son code ; les constats des analyses passent par lib/en.js.
+// Sur le site, l'adresse décide : « /en/… » en anglais, le reste en français
+// (router.jsx). Au premier passage sur une page française, un navigateur qui
+// n'est pas en français est envoyé vers l'adresse anglaise ; le choix fait
+// avec le sélecteur est ensuite gardé. Dans l'application, la langue est un
+// simple réglage, gardé de la même façon.
+// Chaque composant porte ses textes dans les deux langues, à côté de son
+// code ; les constats des analyses passent par lib/en.js.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { createContext, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
+import { desktop } from "./desktop.js";
+import { useUrlLang, switchUrlLang } from "./router.jsx";
 
 const KEY = "slowfi-lang";
 const LangContext = createContext({ lang: "fr", setLang: () => {} });
 
-function initialLang() {
+function savedLang() {
   try {
     const saved = localStorage.getItem(KEY);
     if (saved === "fr" || saved === "en") return saved;
   } catch {
     // Stockage bloqué (navigation privée stricte) : on s'en tient au navigateur.
   }
-  return (navigator.language || "fr").toLowerCase().startsWith("fr")
-    ? "fr"
-    : "en";
+  return null;
 }
+const save = (lang) => {
+  try {
+    localStorage.setItem(KEY, lang);
+  } catch {
+    // Sans stockage, le choix vaut pour la visite en cours.
+  }
+};
+const browserLang = () =>
+  (navigator.language || "fr").toLowerCase().startsWith("fr") ? "fr" : "en";
+// Les robots des moteurs de recherche gardent l'adresse demandée.
+const isBot = () => /bot|crawl|spider|slurp|lighthouse/i.test(navigator.userAgent);
 
-export function LangProvider({ children }) {
-  const [lang, setLangState] = useState(initialLang);
-
+/** Application : la langue est un réglage gardé dans le stockage local. */
+function AppLangProvider({ children }) {
+  const [lang, setLangState] = useState(() => savedLang() ?? browserLang());
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
-
   const setLang = (next) => {
     setLangState(next);
-    try {
-      localStorage.setItem(KEY, next);
-    } catch {
-      // Sans stockage, le choix vaut pour la visite en cours.
-    }
+    save(next);
   };
-
   return (
     <LangContext.Provider value={{ lang, setLang }}>
       {children}
     </LangContext.Provider>
+  );
+}
+
+/** Site : la langue suit l'adresse. */
+function WebLangProvider({ children }) {
+  const lang = useUrlLang();
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  // Premier passage sur une page française avec un navigateur dans une autre
+  // langue : l'adresse anglaise, sans ajouter d'étape à l'historique.
+  useEffect(() => {
+    const preferred = savedLang() ?? browserLang();
+    if (lang === "fr" && preferred === "en" && !isBot())
+      switchUrlLang("en", { replace: true });
+    // Une seule fois, à l'arrivée.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const setLang = (next) => {
+    save(next);
+    switchUrlLang(next);
+  };
+  return (
+    <LangContext.Provider value={{ lang, setLang }}>
+      {children}
+    </LangContext.Provider>
+  );
+}
+
+export function LangProvider({ children }) {
+  return desktop ? (
+    <AppLangProvider>{children}</AppLangProvider>
+  ) : (
+    <WebLangProvider>{children}</WebLangProvider>
   );
 }
 

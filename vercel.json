@@ -3,13 +3,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "cleanUrls": true,
   "redirects": [
-    { "source": "/verifications", "destination": "/", "permanent": true }
-  ],
-  "rewrites": [
-    {
-      "source": "/(diagnostic|historique|confidentialite|application)",
-      "destination": "/index.html"
-    }
+    { "source": "/verifications", "destination": "/", "permanent": true },
+    { "source": "/en/verifications", "destination": "/en", "permanent": true }
   ]
 }

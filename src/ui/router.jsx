@@ -1,21 +1,56 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Navigation minimale entre les deux pages (accueil, vérifications manuelles).
-// De vraies adresses plutôt que des ancres : chaque page peut être indexée et
-// partagée. Vercel renvoie index.html pour toutes les adresses (vercel.json).
+// Navigation entre les pages, avec de vraies adresses plutôt que des ancres :
+// chaque page peut être indexée et partagée. Vercel sert un fichier HTML par
+// page (scripts/prerender.mjs), et index.html pour le reste (vercel.json).
+//
+// Sur le site, chaque page a deux adresses : française (« /application ») et
+// anglaise (« /en/app »). Le code ne manie que l'adresse française ; le
+// routeur la traduit à l'affichage selon la langue de l'adresse courante.
+// Dans l'application, une seule adresse par page : la langue est un réglage.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
+import { desktop } from "./desktop.js";
+
+/** Adresse anglaise de chaque page, à partir de l'adresse française. */
+export const EN_PATHS = {
+  "/": "/en",
+  "/application": "/en/app",
+  "/diagnostic": "/en/diagnostic",
+  "/historique": "/en/history",
+  "/confidentialite": "/en/privacy",
+};
+const FR_PATHS = Object.fromEntries(
+  Object.entries(EN_PATHS).map(([fr, en]) => [en, fr]),
+);
+
+/** Page (adresse française) et langue d'une adresse du site. */
+export function fromUrl(pathname) {
+  const p = pathname.replace(/\/+$/, "") || "/";
+  if (FR_PATHS[p]) return { path: FR_PATHS[p], lang: "en" };
+  if (p.startsWith("/en/")) return { path: p.slice(3), lang: "en" };
+  return { path: p, lang: "fr" };
+}
+
+/** Adresse d'une page (française, ancre comprise) dans une langue. */
+export function toUrl(to, lang) {
+  if (desktop || lang !== "en") return to;
+  const [path, hash] = to.split("#");
+  const en = EN_PATHS[path] ?? `/en${path}`;
+  return hash ? `${en}#${hash}` : en;
+}
 
 const listeners = new Set();
+const urlLang = () => fromUrl(window.location.pathname).lang;
 
-export function navigate(to) {
-  const [pathname, hash] = to.split("#");
+function go(url, { replace = false } = {}) {
+  const [pathname, hash] = url.split("#");
   const here = pathname === window.location.pathname;
-  if (here && !hash) return;
-  window.history.pushState(null, "", to);
+  if (here && !hash && !replace) return;
+  window.history[replace ? "replaceState" : "pushState"](null, "", url);
   // Dans l'application, la page défile dans sa propre zone (Slowfi.jsx).
   const root = document.getElementById("scroll-root") ?? window;
-  if (!hash) root.scrollTo(0, 0);
-  listeners.forEach((fn) => fn(pathname));
+  if (!hash && !replace) root.scrollTo(0, 0);
+  listeners.forEach((fn) => fn(window.location.pathname));
   // Une ancre (« #editeur ») : la section, une fois la page affichée.
   if (hash)
     requestAnimationFrame(() =>
@@ -25,26 +60,49 @@ export function navigate(to) {
     );
 }
 
-export function usePath() {
-  const [path, setPath] = useState(window.location.pathname);
+/** Ouvre une page (adresse française), dans la langue de l'adresse courante. */
+export function navigate(to) {
+  go(toUrl(to, desktop ? "fr" : urlLang()));
+}
+
+/** La même page dans l'autre langue (site seulement). */
+export function switchUrlLang(lang, opts) {
+  const { path } = fromUrl(window.location.pathname);
+  go(toUrl(path + window.location.hash, lang), opts);
+}
+
+function useLocation() {
+  const [pathname, setPathname] = useState(window.location.pathname);
   useEffect(() => {
-    const onPop = () => setPath(window.location.pathname);
-    listeners.add(setPath);
+    const onPop = () => setPathname(window.location.pathname);
+    listeners.add(setPathname);
     window.addEventListener("popstate", onPop);
     return () => {
-      listeners.delete(setPath);
+      listeners.delete(setPathname);
       window.removeEventListener("popstate", onPop);
     };
   }, []);
-  return path;
+  return pathname;
+}
+
+/** Page courante, par son adresse française. */
+export function usePath() {
+  const pathname = useLocation();
+  return desktop ? pathname : fromUrl(pathname).path;
+}
+
+/** Langue de l'adresse courante (site seulement). */
+export function useUrlLang() {
+  return fromUrl(useLocation()).lang;
 }
 
 // Lien interne : navigation sans rechargement, mais un vrai <a href> pour
 // l'ouverture dans un nouvel onglet et pour les moteurs de recherche.
 export function Link({ to, onClick, ...rest }) {
+  const lang = useUrlLang();
   return (
     <a
-      href={to}
+      href={toUrl(to, lang)}
       onClick={(e) => {
         onClick?.(e);
         if (
