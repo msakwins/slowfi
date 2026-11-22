@@ -15,7 +15,8 @@ import { Subtitle, NeonButton, Lead } from "../ui/theme.js";
 import { diagnosticIntro } from "../lib/intro.js";
 import { Unfold } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
-import HistoryPanel from "../ui/HistoryPanel.jsx";
+import { recordLocal } from "../ui/historyStore.js";
+import { makeSnapshot } from "../lib/snapshots.js";
 import { desktop } from "../ui/desktop.js";
 import { navigate } from "../ui/router.jsx";
 import { windowsCommand, macCommand, linuxCommand } from "../lib/commands.js";
@@ -64,7 +65,7 @@ const accentVars = (k) => ({
 
 const TEXT = {
   fr: {
-    pick: "Analyses à inclure",
+    pick: "À analyser",
     labels: {
       network: "Réseau local",
       hardware: "Matériel",
@@ -101,7 +102,7 @@ const TEXT = {
     missing: "Rien de reconnu pour cette analyse dans le texte collé",
   },
   en: {
-    pick: "Analyses to include",
+    pick: "What to check",
     labels: {
       network: "Local network",
       hardware: "Hardware",
@@ -187,7 +188,7 @@ const Chips = styled.div`
 `;
 
 const Pick = styled.p`
-  margin: 0 0 12px;
+  margin: 0 0 18px;
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -207,7 +208,9 @@ const Missing = styled.p`
 
 // Choix et débit transmis de l'accueil à la page « Diagnostic »
 // (application) : le bouton de l'accueil les dépose, la page les reprend.
-const carried = { chosen: null, download: null };
+// `start` : le bouton de l'accueil demande un lancement immédiat ; ouverte
+// depuis la barre latérale, la page attend son propre bouton.
+const carried = { chosen: null, download: null, start: false };
 
 /**
  * @param {{
@@ -233,7 +236,13 @@ export default function CombinedAnalysis({ download, launcher, autoStart }) {
 
   // Une étape après l'autre : la commande, puis les résultats.
   //   idle → command
-  const [phase, setPhase] = useState(autoStart ? "command" : "idle");
+  const [phase, setPhase] = useState(
+    autoStart && carried.start ? "command" : "idle",
+  );
+  // Demande consommée : revenir plus tard sur la page ne relance rien.
+  useEffect(() => {
+    if (autoStart) carried.start = false;
+  }, [autoStart]);
   // Une étape terminée se replie en une ligne de résumé ; un clic la rouvre.
   const [open, setOpen] = useState({ command: true });
   const [res, setRes] = useState(null);
@@ -306,6 +315,11 @@ export default function CombinedAnalysis({ download, launcher, autoStart }) {
   // l'intertitre la replie.
   const onResult = useCallback((r) => setRes(r), []);
 
+  // Chaque résultat est enregistré dans l'historique (page « Historique »).
+  useEffect(() => {
+    if (res) recordLocal(makeSnapshot(res, { download: measured }));
+  }, [res, measured]);
+
   const commandSummary = res
     ? keys
         .filter((k) => res[k])
@@ -355,6 +369,7 @@ export default function CombinedAnalysis({ download, launcher, autoStart }) {
               if (!launcher) return setPhase("command");
               carried.chosen = chosen;
               carried.download = download ?? null;
+              carried.start = true;
               navigate("/diagnostic");
             }}
             disabled={keys.length === 0}
@@ -375,6 +390,9 @@ export default function CombinedAnalysis({ download, launcher, autoStart }) {
             summary={!open.command ? commandSummary : null}
             open={open.command}
             onToggle={() => setOpen((o) => ({ ...o, command: !o.command }))}
+            // Juste sous les choix d'analyses : moins d'espace qu'entre deux
+            // étapes.
+            style={{ marginTop: 4 }}
           >
             <Intros>
               {keys.map((k) => (
@@ -419,8 +437,6 @@ export default function CombinedAnalysis({ download, launcher, autoStart }) {
                 )}
               </Group>
             ))}
-            {/* Comparaison avec l'analyse précédente, et copie en ligne. */}
-            <HistoryPanel res={res} download={measured} />
           </StepBox>
         </Unfold>
       )}

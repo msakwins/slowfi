@@ -16,7 +16,7 @@ const Body = styled.div`
   max-width: 62ch;
 
   h2 {
-    margin: 40px 0 8px;
+    margin: 40px 0 16px;
     font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -53,7 +53,6 @@ export default function Legal() {
   return useLang().lang === "en" ? <LegalEn /> : <LegalFr />;
 }
 
-const SOURCE = "https://github.com/msakwins/slowfi";
 
 function LegalEn() {
   return (
@@ -101,18 +100,10 @@ function LegalEn() {
         <p>
           After each full diagnostic, a short record (findings, measured speeds,
           driver versions, free space) is saved on the device itself, to compare
-          with the next analysis. It never leaves the device unless you choose «
-          Keep the history online »
-        </p>
-        <p>
-          In that case, the history is encrypted in the browser with a private
-          code before being sent to Slowfi's storage (<strong>Upstash</strong>,
-          Europe). Slowfi only receives encrypted data it cannot read, kept two
-          years after the last save. « Stop keeping it online » deletes it
-          immediately
+          with the next analysis. It never leaves the device
         </p>
 
-        <h2>Links to Amazon</h2>
+        <h2 id="amazon">Links to Amazon</h2>
         <p>
           When the analysis finds a worn or failing part, Slowfi suggests a
           replacement with a link to <strong>Amazon</strong>. As an Amazon
@@ -128,14 +119,7 @@ function LegalEn() {
           making them
         </p>
 
-        <h2>Source code</h2>
-        <p>
-          The code is public and can be reviewed on{" "}
-          <a href={SOURCE} target="_blank" rel="noreferrer">
-            GitHub
-          </a>
-          , under the MIT licence
-        </p>
+        <h2>Code signing</h2>
         <p>
           Code signing provided by{" "}
           <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
@@ -156,7 +140,7 @@ function LegalEn() {
           )
         </p>
 
-        <h2>Publisher</h2>
+        <h2 id="editeur">Publisher</h2>
         <p>
           Site published by a private individual, on a non-professional basis.
           In accordance with article 6, III, 2 of the French law of 21 June 2004
@@ -224,17 +208,10 @@ function LegalFr() {
           Après chaque diagnostic complet, un court relevé (constats, débits
           mesurés, versions des pilotes, espace libre) est enregistré sur
           l'appareil lui-même, pour le comparer à l'analyse suivante. Il ne
-          quitte l'appareil qu'avec « Garder l'historique en ligne »
-        </p>
-        <p>
-          Dans ce cas, l'historique est chiffré dans le navigateur avec un code
-          privé avant d'être envoyé au stockage de Slowfi (
-          <strong>Upstash</strong>, Europe). Slowfi ne reçoit que des données
-          chiffrées qu'il ne peut pas lire, gardées deux ans après le dernier
-          enregistrement. « Ne plus garder en ligne » les supprime aussitôt
+          quitte jamais l'appareil
         </p>
 
-        <h2>Liens vers Amazon</h2>
+        <h2 id="amazon">Liens vers Amazon</h2>
         <p>
           Quand l'analyse trouve une pièce usée ou défaillante, Slowfi propose
           un remplacement avec un lien vers <strong>Amazon</strong>. En tant que
@@ -251,14 +228,7 @@ function LegalFr() {
           responsabilité de la personne qui les effectue
         </p>
 
-        <h2>Code source</h2>
-        <p>
-          Le code est public et vérifiable sur{" "}
-          <a href={SOURCE} target="_blank" rel="noreferrer">
-            GitHub
-          </a>
-          , sous licence MIT
-        </p>
+        <h2>Signature du code</h2>
         <p>
           Code signing provided by{" "}
           <a href="https://about.signpath.io/" target="_blank" rel="noreferrer">
@@ -279,7 +249,7 @@ function LegalFr() {
           )
         </p>
 
-        <h2>Éditeur</h2>
+        <h2 id="editeur">Éditeur</h2>
         <p>
           Site édité par un particulier, à titre non professionnel. Conformément
           à l'article 6, III, 2 de la loi du 21 juin 2004 (LCEN), son identité

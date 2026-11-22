@@ -43,7 +43,7 @@ const TEXT = {
         "Sélectionner tout le texte du terminal (clic droit › Tout sélectionner), le copier (Ctrl + Maj + C), puis le coller ici",
     },
     pasteButton: "Coller depuis le presse-papiers",
-    running: "Analyse en cours…",
+    running: "Analyse en cours",
     rerun: "Relancer l'analyse",
     failed: "La lecture n'a rien renvoyé",
     example: "Voir un exemple",
@@ -72,7 +72,7 @@ const TEXT = {
         "Select all the terminal text (right-click › Select All), copy it (Ctrl + Shift + C), then paste it here",
     },
     pasteButton: "Paste from clipboard",
-    running: "Analyzing…",
+    running: "Analyzing",
     rerun: "Run the analysis again",
     failed: "The reading returned nothing",
     example: "Show an example",
@@ -134,6 +134,81 @@ const Label = styled.p`
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     font-size: 12px;
     color: var(--accent);
+  }
+`;
+
+// Analyse en cours, dans l'application : un reflet parcourt le texte et trois
+// points sautillent à la couleur de l'analyse.
+const Running = styled.p`
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+
+  .text {
+    background: linear-gradient(
+        90deg,
+        #94a3b8 0%,
+        #94a3b8 35%,
+        #f1f5f9 50%,
+        #94a3b8 65%,
+        #94a3b8 100%
+      )
+      0 0 / 250% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shine 2.2s linear infinite;
+  }
+  .dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent, #22d3ee);
+    animation: hop 1.1s ease-in-out infinite;
+  }
+  .dots i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .dots i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes shine {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -150% 0;
+    }
+  }
+  @keyframes hop {
+    0%,
+    60%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.4;
+    }
+    30% {
+      transform: translateY(-5px);
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .text,
+    .dots i {
+      animation: none;
+    }
+    .text {
+      color: #cbd5e1;
+      background: none;
+    }
   }
 `;
 
@@ -293,7 +368,14 @@ export default function PasteStep({
       <>
         <Step>
           {running ? (
-            <Label>{t.running}</Label>
+            <Running role="status">
+              <span className="text">{t.running}</span>
+              <span className="dots" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            </Running>
           ) : (
             <Button onClick={run}>{t.rerun}</Button>
           )}

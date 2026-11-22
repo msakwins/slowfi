@@ -1,14 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Barre latérale de l'application desktop : une icône blanche par page,
-// la page ouverte en surbrillance, son nom au survol. Le site garde ses liens
-// en pied de page.
+// Barre latérale, sur le site comme dans l'application : une icône blanche
+// par page, la page ouverte en surbrillance, son nom au survol. Sur
+// téléphone, elle passe en bas de l'écran.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import styled from "styled-components";
 import { Link } from "./router.jsx";
 import { useText } from "./i18n.jsx";
+import { desktop } from "./desktop.js";
 
 export const SIDEBAR_WIDTH = 60;
+// En dessous de cette largeur (site seulement), la barre passe en bas.
+export const SIDEBAR_BREAK = 640;
 
 const TEXT = {
   fr: {
@@ -16,18 +19,20 @@ const TEXT = {
     "/diagnostic": "Diagnostic approfondi",
     "/historique": "Historique",
     "/capteurs": "Capteurs",
-    "/verifications": "Vérifications manuelles",
+    "/application": "Application",
     "/confidentialite": "Confidentialité",
     nav: "Navigation",
+    brand: "Slowfi, accueil",
   },
   en: {
     "/": "Home",
     "/diagnostic": "In-depth diagnostic",
     "/historique": "History",
     "/capteurs": "Sensors",
-    "/verifications": "Manual checks",
+    "/application": "App",
     "/confidentialite": "Privacy",
     nav: "Navigation",
+    brand: "Slowfi, home",
   },
 };
 
@@ -36,8 +41,14 @@ const ICONS = {
   "/": (
     <path d="M3.5 9.5 10 4l6.5 5.5V16a1 1 0 0 1-1 1H12v-4.5H8V17H4.5a1 1 0 0 1-1-1V9.5Z" />
   ),
-  // Tracé d'électrocardiogramme, comme le w du logo.
-  "/diagnostic": <path d="M2.5 10.5h3l1.8-4 2.6 8 2.2-6 1.4 2h4" />,
+  // Jauge : la mesure en détail.
+  "/diagnostic": (
+    <>
+      <path d="M3.5 14.5a6.5 6.5 0 1 1 13 0" />
+      <path d="m10 14.5 3-4" />
+      <circle cx="10" cy="14.5" r="1" />
+    </>
+  ),
   // Horloge avec flèche de retour.
   "/historique": (
     <>
@@ -52,10 +63,11 @@ const ICONS = {
       <path d="M10 8v5" />
     </>
   ),
-  "/verifications": (
+  // Flèche dans un cercle : télécharger l'application.
+  "/application": (
     <>
-      <path d="M8 6h8M8 10h8M8 14h8" />
-      <path d="m3.5 6 1 1 1.5-2M3.5 10l1 1 1.5-2M3.5 14l1 1 1.5-2" />
+      <circle cx="10" cy="10" r="7" />
+      <path d="M10 6.5v6M7.5 10.5 10 13l2.5-2.5" />
     </>
   ),
   "/confidentialite": (
@@ -63,7 +75,15 @@ const ICONS = {
   ),
 };
 
-const TOP = ["/", "/diagnostic", "/historique", "/capteurs", "/verifications"];
+// Capteurs dans l'application seulement ; l'application à télécharger,
+// sur le site seulement.
+const TOP = [
+  "/",
+  "/diagnostic",
+  "/historique",
+  ...(desktop ? ["/capteurs"] : []),
+  ...(desktop ? [] : ["/application"]),
+];
 const BOTTOM = ["/confidentialite"];
 
 const Bar = styled.nav`
@@ -84,6 +104,28 @@ const Bar = styled.nav`
   .spacer {
     flex: 1;
   }
+
+  /* Site sur téléphone : barre en bas, icônes réparties sur la largeur. */
+  @media (max-width: ${SIDEBAR_BREAK}px) {
+    &[data-web] {
+      top: auto;
+      right: 0;
+      width: auto;
+      height: 60px;
+      flex-direction: row;
+      justify-content: space-around;
+      padding: 0 6px;
+      border-right: none;
+      border-top: 1px solid #111a2e;
+    }
+    &[data-web] .brand,
+    &[data-web] .spacer {
+      display: none;
+    }
+    &[data-web] .tip {
+      display: none;
+    }
+  }
 `;
 
 const Item = styled(Link)`
@@ -101,6 +143,20 @@ const Item = styled(Link)`
   svg {
     width: 20px;
     height: 20px;
+  }
+  /* Le logo : sans fond au survol, un peu détaché des pages. */
+  &.brand {
+    margin-bottom: 8px;
+  }
+  &.brand:hover,
+  &.brand:focus-visible {
+    background: none;
+  }
+  svg.logo {
+    width: 28px;
+    height: 18px;
+    overflow: visible;
+    filter: drop-shadow(0 0 4px rgb(34 211 238 / 0.55));
   }
   &:hover,
   &:focus-visible {
@@ -135,6 +191,24 @@ const Item = styled(Link)`
   }
 `;
 
+// Le w du logo (même tracé que Logo.jsx), en cyan avec son halo.
+function LogoMark() {
+  return (
+    <svg
+      className="logo"
+      viewBox="0 0 38 24"
+      fill="none"
+      stroke="#22d3ee"
+      strokeWidth="2.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M1.5 14H5l3.8 7 4.6-15 4.6 15 3.6-10 2.6 3H36" />
+    </svg>
+  );
+}
+
 /** @param {{ path: string, top: number }} props */
 export default function Sidebar({ path, top }) {
   const t = useText(TEXT);
@@ -162,7 +236,15 @@ export default function Sidebar({ path, top }) {
     </Item>
   );
   return (
-    <Bar aria-label={t.nav} style={{ "--top": `${top}px` }}>
+    <Bar
+      aria-label={t.nav}
+      data-web={desktop ? undefined : ""}
+      style={{ "--top": `${top}px` }}
+    >
+      {/* Le logo en tête, qui ramène aussi à l'accueil. */}
+      <Item to="/" className="brand" aria-label={t.brand}>
+        <LogoMark />
+      </Item>
       {TOP.map(item)}
       <div className="spacer" />
       {BOTTOM.map(item)}

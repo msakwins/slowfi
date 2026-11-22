@@ -8,7 +8,6 @@ import styled from "styled-components";
 import { Title, Lead, NeonText } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import CombinedAnalysis from "./CombinedAnalysis.jsx";
-import { desktop } from "../ui/desktop.js";
 import { useText } from "../ui/i18n.jsx";
 
 const TEXT = {
@@ -55,8 +54,8 @@ export default function Home() {
         <Title as="h2">
           <NeonText>{t.allTitle}</NeonText>
         </Title>
-        {/* Dans l'application, le bouton ouvre la page « Diagnostic ». */}
-        <CombinedAnalysis download={download} launcher={Boolean(desktop)} />
+        {/* Le bouton ouvre la page « Diagnostic ». */}
+        <CombinedAnalysis download={download} launcher />
       </Section>
     </>
   );

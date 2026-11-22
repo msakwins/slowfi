@@ -5,7 +5,7 @@
 //
 // Chaque suggestion donne ce qu'il faut chercher (compatible avec la pièce
 // actuelle : interface, format, génération, capacité), un budget indicatif
-// et des liens de recherche chez les marchands (affiliate.js).
+// et des liens de recherche chez les marchands (shopLinks.js).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GB = 1e9;

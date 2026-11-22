@@ -8,11 +8,21 @@ import React, { useEffect, useState } from "react";
 const listeners = new Set();
 
 export function navigate(to) {
-  if (to === window.location.pathname) return;
+  const [pathname, hash] = to.split("#");
+  const here = pathname === window.location.pathname;
+  if (here && !hash) return;
   window.history.pushState(null, "", to);
   // Dans l'application, la page défile dans sa propre zone (Slowfi.jsx).
-  (document.getElementById("scroll-root") ?? window).scrollTo(0, 0);
-  listeners.forEach((fn) => fn(to));
+  const root = document.getElementById("scroll-root") ?? window;
+  if (!hash) root.scrollTo(0, 0);
+  listeners.forEach((fn) => fn(pathname));
+  // Une ancre (« #editeur ») : la section, une fois la page affichée.
+  if (hash)
+    requestAnimationFrame(() =>
+      document
+        .getElementById(hash)
+        ?.scrollIntoView({ behavior: here ? "smooth" : "auto" }),
+    );
 }
 
 export function usePath() {

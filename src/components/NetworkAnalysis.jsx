@@ -11,7 +11,6 @@
 // page renvoie alors aux vérifications Ethernet et câblage.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef } from "react";
-import styled from "styled-components";
 import {
   parseWifi,
   isWired,
@@ -21,8 +20,6 @@ import {
 import { WIFI_WINDOWS, WIFI_MAC, WIFI_LINUX } from "../lib/examples.js";
 import { Subtitle, SEVERITY } from "../ui/theme.js";
 import { useLang, SEVERITY_LABEL } from "../ui/i18n.jsx";
-import { Link } from "../ui/router.jsx";
-import Arrow from "../ui/Arrow.jsx";
 import {
   Unfold,
   Verdict,
@@ -57,7 +54,6 @@ const TEXT = {
       detail:
         "L'appareil est relié par câble Ethernet : pas de perte liée au Wi-Fi. Reste à vérifier la vitesse de la liaison, ci-dessous",
     },
-    wiredLink: "Consulter les vérifications Ethernet et câblage",
   },
   en: {
     title: "Local network analysis",
@@ -79,27 +75,8 @@ const TEXT = {
       detail:
         "The device is connected by Ethernet cable: no Wi-Fi loss. The link speed remains to be checked, below",
     },
-    wiredLink: "See the Ethernet and cabling checks",
   },
 };
-
-const More = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-
-  .arrow {
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  &:hover .arrow {
-    transform: translateX(3px);
-  }
-`;
 
 // Rien de reconnu : soit la machine est en filaire (la sortie le dit), soit
 // le texte n'a rien à voir. Dans ce dernier cas, null, pour que l'étape
@@ -133,10 +110,6 @@ export function WifiResult({ parsed, download }) {
         <Verdict $color={sev.color} gap={32} first={0}>
           <VerdictHead color={sev.color}>{t.wiredHead}</VerdictHead>
           <Findings findings={[t.wired]} />
-          <More to="/verifications">
-            {t.wiredLink}
-            <Arrow />
-          </More>
         </Verdict>
         {/* En filaire, c'est la liaison Ethernet qui compte. */}
         <EthernetCheck download={download} />

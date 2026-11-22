@@ -55,7 +55,6 @@ const TEXT = {
     privacy: "Confidentialité",
     privacyText:
       "Aucune donnée personnelle n'est collectée. Les analyses s'exécutent localement, comme sur le site",
-    sourceText: "Le code est public sur",
   },
   en: {
     title: "App",
@@ -91,7 +90,6 @@ const TEXT = {
     privacy: "Privacy",
     privacyText:
       "No personal data is collected. Analyses run locally, as on the website",
-    sourceText: "The code is public on",
   },
 };
 
@@ -102,12 +100,16 @@ const Body = styled.div`
   max-width: 62ch;
 
   h2 {
-    margin: 40px 0 8px;
+    margin: 40px 0 16px;
     font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     font-weight: 600;
     color: #64748b;
+  }
+  /* Le premier intertitre, juste sous l'introduction. */
+  h2:first-child {
+    margin-top: 12px;
   }
   p {
     margin: 0;
@@ -265,10 +267,7 @@ export default function AppPage() {
 
         <h2>{t.privacy}</h2>
         <p>
-          {t.privacyText}. {t.sourceText}{" "}
-          <a href={SOURCE} target="_blank" rel="noreferrer">
-            GitHub
-          </a>
+          {t.privacyText}
         </p>
         {/* Mention demandée par SignPath sur la page de téléchargement. */}
         <p>

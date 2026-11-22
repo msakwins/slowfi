@@ -1,28 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Pièces à remplacer : la pièce, pourquoi, quoi chercher, un budget indicatif
-// et les liens vers les marchands. N'apparaît que si l'analyse le justifie.
+// Pièces à remplacer, ou améliorations possibles (kind="upgrades") : la
+// pièce, pourquoi, quoi chercher, un budget indicatif et les liens vers les
+// marchands. Un conseil sans achat (query null) n'a ni lien ni budget.
+// N'apparaît que si l'analyse le justifie.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import styled from "styled-components";
 import { useLang } from "./i18n.jsx";
-import { shopLinks, AFFILIATE } from "../lib/affiliate.js";
+import { shopLinks, AFFILIATE } from "../lib/shopLinks.js";
 import { PRICES_DATE } from "../lib/parts.js";
 
 const TEXT = {
   fr: {
     title: "Pièces à remplacer",
+    upgrades: "Suggestions d'amélioration",
     budget: ([a, b]) => `Budget indicatif : ${a} à ${b} € (${PRICES_DATE})`,
-    search: (q) => `Chercher « ${q} »`,
-    on: (shop) => `Voir sur ${shop}`,
+    on: (shop) => `Rechercher sur ${shop}`,
     affiliate:
       "Lien affilié : en tant que Partenaire Amazon, Slowfi réalise un bénéfice sur les achats remplissant les conditions requises, sans surcoût. Les suggestions ne dépendent que de l'analyse",
     plain: "Suggestions faites seulement à partir de l'analyse",
   },
   en: {
     title: "Parts to replace",
+    upgrades: "Upgrade suggestions",
     budget: ([a, b]) => `Rough budget: €${a} to €${b} (November 2026)`,
-    search: (q) => `Search for “${q}”`,
-    on: (shop) => `See on ${shop}`,
+    on: (shop) => `Search on ${shop}`,
     affiliate:
       "Affiliate link: as an Amazon Associate, Slowfi earns from qualifying purchases, at no extra cost. Suggestions depend only on the analysis",
     plain: "Suggestions based only on the analysis",
@@ -93,40 +95,47 @@ const Note = styled.p`
   color: #64748b;
 `;
 
-/** @param {{ parts: ReturnType<typeof import("../lib/parts.js").recommendParts> }} props */
-export default function PartsToBuy({ parts }) {
+/**
+ * @param {{
+ *   parts: { id:string, title:string, reason:string, query:string|null, price:[number,number]|null }[],
+ *   kind?: "parts"|"upgrades",
+ * }} props
+ */
+export default function PartsToBuy({ parts, kind = "parts" }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   if (!parts?.length) return null;
   return (
     <>
-      <Head>{t.title}</Head>
+      <Head>{kind === "upgrades" ? t.upgrades : t.title}</Head>
       <List>
         {parts.map((p) => (
           <li key={p.id}>
             <div className="title">{p.title}</div>
             <div className="reason">{p.reason}</div>
-            <div className="meta">
-              {[t.search(p.query), p.price && t.budget(p.price)]
-                .filter(Boolean)
-                .join(". ")}
-            </div>
-            <div className="links">
-              {shopLinks(p.query).map((l) => (
-                <a
-                  key={l.shop}
-                  href={l.url}
-                  target="_blank"
-                  rel={AFFILIATE ? "sponsored noreferrer" : "noreferrer"}
-                >
-                  {t.on(l.shop)}
-                </a>
-              ))}
-            </div>
+            {p.query && (
+              <>
+                {p.price && <div className="meta">{t.budget(p.price)}</div>}
+                <div className="links">
+                  {shopLinks(p.query).map((l) => (
+                    <a
+                      key={l.shop}
+                      href={l.url}
+                      target="_blank"
+                      rel={AFFILIATE ? "sponsored noreferrer" : "noreferrer"}
+                    >
+                      {t.on(l.shop)}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
           </li>
         ))}
       </List>
-      <Note>{AFFILIATE ? t.affiliate : t.plain}</Note>
+      {parts.some((p) => p.query) && (
+        <Note>{AFFILIATE ? t.affiliate : t.plain}</Note>
+      )}
     </>
   );
 }

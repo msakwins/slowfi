@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { recommendParts } from "./parts.js";
-import { shopLinks } from "./affiliate.js";
+import { shopLinks } from "./shopLinks.js";
 
 const healthy = {
   disks: [

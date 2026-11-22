@@ -1,31 +1,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Historique, sous les résultats du diagnostic complet : ce qui a changé
-// depuis l'analyse précédente, la liste des analyses, et la copie en ligne
-// chiffrée (code privé) pour la garder d'un appareil ou d'un navigateur à
-// l'autre.
+// depuis l'analyse précédente et la liste des analyses, enregistrées sur
+// l'appareil.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useLang } from "./i18n.jsx";
-import { Ghost, SEVERITY } from "./theme.js";
+import { Ghost, NeonButton, SEVERITY } from "./theme.js";
+import { navigate } from "./router.jsx";
 import Arrow from "./Arrow.jsx";
 import { makeSnapshot, compareSnapshots } from "../lib/snapshots.js";
-import { newCode, normalizeCode } from "../lib/vault.js";
-import {
-  loadHistory,
-  loadCode,
-  recordLocal,
-  clearLocal,
-  syncOnline,
-  forgetOnline,
-} from "./historyStore.js";
+import { loadHistory, recordLocal, clearLocal } from "./historyStore.js";
 
 const TEXT = {
   fr: {
     title: "Historique",
-    empty: "Aucune analyse enregistrée : lancer un diagnostic approfondi",
-    first:
-      "Première analyse enregistrée sur cet appareil. La prochaine sera comparée à celle-ci",
+    empty: "Aucune analyse enregistrée",
+    start: "Lancer le diagnostic",
+    first: "Une analyse enregistrée",
     since: (d) => `Depuis l'analyse du ${d}`,
     fixed: "Résolu",
     added: "Nouveau",
@@ -38,31 +30,13 @@ const TEXT = {
       warning: "À surveiller",
       problem: "Problème détecté",
     },
-    local:
-      "Enregistré sur cet appareil seulement. Le code privé garde l'historique en ligne, chiffré : Slowfi ne peut pas le lire",
-    keep: "Garder l'historique en ligne",
-    have: "J'ai déjà un code",
-    codeLabel: "Code privé",
-    codeNote:
-      "À noter et garder : il permet de retrouver l'historique sur un autre appareil ou dans l'application. Perdu, l'historique en ligne est perdu",
-    copy: "Copier",
-    copied: "Copié",
-    use: "Utiliser ce code",
-    placeholder: "slow-XXXX-XXXX-XXXX-XXXX",
-    syncing: "Synchronisation…",
-    synced: "Historique en ligne à jour",
-    disabled: "Historique en ligne indisponible pour le moment",
-    error: "Synchronisation impossible, réessayer plus tard",
-    unknown: "Code inconnu : vérifier qu'il est bien recopié",
-    invalid: "Ce code n'a pas le bon format",
-    forget: "Ne plus garder en ligne",
-    clear: "Effacer l'historique de cet appareil",
+    clear: "Effacer l'historique",
   },
   en: {
     title: "History",
-    empty: "No analysis saved: run an in-depth diagnostic",
-    first:
-      "First analysis saved on this device. The next one will be compared with it",
+    empty: "No analysis saved",
+    start: "Run the diagnostic",
+    first: "One analysis saved",
     since: (d) => `Since the analysis of ${d}`,
     fixed: "Fixed",
     added: "New",
@@ -74,25 +48,7 @@ const TEXT = {
       warning: "To watch",
       problem: "Problem detected",
     },
-    local:
-      "Saved on this device only. The private code keeps the history online, encrypted: Slowfi cannot read it",
-    keep: "Keep the history online",
-    have: "I already have a code",
-    codeLabel: "Private code",
-    codeNote:
-      "Write it down and keep it: it brings the history back on another device or in the app. Lost, the online history is lost",
-    copy: "Copy",
-    copied: "Copied",
-    use: "Use this code",
-    placeholder: "slow-XXXX-XXXX-XXXX-XXXX",
-    syncing: "Syncing…",
-    synced: "Online history up to date",
-    disabled: "Online history unavailable for now",
-    error: "Sync failed, try again later",
-    unknown: "Unknown code: check it was copied correctly",
-    invalid: "This code does not have the right format",
-    forget: "Stop keeping it online",
-    clear: "Clear this device's history",
+    clear: "Clear history",
   },
 };
 
@@ -123,6 +79,22 @@ const Small = styled.p`
   line-height: 1.6;
   color: #64748b;
   max-width: 62ch;
+`;
+
+// Page « Historique » sans analyse : la phrase, puis le bouton vers le
+// diagnostic, comme sur les autres pages.
+const Empty = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #94a3b8;
+  }
 `;
 
 const Diff = styled.ul`
@@ -176,33 +148,6 @@ const Runs = styled.ul`
   }
 `;
 
-const Code = styled.div`
-  margin-top: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #0b1220;
-  font-family: ui-monospace, monospace;
-  font-size: 15px;
-  color: #e2e8f0;
-`;
-
-const Input = styled.input`
-  font: inherit;
-  font-family: ui-monospace, monospace;
-  font-size: 14px;
-  padding: 7px 12px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #0b1220;
-  color: #e2e8f0;
-  width: 260px;
-  max-width: 100%;
-`;
-
 const Row = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -218,10 +163,6 @@ export default function HistoryPanel({ res, download, page }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   const [list, setList] = useState(loadHistory);
-  const [code, setCode] = useState(loadCode);
-  const [status, setStatus] = useState(null);
-  const [typing, setTyping] = useState(null); // null, ou le texte saisi
-  const [copied, setCopied] = useState(false);
   const saved = useRef(null);
 
   const when = (t0) =>
@@ -238,27 +179,7 @@ export default function HistoryPanel({ res, download, page }) {
     saved.current = res;
     const next = recordLocal(makeSnapshot(res, { download }));
     setList(next);
-    if (code) {
-      setStatus("syncing");
-      syncOnline(code).then((r) => {
-        setList(r.list);
-        setStatus(r.status === "ok" ? "synced" : r.status);
-      });
-    }
-    // Le code n'entre pas en jeu : il ne doit pas réenregistrer l'analyse.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [res, download]);
-
-  const sync = async (c, opts) => {
-    setStatus("syncing");
-    const r = await syncOnline(c, opts);
-    setList(r.list);
-    if (r.status === "ok") {
-      setCode(c);
-      setTyping(null);
-      setStatus("synced");
-    } else setStatus(r.status);
-  };
 
   const [current, previous] = list;
   const diff = current && previous ? compareSnapshots(previous, current) : null;
@@ -272,7 +193,14 @@ export default function HistoryPanel({ res, download, page }) {
     <Box>
       {/* Sur la page « Historique », le titre de la page suffit. */}
       {!page && <Head>{t.title}</Head>}
-      {!current ? (
+      {!current && page ? (
+        <Empty>
+          <p>{t.empty}</p>
+          <NeonButton onClick={() => navigate("/diagnostic")}>
+            <span className="neon">{t.start}</span>
+          </NeonButton>
+        </Empty>
+      ) : !current ? (
         <Line>{t.empty}</Line>
       ) : !previous ? (
         <Line>{t.first}</Line>
@@ -332,73 +260,7 @@ export default function HistoryPanel({ res, download, page }) {
         </>
       )}
 
-      {/* Copie en ligne chiffrée. */}
-      {code ? (
-        <>
-          <Code>
-            {t.codeLabel} : {code}
-            <Ghost
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(code);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                } catch {
-                  // Presse-papiers refusé : le code reste lisible à l'écran.
-                }
-              }}
-            >
-              {copied ? t.copied : t.copy}
-            </Ghost>
-          </Code>
-          <Small>{t.codeNote}</Small>
-        </>
-      ) : (
-        <Small>{t.local}</Small>
-      )}
-      {status && <Small>{t[status]}</Small>}
-
-      {typing != null && (
-        <Row>
-          <Input
-            value={typing}
-            onChange={(e) => setTyping(e.target.value)}
-            placeholder={t.placeholder}
-            aria-label={t.codeLabel}
-            spellCheck={false}
-          />
-          <Ghost
-            onClick={() => {
-              const c = normalizeCode(typing);
-              if (!c) setStatus("invalid");
-              else sync(c, { restore: true });
-            }}
-          >
-            {t.use}
-          </Ghost>
-        </Row>
-      )}
-
       <Row>
-        {!code && (
-          <>
-            <Ghost onClick={() => sync(newCode())}>{t.keep}</Ghost>
-            {typing == null && (
-              <Ghost onClick={() => setTyping("")}>{t.have}</Ghost>
-            )}
-          </>
-        )}
-        {code && (
-          <Ghost
-            onClick={async () => {
-              await forgetOnline(code);
-              setCode(null);
-              setStatus(null);
-            }}
-          >
-            {t.forget}
-          </Ghost>
-        )}
         {list.length > 0 && (
           <Ghost
             onClick={() => {

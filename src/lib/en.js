@@ -550,7 +550,7 @@ export const PASSED_EN = {
   "gpu-driver": ({ year, month, name, recent }) =>
     `${recent ? "Recent graphics driver, from" : "Graphics driver from"} ${monthEn(year, month)}${name ? ` (${name})` : ""}`,
   "gpu-ok": ({ name }) =>
-    `Graphics card working, no error reported by Windows${name ? ` (${name})` : ""}`,
+    `Graphics card operational${name ? ` (${name})` : ""}`,
   "bios-recent": ({ year }) => `BIOS from ${year}`,
   "system-ssd": ({ kind, windows = true }) =>
     `${windows ? "Windows" : "System"} on an${kind === "NVMe" ? " NVMe" : ""} SSD`,

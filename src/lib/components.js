@@ -584,7 +584,7 @@ export function diagnoseComponents(
       passed.push({
         id: "gpu-ok",
         vars: { name: gpu.name },
-        label: `Carte graphique en état de marche, sans erreur signalée par Windows${name}`,
+        label: `Carte graphique opérationnelle${name}`,
       });
     }
   }

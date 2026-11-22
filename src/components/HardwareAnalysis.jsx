@@ -41,6 +41,7 @@ import { parseInstalledDrivers, DRIVER_CLASSES } from "../lib/drivers.js";
 import DriverUpdates from "../ui/DriverUpdates.jsx";
 import PartsToBuy from "../ui/PartsToBuy.jsx";
 import { recommendParts } from "../lib/parts.js";
+import { recommendUpgrades } from "../lib/upgrades.js";
 import { localize } from "../lib/en.js";
 import { nvidiaVersion } from "../lib/vendors.js";
 import { analyzeEvents, EVENTS_READ } from "../lib/events.js";
@@ -394,6 +395,33 @@ export function HardwareResults({
   const passed = blocks.flatMap((b) => b.result.passed ?? []);
   const sev = SEVERITY[severity];
 
+  const singleChannel = c?.findings.some((f) => f.id === "ram-single-channel");
+  const parts = recommendParts(
+    {
+      disks: s?.disks,
+      memory: c?.memory,
+      memoryTestFailed: ev?.findings.some((f) => f.id === "memory-test-failed"),
+      singleChannel,
+      battery: s?.env?.battery,
+      machine: c?.machine,
+    },
+    lang,
+  );
+  const upgrades = recommendUpgrades(
+    {
+      cpu: c?.cpu,
+      laptop: c?.machine?.laptop ?? Boolean(s?.env?.battery),
+      systemDisk: s?.systemDisk,
+      systemVolume: volumes.find((v) => /^c$/i.test(v.driveLetter ?? "")),
+      memory: c?.memory,
+      memoryPct: a?.memoryPct,
+      singleChannel,
+      network: c?.network,
+      replacing: parts.map((p) => p.id),
+    },
+    lang,
+  );
+
   return (
     <>
       {/* Ce qui a été lu, replié d'office : le verdict passe en premier à
@@ -414,24 +442,10 @@ export function HardwareResults({
           </p>
         )}
         <DriverUpdates drivers={drivers} />
-        {/* Seulement si une pièce est en fin de vie (parts.js). */}
-        <PartsToBuy
-          parts={recommendParts(
-            {
-              disks: s?.disks,
-              memory: c?.memory,
-              memoryTestFailed: ev?.findings.some(
-                (f) => f.id === "memory-test-failed",
-              ),
-              singleChannel: c?.findings.some(
-                (f) => f.id === "ram-single-channel",
-              ),
-              battery: s?.env?.battery,
-              machine: c?.machine,
-            },
-            lang,
-          )}
-        />
+        {/* Les pièces en fin de vie (parts.js), puis ce qui freine la
+            machine sans être en panne (upgrades.js). */}
+        <PartsToBuy parts={parts} />
+        <PartsToBuy parts={upgrades} kind="upgrades" />
         <Passed items={passed} />
       </Verdict>
       <CopySummary

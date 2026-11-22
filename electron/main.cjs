@@ -170,9 +170,20 @@ function createWindow() {
   if (process.argv.includes("--smoke")) smokeTest(win);
   // Capture de la fenêtre au démarrage, pour vérifier son allure :
   // SLOWFI_SHOT_START=chemin.png (l'application quitte ensuite).
+  // SLOWFI_SHOT_PAGE=/diagnostic ouvre d'abord cette page par la barre
+  // latérale, SLOWFI_SHOT_WAIT=ms règle l'attente avant la capture.
   if (process.env.SLOWFI_SHOT_START) {
     win.webContents.once("did-finish-load", async () => {
       await new Promise((r) => setTimeout(r, 1500));
+      const page = process.env.SLOWFI_SHOT_PAGE;
+      if (page) {
+        await win.webContents.executeJavaScript(
+          `document.querySelector('a[href="${page}"]')?.click()`,
+        );
+        await new Promise((r) =>
+          setTimeout(r, Number(process.env.SLOWFI_SHOT_WAIT) || 800),
+        );
+      }
       const image = await win.webContents.capturePage();
       require("node:fs").writeFileSync(
         process.env.SLOWFI_SHOT_START,

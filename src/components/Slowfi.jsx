@@ -12,13 +12,12 @@ import Logo from "../ui/Logo.jsx";
 import { Link, usePath } from "../ui/router.jsx";
 import { LangSwitch, useLang } from "../ui/i18n.jsx";
 import Home from "./Home.jsx";
-import ManualChecks from "./ManualChecks.jsx";
 import Legal from "./Legal.jsx";
 import AppPage from "./AppPage.jsx";
 import { desktop } from "../ui/desktop.js";
 import UpdateBanner from "../ui/UpdateBanner.jsx";
 import TitleBar, { TITLE_BAR_HEIGHT } from "../ui/TitleBar.jsx";
-import Sidebar, { SIDEBAR_WIDTH } from "../ui/Sidebar.jsx";
+import Sidebar, { SIDEBAR_WIDTH, SIDEBAR_BREAK } from "../ui/Sidebar.jsx";
 import Sensors from "./Sensors.jsx";
 import DiagnosticPage from "./DiagnosticPage.jsx";
 import HistoryPage from "./HistoryPage.jsx";
@@ -29,38 +28,32 @@ export { GlobalStyle };
 // par page, quel que soit le choix du visiteur.
 const PAGES = {
   "/": Home,
-  "/verifications": ManualChecks,
   "/confidentialite": Legal,
   "/application": AppPage,
-  // Capteurs : page de l'application seulement.
-  ...(desktop
-    ? {
-        "/diagnostic": DiagnosticPage,
-        "/historique": HistoryPage,
-        "/capteurs": Sensors,
-      }
-    : {}),
+  "/diagnostic": DiagnosticPage,
+  "/historique": HistoryPage,
+  // Capteurs : page de l'application seulement, un navigateur ne lit pas
+  // les sondes.
+  ...(desktop ? { "/capteurs": Sensors } : {}),
 };
 
 const TEXT = {
   fr: {
     titles: {
       "/": "Slowfi — diagnostic de connexion et de matériel",
-      "/verifications": "Vérifications manuelles — Slowfi",
       "/confidentialite": "Confidentialité et mentions légales — Slowfi",
       "/application": "Application — Slowfi",
       "/capteurs": "Capteurs — Slowfi",
       "/diagnostic": "Diagnostic approfondi — Slowfi",
       "/historique": "Historique — Slowfi",
     },
+    // Pied de page : deux entrées de la page « Confidentialité ».
     nav: {
-      "/": "Analyses",
-      "/verifications": "Vérifications manuelles",
-      "/confidentialite": "Confidentialité et mentions légales",
+      "/confidentialite": "Confidentialité",
+      "/confidentialite#editeur": "Mentions légales",
     },
     home: "Slowfi, accueil",
-    source: "Code source",
-    note: "Aucune donnée personnelle collectée · Analyses exécutées dans le navigateur",
+    note: "Aucune donnée personnelle n'est collectée",
     download: "Télécharger l'application",
     downloadShort: "Télécharger",
     app: "Application",
@@ -68,7 +61,6 @@ const TEXT = {
   en: {
     titles: {
       "/": "Slowfi — connection and hardware diagnostics",
-      "/verifications": "Manual checks — Slowfi",
       "/confidentialite": "Privacy and legal notice — Slowfi",
       "/application": "App — Slowfi",
       "/capteurs": "Sensors — Slowfi",
@@ -76,13 +68,11 @@ const TEXT = {
       "/historique": "History — Slowfi",
     },
     nav: {
-      "/": "Analyses",
-      "/verifications": "Manual checks",
-      "/confidentialite": "Privacy and legal notice",
+      "/confidentialite": "Privacy",
+      "/confidentialite#editeur": "Legal notice",
     },
     home: "Slowfi, home",
-    source: "Source code",
-    note: "No personal data collected · Analyses run in the browser",
+    note: "No personal data is collected",
     download: "Download the app",
     downloadShort: "Download",
     app: "App",
@@ -150,6 +140,30 @@ const ScrollArea = styled.div`
   overscroll-behavior: contain;
 `;
 
+// Sur le site : la page à droite de la barre latérale ; sur téléphone, la
+// barre passe en bas et la page garde toute la largeur.
+// La page occupe au moins toute la hauteur de la fenêtre : la mention reste
+// en bas, même sur une page courte.
+const WebShell = styled.div`
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-left: ${SIDEBAR_WIDTH}px;
+
+  & > div:last-child {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (max-width: ${SIDEBAR_BREAK}px) {
+    padding-left: 0;
+    padding-bottom: 64px;
+  }
+`;
+
 const HomeLink = styled(Link)`
   display: inline-block;
   color: inherit;
@@ -159,23 +173,37 @@ const HomeLink = styled(Link)`
   }
 `;
 
+// Poussée en bas de la page ; au moins 96 px sous le contenu.
+const FooterGap = styled.div`
+  flex: none;
+  height: 96px;
+`;
+
+// Les liens et la mention sur une seule ligne (sur deux si la place manque).
 const Footer = styled.footer`
-  margin-top: 96px;
-  padding-top: 20px;
-  border-top: 1px solid #1e293b;
+  margin-top: auto;
   font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
 
   nav {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 24px;
   }
-  nav + nav {
-    margin-top: 12px;
-  }
   p {
-    margin: 16px 0 0;
+    margin: 0;
     color: #475569;
+  }
+  /* Un point sépare les liens de la mention. */
+  nav + p::before {
+    content: "•";
+    margin-right: 24px;
+    color: #475569;
+    font-size: 16px;
+    line-height: 0;
   }
 
   a {
@@ -204,11 +232,23 @@ export default function Slowfi() {
     document.title = t.titles[path];
   }, [t, path]);
 
+  // Adresse ouverte avec une ancre (« /confidentialite#editeur ») : la section,
+  // une fois la page affichée.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id) document.getElementById(id)?.scrollIntoView();
+  }, []);
+
   // Dans l'application, une colonne de 720 px centrée dans la fenêtre, avec
   // des marges égales de chaque côté.
   const page = (
     <Page
-      style={desktop ? { maxWidth: 720, padding: "24px 28px 48px" } : undefined}
+      style={
+        desktop
+          ? { maxWidth: 720, padding: "24px 28px 48px" }
+          : // Sur le site, la mention descend presque au bord de la fenêtre.
+            { paddingBottom: 24 }
+      }
     >
       <Header>
         <HomeLink to="/" aria-label={t.home}>
@@ -227,45 +267,21 @@ export default function Slowfi() {
       </Header>
       <Current />
       {desktop && <UpdateBanner />}
-      {/* Dans l'application, ni liens ni mention en bas de page : la barre
-          latérale mène à la confidentialité. */}
+      {/* Dans l'application, pas de pied de page : la barre latérale mène à
+          la confidentialité. */}
+      {!desktop && <FooterGap aria-hidden="true" />}
       {!desktop && (
         <Footer>
-          {/* Dans l'application, la barre latérale remplace ces liens. */}
-          {!desktop && (
-            <nav>
-              {Object.keys(PAGES)
-                .filter((to) => to !== "/application")
-                .map((to) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    aria-current={path === to ? "page" : undefined}
-                  >
-                    {t.nav[to]}
-                  </Link>
-                ))}
-              <a
-                href="https://github.com/msakwins/slowfi"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t.source}
-              </a>
-            </nav>
-          )}
-          {!desktop && (
-            <nav aria-label={t.app}>
+          <nav>
+            {Object.keys(t.nav).map((to) => (
               <Link
-                to="/application"
-                aria-current={path === "/application" ? "page" : undefined}
+                key={to}
+                to={to}
               >
-                {t.app}
+                {t.nav[to]}
               </Link>
-              {/* Pas de lien direct vers les fichiers : la page Application
-                vérifie qu'une version est publiée avant de les lier. */}
-            </nav>
-          )}
+            ))}
+          </nav>
           <p>{t.note}</p>
         </Footer>
       )}
@@ -275,7 +291,13 @@ export default function Slowfi() {
   // Sur le site, la page défile avec la fenêtre du navigateur. Dans
   // l'application, seule la zone sous la barre de titre défile : la barre de
   // défilement commence sous les boutons, un peu en retrait du bord.
-  if (!desktop) return page;
+  if (!desktop)
+    return (
+      <WebShell>
+        <Sidebar path={path} top={0} />
+        {page}
+      </WebShell>
+    );
   return (
     <>
       <TitleBar />
