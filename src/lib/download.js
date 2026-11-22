@@ -29,9 +29,9 @@ export function pickDownloads(release) {
   const out = {};
   for (const a of release?.assets ?? []) {
     const url = a.browser_download_url;
-    // Windows : l'installateur Squirrel (Slowfi-Setup.exe) d'abord ; l'ancien
+    // Windows : l'installateur Squirrel (slowfi-Setup-0.1.8.exe) d'abord ; l'ancien
     // installateur ne sert plus qu'aux mises à jour des copies déjà installées.
-    if (/setup\.exe$/i.test(a.name)) out.windows = url;
+    if (/setup[-.\d]*\.exe$/i.test(a.name)) out.windows = url;
     else if (/\.exe$/i.test(a.name) && !/blockmap/i.test(a.name))
       out.windows ??= url;
     else if (/\.dmg$/i.test(a.name)) out.mac ??= url;

@@ -61,4 +61,17 @@ describe("installateur Windows", () => {
       }).windows,
     ).toBe("u/Slowfi-Setup.exe");
   });
+
+  // Nom donné par GitHub Actions à la version 0.1.8.
+  it("reconnaît l'installateur Squirrel numéroté", () => {
+    const asset = (name) => ({ name, browser_download_url: `u/${name}` });
+    expect(
+      pickDownloads({
+        assets: [
+          asset("Slowfi-win-x64.exe"),
+          asset("slowfi-Setup-0.1.8.exe"),
+        ],
+      }).windows,
+    ).toBe("u/slowfi-Setup-0.1.8.exe");
+  });
 });
