@@ -386,6 +386,194 @@ export const EN = {
       detail:
         "This system does not report device errors: only recognised devices are listed",
     }),
+    "service-down": ({ service, group, disabled }) => {
+      const label = {
+        Audiosrv: "Windows Audio",
+        AudioEndpointBuilder: "Windows Audio Endpoint Builder",
+        bthserv: "Bluetooth Support Service",
+        Spooler: "Print Spooler",
+      }[service];
+      return {
+        title: `Windows service ${disabled ? "disabled" : "stopped"}: ${label}`,
+        detail: {
+          audio:
+            "Without this service, no sound comes out and no microphone works, even though the devices are recognised",
+          bluetooth:
+            "Without this service, Bluetooth devices no longer connect",
+          printer: "Without this service, nothing prints any more",
+        }[group],
+        fix: `Press Windows + R, type services.msc, then double-click “${label}” › Startup type: Automatic › Start`,
+      };
+    },
+    "privacy-denied": ({ what, scope }) => {
+      const mic = what === "microphone";
+      const it = mic ? "the microphone" : "the camera";
+      const looks = mic ? "it seems muted" : "it stays black";
+      return {
+        title: mic
+          ? "Microphone access blocked by Windows"
+          : "Camera access blocked by Windows",
+        detail:
+          scope === "desktop"
+            ? `Desktop apps (Discord, Teams, Zoom, games…) are not allowed to use ${it}: ${looks} in those apps`
+            : `No app is allowed to use ${it}: ${looks} everywhere, even though the device works`,
+        fix: `Settings › Privacy & security › ${mic ? "Microphone" : "Camera"}: turn on “${mic ? "Microphone" : "Camera"} access”${scope === "desktop" ? ", then “Let desktop apps access your " + (mic ? "microphone" : "camera") + "”" : ""}`,
+      };
+    },
+    "audio-none-active": ({ flow, names }) => {
+      const mic = flow === "capture";
+      return {
+        title: mic ? "No active microphone" : "No active audio output",
+        detail: `Windows has no ${mic ? "microphone" : "speaker or headset"} in use. Disabled: ${names}`,
+        fix: `Settings › System › Sound › More sound settings › ${mic ? "Recording" : "Playback"} tab › right-click the device › Enable`,
+      };
+    },
+    "endpoint-disabled": ({ name, mic }) => ({
+      title: `${mic ? "Microphone" : "Output"} disabled in Windows: ${name}`,
+      detail: "Windows sees it but does not use it",
+      fix: `Settings › System › Sound › More sound settings › ${mic ? "Recording" : "Playback"} tab › right-click the device › Enable`,
+    }),
+    "voice-clarity": () => ({
+      title: "Voice Clarity is on for this microphone",
+      detail:
+        "This Windows effect removes noise and echo. With some headsets and USB microphones, it cuts the voice out, makes it choppy or drops it entirely: it is the most likely cause",
+      fix: "Settings › System › Sound › click the microphone › “Audio enhancements”: Off. Then try again in the app",
+    }),
+    "audio-effects": () => ({
+      title: "Audio enhancements on",
+      detail:
+        "Driver or Windows effects (noise reduction, automatic gain) cut out or muffle the voice with some microphones",
+      fix: "Settings › System › Sound › click the microphone › “Audio enhancements”: Off, then try again",
+    }),
+    "tip-out-effects": () => ({
+      title:
+        "Distorted or cutting sound: Settings › System › Sound › click the output › “Audio enhancements”: Off",
+    }),
+    "tip-others": ({ names, mic }) => ({
+      title: `Other ${mic ? "microphones" : "outputs"} are in use (${names}): the app may be using one of them`,
+    }),
+    "tip-mic-mute": () => ({
+      title:
+        "Check the mute button on the headset or microphone (often a button on the cable, or the boom flipped up), and the headset volume wheel",
+    }),
+    "tip-mic-app": () => ({
+      title:
+        "Choose this microphone in the app (Discord, Teams, Zoom, the game): it often keeps the old one, even after Windows switched",
+    }),
+    "tip-mic-level": () => ({
+      title:
+        "Settings › System › Sound › click the microphone: set the input volume to about 80 and speak while watching the “Test your microphone” bar",
+    }),
+    "tip-mic-exclusive": () => ({
+      title:
+        "Close other apps using the microphone: some take it for themselves only",
+    }),
+    "tip-replug": () => ({
+      title:
+        "Unplug and plug the device back in, into a USB port on the computer rather than a hub or front panel",
+    }),
+    "tip-out-default": () => ({
+      title:
+        "Click the sound icon in the taskbar › arrow next to the volume: choose this output",
+    }),
+    "tip-out-mixer": () => ({
+      title:
+        "Right-click the sound icon › Open volume mixer: check the app is neither muted nor at zero, and that it plays on the right device",
+    }),
+    "tip-out-app": () => ({
+      title:
+        "Choose this output in the app's audio settings (Discord, Teams, the game)",
+    }),
+    "tip-out-bt": () => ({
+      title:
+        "Bluetooth headset: choose the “Headphones” or “Stereo” entry, not “Hands-Free”, which sounds like a phone call",
+    }),
+    "tip-cam-shutter": () => ({
+      title:
+        "Check the lens cover and the camera key on the keyboard (often F8 or F10 on laptops)",
+    }),
+    "tip-cam-busy": () => ({
+      title: "Close other apps using the camera: only one at a time can use it",
+    }),
+    "tip-cam-app": () => ({
+      title: "Choose this camera in the app's video settings",
+    }),
+    "tip-wireless-battery": () => ({
+      title:
+        "Wireless: replace or recharge the batteries, and bring the USB receiver closer (a USB extension helps when the PC is under the desk)",
+    }),
+    "tip-kb-filter": () => ({
+      title:
+        "Slow or ignored keys: Settings › Accessibility › Keyboard › turn off “Filter keys” and “Sticky keys”",
+    }),
+    "tip-mouse-surface": () => ({
+      title:
+        "Jumping cursor: clean the sensor and try on a mouse pad, not on glass or a glossy surface",
+    }),
+    "tip-bt-toggle": () => ({
+      title: "Turn Bluetooth off and on again (Settings › Bluetooth & devices)",
+    }),
+    "tip-bt-repair": () => ({
+      title:
+        "Remove the device in Settings › Bluetooth & devices, put it back in pairing mode, then add it again",
+    }),
+    "tip-bt-range": () => ({
+      title:
+        "Bring the device closer and keep the PC away from radio sources (router, USB 3 drives plugged in next to the receiver)",
+    }),
+    "tip-bt-other": () => ({
+      title:
+        "Disconnect it from the phone or other computer it is still paired with",
+    }),
+    "tip-mon-cable": () => ({
+      title:
+        "Check the cable at both ends, and the source chosen in the monitor's menu (HDMI, DisplayPort)",
+    }),
+    "tip-mon-gpu": () => ({
+      title:
+        "Desktop PC: plug the monitor into the graphics card, not into the motherboard outputs",
+    }),
+    "tip-mon-reset": () => ({
+      title:
+        "Black or frozen screen: Windows + Ctrl + Shift + B restarts the graphics driver without closing apps",
+    }),
+    "tip-mon-detect": () => ({
+      title:
+        "Settings › System › Display › Multiple displays › Detect, then check the refresh rate in Display › Advanced display",
+    }),
+    "tip-print-queue": () => ({
+      title:
+        "Open the queue (Settings › Bluetooth & devices › Printers & scanners › the printer) and cancel stuck documents",
+    }),
+    "tip-print-default": () => ({
+      title:
+        "Check this printer is the one chosen when printing, and that it is not “offline”",
+    }),
+    "tip-print-network": () => ({
+      title:
+        "Wi-Fi printer: turn it off and on again, and check it is on the same network as the computer",
+    }),
+    "tip-print-driver": () => ({
+      title:
+        "Remove the printer in Windows, then add it again with the driver from the maker's website",
+    }),
+    "tip-other-driver": () => ({
+      title: "Install the driver or software from the device maker",
+    }),
+    "tip-restart": () => ({
+      title: "Restart the computer (Restart, not Shut down)",
+    }),
+    "tip-missing-power": () => ({
+      title:
+        "Check it is on and charged and, for a wireless device, that its receiver or Bluetooth pairing is in place",
+    }),
+    "tip-missing-scan": () => ({
+      title:
+        "Right-click the Start menu › Device Manager › Action › Scan for hardware changes",
+    }),
+    "tip-missing-cable": () => ({
+      title: "Try another cable: many USB cables only charge and carry no data",
+    }),
   },
 
   events: {

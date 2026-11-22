@@ -22,6 +22,7 @@ import DeviceManual from "./DeviceManual.jsx";
 import { Section2, Table } from "./HardwareAnalysis.jsx";
 import { GROUPS } from "../lib/devices.js";
 import CopySummary from "../ui/CopySummary.jsx";
+import Troubleshoot from "../ui/Troubleshoot.jsx";
 import { summarizeBlocks } from "../lib/report.js";
 
 const TEXT = {
@@ -76,9 +77,23 @@ const CLASSES =
 const FIELDS = "Format-List Name,PNPClass,Status,ConfigManagerErrorCode";
 // Pas de « $ » dans la commande : collée dans PowerShell, la commande
 // extérieure le remplacerait avant de la transmettre.
+// Puis ce qui fait qu'un appareil reconnu ne marche pas quand même : état et
+// effets des entrées et sorties audio (Voice Clarity), accès au micro et à la
+// caméra, services du son, du Bluetooth et de l'impression. Tout se lit sans
+// droits d'administrateur.
+const MMDEV =
+  "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio";
+const CONSENT =
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore";
+const QUIET = "-ErrorAction SilentlyContinue";
 export const DEVICE_READS = [
   `Get-CimInstance Win32_PnPEntity | Where-Object PNPClass -in ${CLASSES} | ${FIELDS}`,
   `Get-CimInstance Win32_PnPEntity | Where-Object ConfigManagerErrorCode -ne 0 | ${FIELDS}`,
+  `Get-ItemProperty ${MMDEV}\\*\\* ${QUIET} | Format-List PSPath,DeviceState`,
+  `Get-ItemProperty ${MMDEV}\\*\\*\\Properties ${QUIET} | Format-List PSPath,'{a45c254e-df1c-4efd-8020-67d146a850e0},2','{b3f8fa53-0004-438e-9003-51a46e139bfc},6'`,
+  `Get-ItemProperty ${MMDEV}\\*\\*\\FxProperties ${QUIET} | Format-List PSPath,'{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5','{9e6136e0-57ab-4949-b57a-3627be142855},100'`,
+  `Get-ItemProperty HKCU:\\${CONSENT}\\microphone,HKCU:\\${CONSENT}\\microphone\\NonPackaged,HKCU:\\${CONSENT}\\webcam,HKCU:\\${CONSENT}\\webcam\\NonPackaged,HKLM:\\${CONSENT}\\microphone,HKLM:\\${CONSENT}\\webcam ${QUIET} | Format-List PSPath,Value`,
+  `Get-Service Audiosrv,AudioEndpointBuilder,bthserv,Spooler ${QUIET} | Format-List Name,Status,StartType`,
 ];
 const COMMAND_WINDOWS = windowsCommand(DEVICE_READS);
 // Linux : appareils USB et cartes son. Pas d'état d'erreur lisible sans root.
@@ -130,6 +145,7 @@ export function DeviceResult({ r }) {
       </Table>
       <Section2>{t.results}</Section2>
       <Findings findings={r.findings} engine="devices" />
+      <Troubleshoot r={r} />
       <CopySummary
         build={() =>
           summarizeBlocks(

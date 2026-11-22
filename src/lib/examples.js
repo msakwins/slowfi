@@ -360,7 +360,66 @@ ConfigManagerErrorCode : 0
 Name                   : Synthetic Gamepad
 PNPClass               :
 Status                 : Error
-ConfigManagerErrorCode : 28`;
+ConfigManagerErrorCode : 28
+
+
+
+PSPath      : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{30552e47-ca15-4a78-aa69-ff78e6efc4e0}
+DeviceState : 1
+
+PSPath      : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{8dc00cc5-b6a5-461f-8d67-a43726a0d538}
+DeviceState : 1
+
+PSPath      : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{80e8550e-d5bf-423b-b8b9-5b20853489bb}
+DeviceState : 268435460
+
+PSPath      : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Render\\{6b0a9fea-e3d6-4e43-b69e-715ae4617100}
+DeviceState : 1
+
+
+
+PSPath                                   : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{30552e47-ca15-4a78-aa69-ff78e6efc4e0}\\Properties
+{a45c254e-df1c-4efd-8020-67d146a850e0},2 : Microphone
+{b3f8fa53-0004-438e-9003-51a46e139bfc},6 : HyperX Cloud Alpha Wireless
+
+PSPath                                   : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{8dc00cc5-b6a5-461f-8d67-a43726a0d538}\\Properties
+{a45c254e-df1c-4efd-8020-67d146a850e0},2 : Microphone
+{b3f8fa53-0004-438e-9003-51a46e139bfc},6 : Logitech StreamCam
+
+PSPath                                   : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{80e8550e-d5bf-423b-b8b9-5b20853489bb}\\Properties
+{a45c254e-df1c-4efd-8020-67d146a850e0},2 : Microphone
+{b3f8fa53-0004-438e-9003-51a46e139bfc},6 : High Definition Audio Device
+
+PSPath                                   : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Render\\{6b0a9fea-e3d6-4e43-b69e-715ae4617100}\\Properties
+{a45c254e-df1c-4efd-8020-67d146a850e0},2 : Casque
+{b3f8fa53-0004-438e-9003-51a46e139bfc},6 : HyperX Cloud Alpha Wireless
+
+
+
+PSPath                                     : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{30552e47-ca15-4a78-aa69-ff78e6efc4e0}\\FxProperties
+{9e6136e0-57ab-4949-b57a-3627be142855},100 : SWD\\DRIVERENUM\\{96bedf2c-18cb-4a15-b821-5e95ed0fea61}#VocaEffectPack&1&201ca009&0
+
+PSPath                                     : Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture\\{8dc00cc5-b6a5-461f-8d67-a43726a0d538}\\FxProperties
+{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5   : 1
+{9e6136e0-57ab-4949-b57a-3627be142855},100 : SWD\\DRIVERENUM\\{96bedf2c-18cb-4a15-b821-5e95ed0fea61}#VocaEffectPack&1&201ca009&0
+
+
+
+PSPath : Microsoft.PowerShell.Core\\Registry::HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\microphone
+Value  : Allow
+
+PSPath : Microsoft.PowerShell.Core\\Registry::HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\webcam
+Value  : Allow
+
+
+
+Name      : Audiosrv
+Status    : Running
+StartType : Automatic
+
+Name      : bthserv
+Status    : Running
+StartType : Manual`;
 
 // macOS — MacBook avec casque Bluetooth et écran externe.
 export const DEVICES_MAC = `Audio:

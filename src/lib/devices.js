@@ -9,6 +9,13 @@
 //
 // Windows : Win32_PnPEntity (Format-List). macOS : system_profiler, qui
 // liste les appareils sans état d'erreur.
+//
+// Un appareil peut aussi être « en bon état » pour Windows et ne pas marcher :
+// micro bloqué par la confidentialité, service audio arrêté, effet de Windows
+// (Voice Clarity) qui coupe la voix avec certains casques. Sous Windows, on lit
+// donc aussi les entrées et sorties audio dans le registre, l'accès au micro
+// et à la caméra, et les services dont dépendent le son, le Bluetooth et
+// l'impression.
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number } from "./powershell.js";
 import { isLinux, parseLinuxDevices } from "./linux.js";
@@ -129,6 +136,205 @@ export function parseMacDevices(raw) {
   return out;
 }
 
+// ── Audio, confidentialité et services (Windows) ────────────────────────────
+
+const MMDEV =
+  /MMDevices\\Audio\\(Capture|Render)\\(\{[0-9a-f-]{36}\})(\\\w+)?$/i;
+// Nom court (« Microphone ») et nom de l'appareil (« HyperX Cloud Alpha »).
+const KIND = "{a45c254e-df1c-4efd-8020-67d146a850e0},2";
+const MODEL = "{b3f8fa53-0004-438e-9003-51a46e139bfc},6";
+// PKEY_AudioEndpoint_Disable_SysFx : 1 = « Améliorations audio » désactivées.
+const SYSFX_OFF = "{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5";
+// Pack d'effets attaché à l'entrée ; VocaEffectPack est celui de Voice Clarity.
+const EFFECT_PACK = "{9e6136e0-57ab-4949-b57a-3627be142855},100";
+// DeviceState (4 bits de poids faible) : 1 actif, 2 désactivé, 4 absent,
+// 8 débranché.
+const STATES = { 1: "active", 2: "disabled", 4: "absent", 8: "unplugged" };
+
+/**
+ * Entrées et sorties audio, d'après trois lectures du registre (état, noms,
+ * effets), réunies par identifiant.
+ * @param {string} raw
+ * @returns {Array<{id:string, flow:"capture"|"render", name:string|null, state:string|null, effects:boolean|null, voiceClarity:boolean}>}
+ */
+export function parseAudioEndpoints(raw) {
+  const byId = new Map();
+  for (const f of parseBlocks(raw)) {
+    const m = (field(f, "PSPath") ?? "").match(MMDEV);
+    if (!m) continue;
+    const id = m[2].toLowerCase();
+    const e = byId.get(id) ?? {
+      id,
+      flow: m[1].toLowerCase() === "capture" ? "capture" : "render",
+      name: null,
+      state: null,
+      effects: null,
+      voiceClarity: false,
+    };
+    byId.set(id, e);
+    const sub = (m[3] ?? "").slice(1).toLowerCase();
+    if (sub === "") {
+      const n = number(f, "DeviceState");
+      if (n != null) e.state = STATES[n & 0xf] ?? null;
+    } else if (sub === "properties") {
+      const kind = field(f, KIND);
+      const model = field(f, MODEL);
+      // Même forme que dans le Gestionnaire de périphériques :
+      // « Microphone (HyperX Cloud Alpha Wireless) ».
+      e.name = kind && model ? `${kind} (${model})` : (kind ?? model);
+    } else if (sub === "fxproperties") {
+      e.effects = field(f, SYSFX_OFF) !== "1";
+      e.voiceClarity = /VocaEffectPack/i.test(field(f, EFFECT_PACK) ?? "");
+    }
+  }
+  return [...byId.values()].filter((e) => e.name);
+}
+
+/**
+ * Accès au micro et à la caméra (Paramètres › Confidentialité). « Deny » sur
+ * l'ordinateur, pour l'utilisateur, ou pour les applications de bureau
+ * (NonPackaged : Discord, Teams, Zoom, les jeux…).
+ * @param {string} raw
+ * @returns {Array<{what:"microphone"|"webcam", scope:"machine"|"user"|"desktop", allowed:boolean}>}
+ */
+export function parsePrivacy(raw) {
+  const out = [];
+  for (const f of parseBlocks(raw)) {
+    const m = (field(f, "PSPath") ?? "").match(
+      /(HKEY_LOCAL_MACHINE|HKEY_CURRENT_USER)\\.*ConsentStore\\(microphone|webcam)(\\NonPackaged)?$/i,
+    );
+    const value = field(f, "Value");
+    if (!m || !value) continue;
+    out.push({
+      what: m[2].toLowerCase(),
+      scope: m[3]
+        ? "desktop"
+        : /LOCAL_MACHINE/i.test(m[1])
+          ? "machine"
+          : "user",
+      allowed: !/deny/i.test(value),
+    });
+  }
+  return out;
+}
+
+/**
+ * Services Windows (Get-Service … | Format-List Name,Status,StartType).
+ * @param {string} raw
+ */
+export function parseServices(raw) {
+  return parseBlocks(raw)
+    .filter((f) => "StartType" in f && field(f, "Name"))
+    .map((f) => ({
+      name: field(f, "Name"),
+      running: /running/i.test(field(f, "Status") ?? ""),
+      disabled: /disabled/i.test(field(f, "StartType") ?? ""),
+    }));
+}
+
+// Services surveillés : ce qu'ils font marcher, et s'ils doivent tourner en
+// permanence. Le Bluetooth et l'impression démarrent à la demande : arrêtés,
+// ils ne sont pas en panne tant qu'ils ne sont pas désactivés.
+export const SERVICES = {
+  Audiosrv: { group: "audio", always: true, label: "Audio Windows" },
+  AudioEndpointBuilder: {
+    group: "audio",
+    always: true,
+    label: "Générateur de points de terminaison audio Windows",
+  },
+  bthserv: {
+    group: "bluetooth",
+    always: false,
+    label: "Service de prise en charge Bluetooth",
+  },
+  Spooler: { group: "printer", always: false, label: "Spouleur d'impression" },
+};
+
+/** Constats tirés de l'audio, de la confidentialité et des services. */
+function systemFindings(d) {
+  const out = [];
+  const present = (group) => d.devices.some((x) => x.group === group);
+
+  for (const s of d.services ?? []) {
+    const def = SERVICES[s.name];
+    if (!def) continue;
+    const down = def.always ? !s.running || s.disabled : s.disabled;
+    if (!down) continue;
+    // Pas de Bluetooth ni d'imprimante : le service désactivé ne gêne rien.
+    if (!def.always && !present(def.group)) continue;
+    out.push({
+      level: "problem",
+      id: `service-${s.name}`,
+      key: "service-down",
+      vars: { service: s.name, group: def.group, disabled: s.disabled },
+      title: `Service Windows ${s.disabled ? "désactivé" : "arrêté"} : ${def.label}`,
+      detail: {
+        audio:
+          "Sans ce service, aucun son ne sort et aucun micro ne fonctionne, même si les appareils sont reconnus",
+        bluetooth:
+          "Sans ce service, les appareils Bluetooth ne se connectent plus",
+        printer: "Sans ce service, plus rien ne s'imprime",
+      }[def.group],
+      fix: `Touche Windows + R, taper services.msc, puis double-clic sur « ${def.label} » › Type de démarrage : Automatique › Démarrer`,
+    });
+  }
+
+  // Accès bloqué : l'appareil marche, mais les applications ne le reçoivent pas.
+  for (const what of ["microphone", "webcam"]) {
+    const denied = (d.privacy ?? []).filter(
+      (p) => p.what === what && !p.allowed,
+    );
+    if (denied.length === 0) continue;
+    // Le blocage le plus large l'emporte.
+    const scope = ["machine", "user", "desktop"].find((s) =>
+      denied.some((p) => p.scope === s),
+    );
+    const mic = what === "microphone";
+    const it = mic ? "le micro" : "la caméra";
+    const looks = mic ? "il paraît muet" : "elle reste noire";
+    out.push({
+      level: "problem",
+      id: `privacy-${what}`,
+      key: "privacy-denied",
+      vars: { what, scope },
+      title: mic
+        ? "Accès au micro bloqué par Windows"
+        : "Accès à la caméra bloqué par Windows",
+      detail:
+        scope === "desktop"
+          ? `Les applications de bureau (Discord, Teams, Zoom, les jeux…) n'ont pas le droit d'utiliser ${it} : ${looks} dans ces applications`
+          : `Aucune application n'a le droit d'utiliser ${it} : ${looks} partout, alors que l'appareil fonctionne`,
+      fix: `Paramètres › Confidentialité et sécurité › ${mic ? "Microphone" : "Caméra"} : activer « Accès ${mic ? "au microphone" : "à la caméra"} »${scope === "desktop" ? ", puis « Autoriser les applications de bureau à accéder »" : ""}`,
+    });
+  }
+
+  // Aucune entrée (ou sortie) active alors que certaines sont désactivées :
+  // c'est sans doute celle qui manque.
+  const audio = d.audio ?? [];
+  for (const flow of ["capture", "render"]) {
+    const mine = audio.filter((e) => e.flow === flow);
+    if (mine.length === 0 || mine.some((e) => e.state === "active")) continue;
+    const off = mine.filter((e) => e.state === "disabled");
+    if (off.length === 0) continue;
+    const names = off.map((e) => e.name).join(", ");
+    const mic = flow === "capture";
+    out.push({
+      level: "problem",
+      id: `audio-none-${flow}`,
+      key: "audio-none-active",
+      vars: { flow, names },
+      title: mic ? "Aucun micro actif" : "Aucune sortie audio active",
+      detail: `Windows n'a ${mic ? "aucun micro" : "aucun haut-parleur ni casque"} en service. Désactivé : ${names}`,
+      fix: `Paramètres › Système › Son › Plus de paramètres de son › onglet ${mic ? "Enregistrement" : "Lecture"} › clic droit sur l'appareil › Activer`,
+    });
+  }
+  return out;
+}
+
+// Voice Clarity n'est pas signalé ici : il est activé d'office sur beaucoup
+// de micros et les aide le plus souvent. Il n'apparaît que lorsque
+// l'utilisateur désigne le micro qui ne marche pas (troubleshoot.js).
+
 function groupOf(cls) {
   return GROUPS.find(([, classes]) => classes.includes(cls))?.[0] ?? null;
 }
@@ -203,6 +409,11 @@ export function diagnoseDevices(d) {
     });
   }
 
+  for (const f of systemFindings(d)) {
+    bump(f.level);
+    findings.push(f);
+  }
+
   if (findings.length === 0) {
     findings.push({
       id: "healthy",
@@ -247,7 +458,13 @@ export function analyzeDevices(raw) {
     if (!devices.some((x) => x.group === "audio")) {
       for (const x of devices) if (x.cls === "MEDIA") x.group = "audio";
     }
-    return diagnoseDevices({ platform: "windows", devices });
+    return diagnoseDevices({
+      platform: "windows",
+      devices,
+      audio: parseAudioEndpoints(raw),
+      privacy: parsePrivacy(raw),
+      services: parseServices(raw),
+    });
   }
   if (isLinux(raw)) {
     const linux = parseLinuxDevices(raw);
