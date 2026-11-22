@@ -28,6 +28,18 @@ function notify(next) {
 }
 
 /**
+ * Avant l'installation : la fenêtre de l'application se ferme et la fenêtre
+ * de mise à jour (update-splash.cjs) s'affiche, comme à l'installation, le
+ * temps que l'installateur prenne le relais.
+ */
+function withSplash(install) {
+  const { showInstalling } = require("./update-splash.cjs");
+  for (const win of BrowserWindow.getAllWindows()) win.hide();
+  showInstalling(state?.version ?? "");
+  setTimeout(install, 1800);
+}
+
+/**
  * Installée par Squirrel (Windows) : Update.exe se trouve un dossier au-dessus
  * de l'application.
  */
@@ -60,7 +72,8 @@ function setupSquirrelUpdates() {
   });
   autoUpdater.on("error", () => {});
   ipcMain.handle("slowfi:install-update", () => {
-    if (state?.status === "ready") autoUpdater.quitAndInstall();
+    if (state?.status === "ready")
+      withSplash(() => autoUpdater.quitAndInstall());
   });
   try {
     autoUpdater.checkForUpdates();
@@ -99,7 +112,8 @@ function setupUpdates() {
   ipcMain.handle("slowfi:install-update", () => {
     // Installation silencieuse, puis relance : les étapes de l'installateur
     // ne servent qu'à la première installation, pas aux mises à jour.
-    if (state?.status === "ready") autoUpdater.quitAndInstall(true, true);
+    if (state?.status === "ready")
+      withSplash(() => autoUpdater.quitAndInstall(true, true));
   });
 
   autoUpdater.checkForUpdates().catch(() => {});

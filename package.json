@@ -1,7 +1,7 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Diagnostic de connexion, de matériel et de périphériques",
   "author": "Slowfi",
   "homepage": "https://www.slowfi.app",
@@ -46,6 +46,7 @@
       "electron/sensors.cjs",
       "electron/nvme-health.ps1",
       "electron/updater.cjs",
+      "electron/update-splash.cjs",
       "src/lib/catalog.js",
       "src/lib/vendors.js",
       "src/lib/driverLookup.js",

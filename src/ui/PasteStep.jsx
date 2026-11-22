@@ -137,77 +137,48 @@ const Label = styled.p`
   }
 `;
 
-// Analyse en cours, dans l'application : un reflet parcourt le texte et trois
-// points sautillent à la couleur de l'analyse.
+// Analyse en cours, dans l'application : le texte, suivi de trois petits
+// points qui s'allument tour à tour.
 const Running = styled.p`
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
 
-  .text {
-    background: linear-gradient(
-        90deg,
-        #94a3b8 0%,
-        #94a3b8 35%,
-        #f1f5f9 50%,
-        #94a3b8 65%,
-        #94a3b8 100%
-      )
-      0 0 / 250% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: shine 2.2s linear infinite;
-  }
   .dots {
     display: inline-flex;
-    gap: 4px;
+    gap: 3px;
   }
   .dots i {
-    width: 5px;
-    height: 5px;
+    width: 3px;
+    height: 3px;
     border-radius: 50%;
-    background: var(--accent, #22d3ee);
-    animation: hop 1.1s ease-in-out infinite;
+    background: currentColor;
+    animation: fade 1.2s ease-in-out infinite;
   }
   .dots i:nth-child(2) {
-    animation-delay: 0.15s;
+    animation-delay: 0.2s;
   }
   .dots i:nth-child(3) {
-    animation-delay: 0.3s;
+    animation-delay: 0.4s;
   }
 
-  @keyframes shine {
-    from {
-      background-position: 100% 0;
-    }
-    to {
-      background-position: -150% 0;
-    }
-  }
-  @keyframes hop {
+  @keyframes fade {
     0%,
-    60%,
     100% {
-      transform: translateY(0);
-      opacity: 0.4;
+      opacity: 0.25;
     }
-    30% {
-      transform: translateY(-5px);
+    50% {
       opacity: 1;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .text,
     .dots i {
       animation: none;
-    }
-    .text {
-      color: #cbd5e1;
-      background: none;
+      opacity: 0.6;
     }
   }
 `;

@@ -447,6 +447,13 @@ if (squirrelEvent) {
     });
     createWindow();
     setupUpdates();
+    // Premier lancement après une mise à jour : la nouvelle version
+    // s'annonce, dans la même fenêtre que l'installation.
+    if (app.isPackaged && !process.argv.includes("--smoke"))
+      require("./update-splash.cjs").announceIfUpdated();
+    // Aperçu de la fenêtre de mise à jour : SLOWFI_UPDATE_PREVIEW=1.
+    if (process.env.SLOWFI_UPDATE_PREVIEW && !app.isPackaged)
+      require("./update-splash.cjs").showInstalling(app.getVersion());
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

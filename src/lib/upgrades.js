@@ -136,7 +136,9 @@ export function recommendUpgrades(data, lang = "fr") {
           ? `Current processor: ${current}${now}. The ${up.model} (${spec(...up.spec, false)}) is compatible with the existing motherboard${up.bios ? ". Update the BIOS before replacing the processor" : ""}`
           : `Processeur actuel : ${current}${now}. Le ${up.model} (${spec(...up.spec, true)}) est compatible avec la carte mère existante${up.bios ? ". Mettre à jour le BIOS avant le remplacement" : ""}`,
         query: up.model,
-        price: PRICES[up.price],
+        // Pas de budget : ces processeurs se vendent surtout d'occasion, et
+        // le prix neuf sur Amazon varie trop pour donner un chiffre juste.
+        price: null,
       });
     }
   }
