@@ -3,7 +3,7 @@
 // Le détail de chaque analyse est donné au-dessus du bouton de lancement.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** « a », « a et b », « a, b et c ». */
+/** « a », « a et b », « a, b et c ». */
 function joinList(items, and) {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} ${and} ${items.at(-1)}`;

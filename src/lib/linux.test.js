@@ -46,7 +46,7 @@ describe("Linux — réseau", () => {
 describe("Linux — matériel", () => {
   it("lit le disque système, sans doublon pour /home", () => {
     const v = diagnoseStorage(HARDWARE_LINUX).volumes;
-    // /home est sur la même partition que « / » : une seule ligne.
+    // /home est sur la même partition que « / » : une seule ligne.
     expect(v.map((x) => x.name)).toEqual(["/"]);
     expect(v[0].findings[0].id).toBe("disk-low");
   });

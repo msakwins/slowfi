@@ -16,7 +16,7 @@ const TEXT = {
       disks: (
         <>
           Ouvrir l'<span className="path">Explorateur de fichiers › Ce PC</span>
-          . Sous chaque disque : « X Go libres sur Y Go »
+          . Sous chaque disque : « X Go libres sur Y Go »
         </>
       ),
       memory: (
@@ -28,7 +28,7 @@ const TEXT = {
       gpu: (
         <>
           Dans le même onglet, <span className="path">Performances › GPU</span>{" "}
-          : ligne « Date du pilote ». Puis clic droit sur le menu Démarrer ›{" "}
+          : ligne « Date du pilote ». Puis clic droit sur le menu Démarrer ›{" "}
           <span className="path">
             Gestionnaire de périphériques › Cartes graphiques
           </span>{" "}
@@ -38,18 +38,18 @@ const TEXT = {
       bios: (
         <>
           Menu Démarrer › taper{" "}
-          <span className="path">Informations système</span> › ligne « Version
-          du BIOS/Date »
+          <span className="path">Informations système</span> › ligne « Version
+          du BIOS/Date »
         </>
       ),
       system: (
         <>
           Dans le{" "}
           <span className="path">Gestionnaire des tâches › Performances</span> :
-          le type du disque (C:) s'affiche en haut à droite de « Disque 0 » ou «
-          Disque 1 », le « Temps d'activité » sous « Processeur ». Puis{" "}
+          le type du disque (C:) s'affiche en haut à droite de « Disque 0 » ou «
+          Disque 1 », le « Temps d'activité » sous « Processeur ». Puis{" "}
           <span className="path">Paramètres › Système › Alimentation</span> : «
-          Mode d'alimentation »
+          Mode d'alimentation »
         </>
       ),
     },
@@ -60,19 +60,19 @@ const TEXT = {
           <span className="path">
             Menu Pomme › Réglages Système › Général › Stockage
           </span>{" "}
-          : « X Go disponibles sur Y Go »
+          : « X Go disponibles sur Y Go »
         </>
       ),
       memory: (
         <>
           Ouvrir <span className="path">Menu Pomme › À propos de ce Mac</span> :
-          ligne « Mémoire »
+          ligne « Mémoire »
         </>
       ),
       system: (
         <>
           Ouvrir <span className="path">Réglages Système › Batterie</span> :
-          ligne « Mode économie d'énergie »
+          ligne « Mode économie d'énergie »
         </>
       ),
     },
@@ -86,7 +86,7 @@ const TEXT = {
     memTotalMac: "Mémoire",
     speed: "Vitesse",
     slots: "Emplacements utilisés",
-    slotsHint: "« 2 sur 4 » → 2",
+    slotsHint: "« 2 sur 4 » → 2",
     rated: "Fréquence annoncée",
     ratedHint: "facultatif, sur la fiche produit",
     year: "Année",
@@ -115,7 +115,7 @@ const TEXT = {
       disks: (
         <>
           Ouvrir <span className="path">Fichiers › Autres emplacements</span> :
-          sous « Ordinateur », l'espace disponible et la taille
+          sous « Ordinateur », l'espace disponible et la taille
         </>
       ),
       about: (
@@ -147,11 +147,11 @@ const TEXT = {
           <span className="path">
             Paramètres › Système › Informations système
           </span>{" "}
-          : lignes « Édition » et « Version ». Puis, dans le{" "}
+          : lignes « Édition » et « Version ». Puis, dans le{" "}
           <span className="path">Gestionnaire des tâches › Processus</span>, les
-          pourcentages en tête des colonnes « Processeur » et « Mémoire », et
+          pourcentages en tête des colonnes « Processeur » et « Mémoire », et
           dans <span className="path">Applications de démarrage</span>, le
-          nombre d'applications « Activé »
+          nombre d'applications « Activé »
         </>
       ),
       mac: (
@@ -159,7 +159,7 @@ const TEXT = {
           Ouvrir <span className="path">Menu Pomme › À propos de ce Mac</span> :
           version de macOS. Puis{" "}
           <span className="path">Réglages Système › Batterie</span>, bouton ⓘ à
-          côté de « État de la batterie » : capacité maximale
+          côté de « État de la batterie » : capacité maximale
         </>
       ),
     },
@@ -173,7 +173,7 @@ const TEXT = {
     macVersion: "Version de macOS",
     cpuLoad: "Processeur",
     memoryPct: "Mémoire",
-    startupCount: "Applications « Activé »",
+    startupCount: "Applications « Activé »",
     batteryPct: "Capacité maximale",
   },
   en: {

@@ -68,7 +68,9 @@ export function driverStatus(installed, latest) {
  * quand il a répondu (NVIDIA), sinon le catalogue Windows Update.
  * @param {{ version: string, key: string, cls: string, name: string }} installed
  * @param {{ latest: { version: string, date: string|null }|null, vendor: { version: string, date: string|null, url: string|null }|null }} found
- * @returns {{ status: "update"|"current"|"unknown"|"info", version: string|null, date: string|null, source: "nvidia"|"amd"|"windows-update"|null, url: string|null }}
+ * @returns {{ status: "update"|"current"|"unknown"|"info", version: string|null, date: string|null, source: "nvidia"|"amd"|"windows-update"|null, url: string|null, download?: string|null }}
+ *   download : lien direct vers l'installateur officiel (NVIDIA), seulement
+ *   quand une mise à jour existe.
  */
 export function driverState(installed, found) {
   // AMD : dernière version affichée, sans verdict (voir vendors.js).
@@ -93,6 +95,7 @@ export function driverState(installed, found) {
       date: found.vendor.date,
       source: "nvidia",
       url: found.vendor.url ?? vendorPage(installed),
+      download: status === "update" ? (found.vendor.download ?? null) : null,
     };
   }
   const status = driverStatus(installed, found.latest);

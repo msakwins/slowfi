@@ -4,7 +4,7 @@
 //
 // Trois causes de lenteur que rien ne signale : Windows sur un disque dur
 // mécanique, une machine jamais vraiment redémarrée (le démarrage rapide de
-// Windows fait d'un « Arrêter » une mise en veille prolongée), et un mode
+// Windows fait d'un « Arrêter » une mise en veille prolongée), et un mode
 // d'économie d'énergie oublié qui bride le processeur.
 //
 // Windows : Get-PhysicalDisk, plus un bloc calculé (disque système, jours
@@ -14,7 +14,7 @@ import { parseBlocks, field, number } from "./powershell.js";
 import { parsePlatform, platformRules } from "./platform.js";
 import { isLinux, parseLinuxSystem } from "./linux.js";
 
-// Mode « Économies d'énergie » de Windows : identifiant fixe, quelle que soit
+// Mode « Économies d'énergie » de Windows : identifiant fixe, quelle que soit
 // la langue du système.
 const POWER_SAVER_GUID = "a1841308-3541-4fab-bc81-f71556f20b4a";
 
@@ -78,7 +78,7 @@ export function parseSystem(raw) {
     if (linux) return linux;
   }
 
-  // macOS : « up 12 days, 3:04 » ; moins d'un jour, « up 3:04 » ou « up 5 mins ».
+  // macOS : « up 12 days, 3:04 » ; moins d'un jour, « up 3:04 » ou « up 5 mins ».
   const up = raw.match(/\bup\s+(?:(\d+)\s+days?,?|\d+:\d+|\d+\s+mins?)/i);
   const lowPower = raw.match(/lowpowermode\s+(\d)/i);
   if (!up && !lowPower && !env.os && !env.battery) return null;
@@ -103,7 +103,7 @@ export function diskKind(d) {
 
 /**
  * @param {NonNullable<ReturnType<typeof parseSystem>>} s
- * @param {{ today?: string }} [opts] date du jour (« AAAA-MM-JJ »), fixée par les tests
+ * @param {{ today?: string }} [opts] date du jour (« AAAA-MM-JJ »), fixée par les tests
  */
 export function diagnoseSystem(
   s,
@@ -143,7 +143,7 @@ export function diagnoseSystem(
         key: "disk-unhealthy",
         vars: { name: d.name || "?", state: d.health },
         title: `Disque en mauvais état (${d.name || "?"})`,
-        detail: `État signalé par Windows : « ${d.health} ». Le disque anticipe lui-même une panne`,
+        detail: `État signalé par Windows : « ${d.health} ». Le disque anticipe lui-même une panne`,
         fix: "Sauvegarder immédiatement, puis remplacer le disque",
       });
     }
@@ -185,12 +185,12 @@ export function diagnoseSystem(
         ? "Mémoire encombrée et mises à jour en attente s'accumulent tant que le Mac n'est pas redémarré"
         : s.platform === "linux"
           ? "Mises à jour du noyau en attente et mémoire encombrée s'accumulent tant que l'ordinateur n'est pas redémarré"
-          : "Avec le démarrage rapide de Windows, « Arrêter » ne remet pas le système à zéro : seul « Redémarrer » le fait. Mémoire encombrée et mises à jour en attente s'accumulent",
+          : "Avec le démarrage rapide de Windows, « Arrêter » ne remet pas le système à zéro : seul « Redémarrer » le fait. Mémoire encombrée et mises à jour en attente s'accumulent",
       fix: mac
         ? "Redémarrer le Mac (Menu Pomme › Redémarrer) au moins une fois par semaine"
         : s.platform === "linux"
           ? "Redémarrer l'ordinateur au moins une fois par semaine, et après chaque mise à jour du noyau"
-          : "Utiliser « Redémarrer », et non « Arrêter », au moins une fois par semaine",
+          : "Utiliser « Redémarrer », et non « Arrêter », au moins une fois par semaine",
     });
   }
 
@@ -210,10 +210,10 @@ export function diagnoseSystem(
       detail:
         "Le processeur est volontairement bridé pour économiser l'énergie : les applications répondent plus lentement",
       fix: mac
-        ? "Régler « Mode économie d'énergie » sur « Jamais » ou « Sur batterie uniquement » dans Réglages Système › Batterie"
+        ? "Régler « Mode économie d'énergie » sur « Jamais » ou « Sur batterie uniquement » dans Réglages Système › Batterie"
         : s.platform === "linux"
-          ? "Choisir le profil « Équilibré » dans les paramètres d'alimentation, ou lancer powerprofilesctl set balanced"
-          : "Choisir « Équilibré » dans Paramètres › Système › Alimentation › Mode d'alimentation, ou dans les Options d'alimentation du Panneau de configuration",
+          ? "Choisir le profil « Équilibré » dans les paramètres d'alimentation, ou lancer powerprofilesctl set balanced"
+          : "Choisir « Équilibré » dans Paramètres › Système › Alimentation › Mode d'alimentation, ou dans les Options d'alimentation du Panneau de configuration",
     });
   }
 

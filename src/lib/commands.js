@@ -18,7 +18,7 @@
 // résultat dans le terminal. Elle annonce donc son début et sa fin, et
 // affiche aussi le résultat dans le terminal, en plus de le copier.
 //
-// Sous Windows, pas de « $ » dans la commande : collée dans PowerShell, la
+// Sous Windows, pas de « $ » dans la commande : collée dans PowerShell, la
 // chaîne entre guillemets serait développée avant d'arriver au sous-shell.
 // D'où Tee-Object -Variable puis Get-Variable -ValueOnly.
 // ─────────────────────────────────────────────────────────────────────────────

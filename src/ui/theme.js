@@ -28,8 +28,10 @@ export const GlobalStyle = createGlobalStyle`
     margin: 0;
     background: #020617;
     color: #e2e8f0;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* Inter, légèrement aérée (choix « A2 »). */
+    letter-spacing: 0.01em;
   }
   /* Barre de défilement fine et sombre, à la place de la grise du système. */
   ::-webkit-scrollbar {
@@ -58,9 +60,10 @@ export const Page = styled.div`
 export const Title = styled.h1`
   font-size: clamp(21px, 3.4vw, 26px);
   line-height: 1.1;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0;
+  /* Même couleur sur toutes les pages : la couleur reste aux accents. */
+  color: #f1f5f9;
   margin: 0;
 `;
 
@@ -68,14 +71,14 @@ export const Title = styled.h1`
 export const Subtitle = styled.h3`
   margin: 0 0 20px;
   font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: 0;
   color: #f1f5f9;
 `;
 
 // Un <div> plutôt qu'un <p> : une introduction peut compter plusieurs
 // paragraphes, et des <p> imbriqués dans un <p> sont invalides.
-// Attente en cours (« Lecture des capteurs », « Analyse en cours ») : une
+// Attente en cours (« Lecture des capteurs », « Analyse en cours ») : une
 // ligne de texte gris, la même partout. Les points de suspension s'écrivent
 // un à un ; le texte passé ne les contient pas.
 export const Pending = styled.p.attrs({ role: "status" })`
@@ -159,7 +162,7 @@ export const Button = styled.button`
     transform: translateX(3px);
   }
 
-  /* Style « ghost » : contour fin, fond transparent. Le bouton principal se
+  /* Style « ghost » : contour fin, fond transparent. Le bouton principal se
      distingue par la couleur, pas par un aplat. */
   color: ${(p) => (p.$primary ? "var(--accent)" : "#94a3b8")};
   border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.45)" : "#1e293b")};

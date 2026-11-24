@@ -9,19 +9,13 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLang } from "./i18n.jsx";
 import { driverState, withAi } from "../lib/drivers.js";
-import { aiVendor, aiEligible } from "../lib/aiDriver.js";
+import { aiVendor } from "../lib/aiDriver.js";
 import { desktop } from "./desktop.js";
-import { Ghost } from "./theme.js";
 import { nvidiaVersion } from "../lib/vendors.js";
 
 // Sur le site, une fonction Vercel ; dans l'application, le processus
 // principal ; en développement, le serveur Vite. Même adresse partout.
 const API = "/api/drivers";
-// La recherche IA garde sa clé sur le serveur du site : l'application
-// l'appelle aussi sur slowfi.app.
-const AI_API = desktop
-  ? "https://www.slowfi.app/api/driver-ai"
-  : "/api/driver-ai";
 
 const TEXT = {
   fr: {
@@ -37,12 +31,14 @@ const TEXT = {
     aiPackage: (p) => `Pack ${p.packageVersion} sur le site du fabricant`,
     aiButton: (vendors) => `Chercher sur les sites ${vendors}`,
     aiNote:
-      "Recherche par IA (Google Gemini) : le nom et l'identifiant de chaque composant concerné sont envoyés à Google, qui lit la page de pilotes du fabricant. À confirmer sur la page indiquée",
+      "Recherche via Google Gemini : nom et identifiant des composants transmis à Google",
     aiRunning: "Recherche sur les sites des fabricants…",
     aiQuota: "Quota gratuit de recherche épuisé, réessayer demain",
     aiDisabled: "Recherche par IA indisponible pour le moment",
     and: "et",
     page: "Page du pilote",
+    download: (v) => `Télécharger la version ${v}`,
+    optional: "Ouvrir les mises à jour facultatives de Windows",
     searching: "Recherche…",
     current: "À jour",
     update: (v) => `${v} disponible`,
@@ -76,12 +72,14 @@ const TEXT = {
     aiPackage: (p) => `Package ${p.packageVersion} on the maker's site`,
     aiButton: (vendors) => `Search the ${vendors} sites`,
     aiNote:
-      "AI search (Google Gemini): the name and identifier of each component concerned are sent to Google, which reads the maker's driver page. Confirm on the page shown",
+      "Search via Google Gemini: component names and identifiers are sent to Google",
     aiRunning: "Searching the makers' sites…",
     aiQuota: "Free search quota used up, try again tomorrow",
     aiDisabled: "AI search unavailable for now",
     and: "and",
     page: "Driver page",
+    download: (v) => `Download version ${v}`,
+    optional: "Open Windows optional updates",
     searching: "Searching…",
     current: "Up to date",
     update: (v) => `${v} available`,
@@ -106,11 +104,11 @@ const TEXT = {
 
 const Head = styled.p`
   margin: 32px 0 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 const Intro = styled.p`
@@ -187,10 +185,8 @@ export default function DriverUpdates({ drivers }) {
   // Résultat par identifiant : undefined (en cours), null (échec), ou
   // { latest, vendor } (catalogue et site du fabricant).
   const [found, setFound] = useState({});
-  // Recherche IA, lancée à la demande : résultat par identifiant, et état
-  // général (idle, running, done, quota, disabled).
-  const [ai, setAi] = useState({});
-  const [aiState, setAiState] = useState("idle");
+  // Recherche IA (Google Gemini) : retirée de l'interface ; aucun résultat.
+  const ai = {};
   const keys = drivers.map((d) => d.key).join("|");
 
   useEffect(() => {
@@ -212,35 +208,6 @@ export default function DriverUpdates({ drivers }) {
 
   if (drivers.length === 0) return null;
 
-  const eligible = drivers.filter(aiEligible);
-  const vendors = [...new Set(eligible.map((d) => aiVendor(d.key).name))];
-  const vendorList =
-    vendors.length > 1
-      ? `${vendors.slice(0, -1).join(", ")} ${t.and} ${vendors.at(-1)}`
-      : vendors[0];
-
-  const searchAi = async () => {
-    setAiState("running");
-    let failure = null;
-    await Promise.all(
-      eligible.map(async (d) => {
-        const url = `${AI_API}?id=${encodeURIComponent(d.key)}&name=${encodeURIComponent(d.name)}&cls=${d.cls}`;
-        try {
-          const r = await fetch(url);
-          if (r.status === 429) failure = "quota";
-          else if (!r.ok) failure ??= "disabled";
-          else {
-            const body = await r.json();
-            setAi((a) => ({ ...a, [d.key]: body.found ?? null }));
-          }
-        } catch {
-          failure ??= "disabled";
-        }
-      }),
-    );
-    setAiState(failure ?? "done");
-  };
-
   const catalogDate = (iso) => {
     if (!iso) return "";
     const [y, m] = iso.split("-").map(Number);
@@ -257,6 +224,9 @@ export default function DriverUpdates({ drivers }) {
           let state;
           let link = null;
           let shown = null;
+          // Lien direct sûr : l'installateur officiel de NVIDIA, ou les
+          // mises à jour facultatives de Windows (application seulement).
+          let direct = null;
           if (r === undefined) {
             state = <span className="muted">{t.searching}</span>;
           } else if (r === null) {
@@ -289,12 +259,33 @@ export default function DriverUpdates({ drivers }) {
               );
             link = st.url;
             shown = st.source === "nvidia" ? nvidiaVersion(d.version) : null;
+            if (st.download)
+              direct = { href: st.download, label: t.download(st.version) };
+            else if (
+              desktop &&
+              st.status === "update" &&
+              st.source === "windows-update"
+            )
+              direct = {
+                href: "ms-settings:windowsupdate-optionalupdates",
+                label: t.optional,
+              };
           }
           return (
             <li key={d.key}>
               <span className="name">
                 {d.name}
                 <span className="sub">{shown ?? d.version}</span>
+                {direct && (
+                  <a
+                    href={direct.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="direct"
+                  >
+                    {direct.label}
+                  </a>
+                )}
                 {link && (
                   <a href={link} target="_blank" rel="noreferrer">
                     {t.page}
@@ -306,22 +297,6 @@ export default function DriverUpdates({ drivers }) {
           );
         })}
       </List>
-      {eligible.length > 0 && (
-        <>
-          <Intro>{t.aiNote}</Intro>
-          <div style={{ marginTop: 10, marginLeft: -8 }}>
-            {aiState === "running" ? (
-              <Intro as="span">{t.aiRunning}</Intro>
-            ) : aiState === "idle" ? (
-              <Ghost onClick={searchAi}>{t.aiButton(vendorList)}</Ghost>
-            ) : aiState === "quota" ? (
-              <Intro as="span">{t.aiQuota}</Intro>
-            ) : aiState === "disabled" ? (
-              <Intro as="span">{t.aiDisabled}</Intro>
-            ) : null}
-          </div>
-        </>
-      )}
     </>
   );
 }

@@ -6,6 +6,7 @@
 import React from "react";
 import styled, { keyframes, css } from "styled-components";
 import Arrow from "./Arrow.jsx";
+import Fold from "./Fold.jsx";
 import { useLang, SEVERITY_LABEL } from "./i18n.jsx";
 import { SEVERITY } from "./theme.js";
 import { localize, passedLabel } from "../lib/en.js";
@@ -115,9 +116,9 @@ const Head = styled.div`
   }
   .label {
     font-size: 12px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 600;
     color: ${(p) => p.$color};
   }
   .tag {
@@ -145,10 +146,10 @@ const Stat = styled.div`
   gap: 4px;
 
   .k {
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #64748b;
+    color: #94a3b8;
     font-weight: 500;
   }
   .v {
@@ -183,14 +184,14 @@ const FindingCard = styled.div`
   .lvl {
     display: block;
     margin: 0 0 4px;
-    font-size: 11px;
-    letter-spacing: 0.12em;
+    font-size: 12px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 600;
   }
   .lvl .area {
     color: #64748b;
-    font-weight: 600;
+    font-weight: 500;
   }
 
   h3 {
@@ -217,8 +218,8 @@ const FindingCard = styled.div`
   }
 `;
 
-// Nombres écrits selon la langue (« 232,3 » en français), sans séparateur
-// de milliers pour que les années restent lisibles (« 2019 »).
+// Nombres écrits selon la langue (« 232,3 » en français), sans séparateur
+// de milliers pour que les années restent lisibles (« 2019 »).
 export function StatCell({ k, value, unit, text }) {
   const { lang } = useLang();
   const shown =
@@ -287,11 +288,11 @@ const PassedList = styled.div`
 
   .head {
     margin: 0 0 8px;
-    font-size: 11px;
-    letter-spacing: 0.12em;
+    font-size: 12px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-weight: 600;
-    color: #64748b;
+    font-weight: 500;
+    color: #94a3b8;
   }
   ul {
     margin: 0;
@@ -318,9 +319,11 @@ export function Passed({ items }) {
   if (!items || items.length === 0) return null;
   return (
     <PassedList>
-      <p className="head">
-        {lang === "fr" ? "Points vérifiés" : "Checked"}
-      </p>
+      {/* Repliée d'office : les problèmes passent en premier, la liste de ce
+          qui va bien s'ouvre au besoin. */}
+      <Fold
+        title={`${lang === "fr" ? "Points vérifiés" : "Checked"} · ${items.length}`}
+      >
       <ul>
         {items.map((p) => (
           <li key={p.id + (p.label ?? "")}>
@@ -343,6 +346,7 @@ export function Passed({ items }) {
           </li>
         ))}
       </ul>
+      </Fold>
     </PassedList>
   );
 }

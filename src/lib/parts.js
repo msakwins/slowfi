@@ -86,7 +86,7 @@ export function recommendParts(data, lang = "fr") {
             : "Le disque dur n'arrive plus à relire certaines données"
         : en
           ? `SSD worn to ${health.wear}% of its endurance`
-          : `SSD usé à ${health.wear} % de son endurance`,
+          : `SSD usé à ${health.wear} % de son endurance`,
       query: `SSD ${nvme ? "NVMe M.2" : 'SATA 2,5"'} ${sizeLabel(size)}`,
       price: PRICES[`${kind}-${size}`] ?? null,
     });
@@ -161,7 +161,7 @@ export function recommendParts(data, lang = "fr") {
       title: en ? "Replace the battery" : "Remplacer la batterie",
       reason: en
         ? `Battery at ${b.pct}% of its original capacity`
-        : `Batterie à ${b.pct} % de sa capacité d'origine`,
+        : `Batterie à ${b.pct} % de sa capacité d'origine`,
       query: model ? `batterie ${model}` : "batterie ordinateur portable",
       price: PRICES.battery,
     });

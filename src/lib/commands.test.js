@@ -30,7 +30,7 @@ describe("script de l'application desktop", () => {
     expect(win).toContain(
       "Set-Clipboard; Get-Variable slowfi -ValueOnly; Write-Host ('R' + [char]0xE9 + 'sultat copi' + [char]0xE9 + ', vous pouvez maintenant le coller dans la page (Ctrl + V)')",
     );
-    // Pas de « $ » : PowerShell le développerait avant le sous-shell.
+    // Pas de « $ » : PowerShell le développerait avant le sous-shell.
     expect(win).not.toContain("$");
     const mac = macCommand(["uptime"], "fr");
     expect(mac).toMatch(/^echo 'Chargement\.\.\.' ; \{ uptime ; \}/);

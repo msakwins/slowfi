@@ -133,9 +133,17 @@ export function recommendUpgrades(data, lang = "fr") {
         id: "cpu",
         title: en ? `Processor: ${up.model}` : `Processeur : ${up.model}`,
         reason: en
-          ? `Current processor: ${current}${now}. The ${up.model} (${spec(...up.spec, false)}) is compatible with the existing motherboard${up.bios ? ". Update the BIOS before replacing the processor" : ""}`
-          : `Processeur actuel : ${current}${now}. Le ${up.model} (${spec(...up.spec, true)}) est compatible avec la carte mère existante${up.bios ? ". Mettre à jour le BIOS avant le remplacement" : ""}`,
+          ? `Current processor: ${current}${now}. The ${up.model} (${spec(...up.spec, false)}) is compatible with the existing motherboard`
+          : `Processeur actuel : ${current}${now}. Le ${up.model} (${spec(...up.spec, true)}) est compatible avec la carte mère existante`,
         query: up.model,
+        // À vérifier avant l'achat, affiché juste au-dessus du lien.
+        checks: [
+          up.bios &&
+            (en
+              ? "BIOS up to date"
+              : "BIOS à jour"),
+          en ? "Fresh thermal paste" : "Pâte thermique neuve",
+        ].filter(Boolean),
         // Pas de budget : ces processeurs se vendent surtout d'occasion, et
         // le prix neuf sur Amazon varie trop pour donner un chiffre juste.
         price: null,
@@ -172,7 +180,7 @@ export function recommendUpgrades(data, lang = "fr") {
             : "Disque système : libérer de l'espace",
           reason: en
             ? `${freeGB} GB free out of ${sizeGB} GB (${pct}%). A nearly full SSD loses performance. Recommended: Disk Cleanup including system files, removal of unused programs, transfer of large files to another drive`
-            : `${freeGB} Go libres sur ${sizeGB} Go (${pct} %). Un SSD saturé perd en performances. Actions recommandées : Nettoyage de disque avec les fichiers système, désinstallation des programmes inutilisés, transfert des fichiers volumineux vers un autre disque`,
+            : `${freeGB} Go libres sur ${sizeGB} Go (${pct} %). Un SSD saturé perd en performances. Actions recommandées : Nettoyage de disque avec les fichiers système, désinstallation des programmes inutilisés, transfert des fichiers volumineux vers un autre disque`,
           query: null,
           price: null,
         });
@@ -185,7 +193,7 @@ export function recommendUpgrades(data, lang = "fr") {
           title: en ? "System drive: 1 TB SSD" : "Disque système : SSD de 1 To",
           reason: en
             ? `${freeGB} GB free out of ${sizeGB} GB (${pct}%). A nearly full SSD loses performance and holds back Windows updates. Alternative at no cost: migrate Windows to another drive in the PC with enough free space`
-            : `${freeGB} Go libres sur ${sizeGB} Go (${pct} %). Un SSD saturé perd en performances et freine les mises à jour de Windows. Alternative sans achat : migrer Windows vers un autre disque du PC disposant d'espace libre`,
+            : `${freeGB} Go libres sur ${sizeGB} Go (${pct} %). Un SSD saturé perd en performances et freine les mises à jour de Windows. Alternative sans achat : migrer Windows vers un autre disque du PC disposant d'espace libre`,
           query:
             kind === "nvme" ? "SSD NVMe M.2 1 To" : 'SSD SATA 2,5" 1 To',
           price: PRICES[`${kind}-1000`],
@@ -216,7 +224,7 @@ export function recommendUpgrades(data, lang = "fr") {
       reason: full
         ? en
           ? `${data.memoryPct}% of ${totalGB} GB in use during the analysis. When memory is saturated, Windows relies on the disk, which is much slower`
-          : `${data.memoryPct} % des ${totalGB} Go utilisés pendant l'analyse. Mémoire saturée : Windows s'appuie sur le disque, nettement plus lent`
+          : `${data.memoryPct} % des ${totalGB} Go utilisés pendant l'analyse. Mémoire saturée : Windows s'appuie sur le disque, nettement plus lent`
         : en
           ? `${totalGB} GB installed: insufficient capacity for Windows 11 and a current browser`
           : `${totalGB} Go installés : capacité insuffisante pour Windows 11 et un navigateur actuel`,

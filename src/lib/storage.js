@@ -3,11 +3,11 @@
 // on colle la sortie d'une commande PowerShell, on parse, on applique des
 // règles symptôme → coupable → correctif.
 //
-// Pourquoi le stockage a sa place dans un outil qui s'appelle « ça rame » : un
+// Pourquoi le stockage a sa place dans un outil qui s'appelle « ça rame » : un
 // disque système saturé ralentit tout (plus de place pour le fichier d'échange,
 // les mises à jour échouent, le contrôleur SSD n'a plus de blocs libres à
 // recycler), et une table de fichiers abîmée passe inaperçue pendant des mois.
-// Deux pannes invisibles qui se manifestent comme « l'ordi est lent ».
+// Deux pannes invisibles qui se manifestent comme « l'ordi est lent ».
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field, number } from "./powershell.js";
 import { parseDf } from "./linux.js";
@@ -73,7 +73,7 @@ export function gradeVolume(v, { system = false } = {}) {
 
   const pct = freePercent(v);
   const freeGB = toGB(v.free);
-  // Nom affiché : la lettre sous Windows (« C: »), le nom du volume sur Mac.
+  // Nom affiché : la lettre sous Windows (« C: »), le nom du volume sur Mac.
   const where = v.name ?? `${v.driveLetter}:`;
 
   // Règle A — saturation. Le symptôme le plus courant et le plus invisible.
@@ -84,7 +84,7 @@ export function gradeVolume(v, { system = false } = {}) {
         level: "problem",
         id: "disk-critical",
         vars: { where, freeGB, pct },
-        title: `${where} saturé (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
+        title: `${where} saturé (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
         detail:
           "Espace insuffisant pour le fonctionnement de Windows : échec des mises à jour, fichier d'échange bloqué, risque de corruption du système de fichiers",
         fix: "Déplacer les gros dossiers (jeux, téléchargements, documents) vers un autre disque, puis vider la corbeille",
@@ -95,7 +95,7 @@ export function gradeVolume(v, { system = false } = {}) {
         level: "warning",
         id: "disk-low",
         vars: { where, freeGB, pct },
-        title: `${where} presque plein (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
+        title: `${where} presque plein (${fr(freeGB)} Go libres, ${fr(pct)} %)`,
         detail:
           "Sous 15 % d'espace libre, un SSD perd en vitesse d'écriture et s'use plus rapidement",
         fix: "Viser 20 % d'espace libre. Déplacer en priorité les bibliothèques de jeux et les caches d'applications",
@@ -136,7 +136,7 @@ export function gradeVolume(v, { system = false } = {}) {
       id: "fs-damaged",
       vars: { where, state: v.operational || v.health },
       title: `Système de fichiers endommagé sur ${where}`,
-      detail: `État signalé par Windows : « ${v.operational || v.health} ». Une erreur dans la table des fichiers (MFT) ne se corrige pas d'elle-même et peut rester sans symptôme visible pendant des mois`,
+      detail: `État signalé par Windows : « ${v.operational || v.health} ». Une erreur dans la table des fichiers (MFT) ne se corrige pas d'elle-même et peut rester sans symptôme visible pendant des mois`,
       fix: `Sauvegarder d'abord. La réparation se lance avec chkdsk ${where} /f ; si la commande refuse de démarrer, elle passe par l'environnement de récupération (Paramètres › Récupération › Démarrage avancé › Invite de commandes)`,
     });
   }
@@ -150,7 +150,7 @@ export function gradeVolume(v, { system = false } = {}) {
       vars: { where },
       title: `Disque signalé défaillant (${where})`,
       detail:
-        "Le disque annonce lui-même une panne prochaine (état SMART « Failing »). Les ralentissements et les pertes de données vont s'aggraver",
+        "Le disque annonce lui-même une panne prochaine (état SMART « Failing »). Les ralentissements et les pertes de données vont s'aggraver",
       fix: "Sauvegarder immédiatement (Time Machine ou copie sur un disque externe), puis faire remplacer le disque",
     });
   }
@@ -160,7 +160,7 @@ export function gradeVolume(v, { system = false } = {}) {
       id: "healthy",
       vars: { where, freeGB, pct },
       title: `${where} en bonne santé`,
-      detail: `${fr(freeGB)} Go libres (${fr(pct)} %), intégrité vérifiée`,
+      detail: `${fr(freeGB)} Go libres (${fr(pct)} %), intégrité vérifiée`,
     });
   }
 
@@ -171,7 +171,7 @@ export function gradeVolume(v, { system = false } = {}) {
       passed.push({
         id: "space-ok",
         vars: { freeGB, pct },
-        label: `${fr(freeGB)} Go libres (${fr(pct)} %)`,
+        label: `${fr(freeGB)} Go libres (${fr(pct)} %)`,
       });
     }
     if ((v.health || v.operational) && !healthBad && !repairNeeded) {
@@ -203,7 +203,7 @@ export function diagnoseStorage(raw) {
     ),
     // Sur Mac, la commande ne décrit que le volume de démarrage.
     ...parseMacDisk(raw).map((v) => gradeVolume(v, { system: true })),
-    // Linux : « / » porte le système, « /home » les données.
+    // Linux : « / » porte le système, « /home » les données.
     ...parseDf(raw).map((v) => gradeVolume(v, { system: v.name === "/" })),
   ];
 

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // La marque : le w de slowfi devient un tracé d'électrocardiogramme. La lettre
 // est déjà un zigzag, donc le dessin ne force rien — et un électro dit
-// « diagnostic » sans dire « panne ».
+// « diagnostic » sans dire « panne ».
 //
 // Texte blanc, tracé bleu avec un halo : le contraste met le tracé en avant,
 // c'est lui qu'on regarde en premier. Le halo ne tient que sur fond sombre,
@@ -18,6 +18,8 @@ const Word = styled.div`
   margin-bottom: 44px;
   font-size: clamp(34px, 5.6vw, 44px);
   font-weight: 700;
+  /* Le logo garde sa police d'origine, distincte du texte (Inter). */
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
 
   /* Application : le nom est déjà dans la barre de titre, le logo se fait
      plus discret. */

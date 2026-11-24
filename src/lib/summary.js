@@ -24,7 +24,7 @@ const LABELS = {
 
 const LOCALE = { fr: "fr-FR", en: "en-GB" };
 
-/** Nombre arrondi au dixième, écrit à la façon de la langue (« 130,1 »). */
+/** Nombre arrondi au dixième, écrit à la façon de la langue (« 130,1 »). */
 export function formatNumber(n, lang) {
   if (n == null) return "—";
   return (Math.round(n * 10) / 10).toLocaleString(LOCALE[lang]);

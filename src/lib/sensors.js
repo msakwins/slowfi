@@ -4,7 +4,7 @@ import { pressureLevel } from "./macSensors.js";
 // SSD, ventilateurs, et suivi de la charge dans le temps.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Seuils, en °C : au-delà du premier, la pièce chauffe plus que d'ordinaire ;
+// Seuils, en °C : au-delà du premier, la pièce chauffe plus que d'ordinaire ;
 // au-delà du second, elle ralentit pour se protéger ou s'use plus vite.
 const LIMITS = {
   gpu: [83, 90],

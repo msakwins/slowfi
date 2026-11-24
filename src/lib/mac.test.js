@@ -82,7 +82,7 @@ describe("comparaison avec le test de débit", () => {
     expect(r.findings[0].id).toBe("line-limits");
   });
 
-  it("passe un Wi-Fi sain en « à surveiller » s'il plafonne", () => {
+  it("passe un Wi-Fi sain en « à surveiller » s'il plafonne", () => {
     const healthy = diagnose({
       radio: "802.11ax",
       channel: 36,

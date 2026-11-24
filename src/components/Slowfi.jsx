@@ -47,7 +47,7 @@ const TEXT = {
       "/diagnostic": "Diagnostic approfondi — Slowfi",
       "/historique": "Historique — Slowfi",
     },
-    // Pied de page : deux entrées de la page « Confidentialité ».
+    // Pied de page : deux entrées de la page « Confidentialité ».
     nav: {
       "/confidentialite": "Confidentialité",
       "/confidentialite#editeur": "Mentions légales",
@@ -135,7 +135,8 @@ const ScrollArea = styled.div`
   position: fixed;
   top: ${TITLE_BAR_HEIGHT}px;
   /* À droite de la barre latérale. */
-  left: ${SIDEBAR_WIDTH}px;
+  left: var(--sidebar, ${SIDEBAR_WIDTH}px);
+  transition: left 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   right: 3px;
   bottom: 3px;
   overflow-y: auto;
@@ -151,7 +152,8 @@ const WebShell = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-left: ${SIDEBAR_WIDTH}px;
+  padding-left: var(--sidebar, ${SIDEBAR_WIDTH}px);
+  transition: padding-left 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 
   & > div:last-child {
     flex: 1;
@@ -163,6 +165,24 @@ const WebShell = styled.div`
   @media (max-width: ${SIDEBAR_BREAK}px) {
     padding-left: 0;
     padding-bottom: 64px;
+  }
+`;
+
+const PageIn = styled.div`
+  animation: page-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 `;
 
@@ -234,7 +254,7 @@ export default function Slowfi() {
     document.title = t.titles[path];
   }, [t, path]);
 
-  // Adresse ouverte avec une ancre (« /confidentialite#editeur ») : la section,
+  // Adresse ouverte avec une ancre (« /confidentialite#editeur ») : la section,
   // une fois la page affichée.
   useEffect(() => {
     const id = window.location.hash.slice(1);
@@ -267,7 +287,10 @@ export default function Slowfi() {
           <LangSwitch />
         </Actions>
       </Header>
-      <Current />
+      {/* Changement de page : la nouvelle entre en fondu, légèrement montante. */}
+      <PageIn key={path}>
+        <Current />
+      </PageIn>
       {desktop && <UpdateBanner />}
       {/* Dans l'application, pas de pied de page : la barre latérale mène à
           la confidentialité. */}

@@ -64,7 +64,7 @@ export function yearOf(value) {
 
 /**
  * Mois et année d'une date écrite par PowerShell. Jour et mois s'inversent
- * selon la langue : « 14/08/2024 » (français), « 8/14/2024 2:00:00 AM »
+ * selon la langue : « 14/08/2024 » (français), « 8/14/2024 2:00:00 AM »
  * (anglais, repérable à AM/PM). Un nombre au-delà de 12 lève l'ambiguïté.
  * @returns {{year:number, month:number}|null}
  */

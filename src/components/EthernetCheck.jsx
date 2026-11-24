@@ -43,8 +43,8 @@ const TEXT = {
           <span className="path">
             Paramètres › Réseau et Internet › Ethernet
           </span>
-          , puis descendre jusqu'à « Vitesse de liaison (réception/transmission)
-          »
+          , puis descendre jusqu'à « Vitesse de liaison (réception/transmission)
+          »
         </>
       ),
       mac: (
@@ -53,7 +53,7 @@ const TEXT = {
           <span className="path">
             Réglages Système › Réseau › Ethernet › Détails… › Matériel
           </span>{" "}
-          : ligne « Vitesse »
+          : ligne « Vitesse »
         </>
       ),
       linux: (

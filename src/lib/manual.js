@@ -15,7 +15,7 @@ import { diagnoseActivity } from "./activity.js";
 import { shortMaker } from "./components.js";
 
 // Numéro de build de chaque version de Windows 11, pour retrouver la date de
-// fin de support à partir du nom affiché dans les Paramètres (« 24H2 »).
+// fin de support à partir du nom affiché dans les Paramètres (« 24H2 »).
 const BUILDS = {
   "21H2": 22000,
   "22H2": 22621,
@@ -75,11 +75,11 @@ export function wifiFromForm(f) {
  *   speed?: string,      fréquence appliquée (Gestionnaire des tâches), MHz
  *   rated?: string,      fréquence annoncée des barrettes, MHz
  *   slots?: string,      emplacements utilisés
- *   gpuYear?: string,    date du pilote graphique (« 07/11/2026 ») ou son année
+ *   gpuYear?: string,    date du pilote graphique (« 07/11/2026 ») ou son année
  *   gpuState?: "ok"|"error"|"disabled"|"",  icône dans le Gestionnaire de périphériques
  *   biosYear?: string,   année de la date du BIOS
  *   diskType?: "SSD"|"HDD"|"",  type du disque système
- *   uptime?: string,     jours depuis le démarrage (1er nombre de « 3:04:12:55 »)
+ *   uptime?: string,     jours depuis le démarrage (1er nombre de « 3:04:12:55 »)
  *   power?: "saver"|"normal"|"",
  * }} f
  * @param {{ year?: number }} [opts]

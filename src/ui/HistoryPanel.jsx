@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useLang } from "./i18n.jsx";
-import { Ghost, NeonButton, SEVERITY } from "./theme.js";
+import { Ghost, NeonButton, SEVERITY, Title } from "./theme.js";
 import { navigate } from "./router.jsx";
 import Arrow from "./Arrow.jsx";
 import {
@@ -64,13 +64,22 @@ const Box = styled.section`
   padding-top: 4px;
 `;
 
+// Page « Historique » : titre à gauche, « Effacer l'historique » à droite.
+const PageHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+`;
+
 const Head = styled.p`
   margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 const Line = styled.p`
@@ -88,7 +97,7 @@ const Small = styled.p`
   max-width: 62ch;
 `;
 
-// Page « Historique » sans analyse : la phrase, puis le bouton vers le
+// Page « Historique » sans analyse : la phrase, puis le bouton vers le
 // diagnostic, comme sur les autres pages.
 const Empty = styled.div`
   display: flex;
@@ -217,7 +226,7 @@ export default function HistoryPanel({ res, download, page }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   const [list, setList] = useState(loadHistory);
-  // Nombres à la façon de la langue (« 24,8 » en français).
+  // Nombres à la façon de la langue (« 24,8 » en français).
   const num = (v) =>
     typeof v === "number"
       ? v.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB")
@@ -250,10 +259,30 @@ export default function HistoryPanel({ res, download, page }) {
     changed: "#94a3b8",
   };
 
+  const clearButton = list.length > 0 && (
+    <Ghost
+      onClick={() => {
+        clearLocal();
+        setList([]);
+        saved.current = res;
+      }}
+    >
+      {t.clear}
+    </Ghost>
+  );
+
   return (
-    <Box>
-      {/* Sur la page « Historique », le titre de la page suffit. */}
-      {!page && <Head>{t.title}</Head>}
+    <Box style={page ? { marginTop: 0, paddingTop: 0 } : undefined}>
+      {/* Sur la page « Historique » : le titre de la page, et le bouton pour
+          effacer sur la même ligne, à droite. */}
+      {page ? (
+        <PageHead>
+          <Title>{page}</Title>
+          {clearButton}
+        </PageHead>
+      ) : (
+        <Head>{t.title}</Head>
+      )}
       {!current && page ? (
         <Empty>
           <p>{t.empty}</p>
@@ -376,19 +405,8 @@ export default function HistoryPanel({ res, download, page }) {
         </>
       )}
 
-      <Row>
-        {list.length > 0 && (
-          <Ghost
-            onClick={() => {
-              clearLocal();
-              setList([]);
-              saved.current = res;
-            }}
-          >
-            {t.clear}
-          </Ghost>
-        )}
-      </Row>
+      {/* Sur la page « Historique », le bouton est en haut, à côté du titre. */}
+      {!page && <Row>{clearButton}</Row>}
     </Box>
   );
 }

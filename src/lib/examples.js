@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Exemples de sorties de commandes, affichés par « Voir un exemple » et
+// Exemples de sorties de commandes, affichés par « Voir un exemple » et
 // réutilisés par les tests : ce que la page montre est ce qui est testé.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ export const WIFI_WIRED_WINDOWS = `Il existe 1 interface sur le système :
 // Windows — deux machines réelles réunies : disque système à 13,7 % avec une
 // MFT abîmée, disque de données saturé, mémoire bridée faute de profil XMP,
 // pilote graphique de deux ans, BIOS d'origine, plus un disque de données
-// mécanique, douze jours sans redémarrage et le mode « Économies d'énergie ».
+// mécanique, douze jours sans redémarrage et le mode « Économies d'énergie ».
 export const HARDWARE_WINDOWS = `DriveLetter       : C
 FileSystemLabel   :
 Size              : 249382825984

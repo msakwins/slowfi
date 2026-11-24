@@ -51,7 +51,7 @@ describe("pièces à remplacer", () => {
       ssdHealth: [{ ...healthy.ssdHealth[0], wear: 85 }],
     });
     expect(parts[0]).toMatchObject({
-      reason: "SSD usé à 85 % de son endurance",
+      reason: "SSD usé à 85 % de son endurance",
       query: "SSD NVMe M.2 500 Go",
     });
   });

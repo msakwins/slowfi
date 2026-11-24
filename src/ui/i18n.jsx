@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Langue de l'interface : français ou anglais.
 //
-// Sur le site, l'adresse décide : « /en/… » en anglais, le reste en français
+// Sur le site, l'adresse décide : « /en/… » en anglais, le reste en français
 // (router.jsx). Au premier passage sur une page française, un navigateur qui
 // n'est pas en français est envoyé vers l'adresse anglaise ; le choix fait
 // avec le sélecteur est ensuite gardé. Dans l'application, la langue est un

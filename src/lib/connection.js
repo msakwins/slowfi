@@ -6,7 +6,7 @@
 // symptôme → coupable → correctif, une par cas, faciles à tester et à enrichir.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Seuils du palier « excellente » : débit confortable dans les deux sens,
+// Seuils du palier « excellente » : débit confortable dans les deux sens,
 // latence et variation basses.
 /** Nombre écrit à la française (virgule décimale). */
 const fr = (n) => String(n).replace(".", ",");
@@ -86,7 +86,7 @@ export function gradeConnection(m) {
 
   // Une ligne sans défaut n'est pas forcément excellente : 30 Mb/s et 90 ms
   // passent tous les seuils d'alerte, mais n'ont rien d'exceptionnel. Le palier
-  // « excellente » demande donc de la marge sur tous les chiffres à la fois.
+  // « excellente » demande donc de la marge sur tous les chiffres à la fois.
   const excellent =
     severity === "ok" &&
     m.download != null &&

@@ -3,8 +3,8 @@
 // chaque page peut être indexée et partagée. Vercel sert un fichier HTML par
 // page (scripts/prerender.mjs), et index.html pour le reste (vercel.json).
 //
-// Sur le site, chaque page a deux adresses : française (« /application ») et
-// anglaise (« /en/app »). Le code ne manie que l'adresse française ; le
+// Sur le site, chaque page a deux adresses : française (« /application ») et
+// anglaise (« /en/app »). Le code ne manie que l'adresse française ; le
 // routeur la traduit à l'affichage selon la langue de l'adresse courante.
 // Dans l'application, une seule adresse par page : la langue est un réglage.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ function go(url, { replace = false } = {}) {
   const root = document.getElementById("scroll-root") ?? window;
   if (!hash && !replace) root.scrollTo(0, 0);
   listeners.forEach((fn) => fn(window.location.pathname));
-  // Une ancre (« #editeur ») : la section, une fois la page affichée.
+  // Une ancre (« #editeur ») : la section, une fois la page affichée.
   if (hash)
     requestAnimationFrame(() =>
       document

@@ -1,14 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // L'accueil : le test de débit (Wi-Fi ou Ethernet) en tête, lançable tout de
 // suite. Dessous, le diagnostic approfondi : réseau local, matériel et
-// périphériques, à choisir avant de lancer la commande.
+// périphériques, à choisir avant de lancer la commande. Dans l'application,
+// un tableau de bord les précède (Dashboard.jsx).
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Title, Lead, NeonText } from "../ui/theme.js";
+import { Title, Lead } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import CombinedAnalysis from "./CombinedAnalysis.jsx";
 import { useText } from "../ui/i18n.jsx";
+import Dashboard from "./Dashboard.jsx";
 
 const TEXT = {
   fr: {
@@ -41,6 +43,8 @@ export default function Home() {
 
   return (
     <>
+      {/* Application : la dernière analyse et les températures, en tête. */}
+      <Dashboard />
       <section style={NETWORK}>
         <Title>{t.title}</Title>
         <Lead>{t.lead}</Lead>
@@ -51,10 +55,8 @@ export default function Home() {
 
       <Section>
         {/* Même taille que le titre du test de débit. */}
-        <Title as="h2">
-          <NeonText>{t.allTitle}</NeonText>
-        </Title>
-        {/* Le bouton ouvre la page « Diagnostic ». */}
+        <Title as="h2">{t.allTitle}</Title>
+        {/* Le bouton ouvre la page « Diagnostic ». */}
         <CombinedAnalysis download={download} launcher />
       </Section>
     </>

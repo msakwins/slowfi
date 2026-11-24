@@ -10,6 +10,7 @@
 // Une machine en filaire n'a pas de Wi-Fi actif : la sortie le dit, et la
 // page renvoie alors aux vérifications Ethernet et câblage.
 // ─────────────────────────────────────────────────────────────────────────────
+import Fold from "../ui/Fold.jsx";
 import React, { useEffect, useRef } from "react";
 import {
   parseWifi,
@@ -35,6 +36,7 @@ import WifiManual from "./WifiManual.jsx";
 
 const TEXT = {
   fr: {
+    details: "Détails de la connexion",
     title: "Analyse du réseau local",
     placeholder: "Coller ici le résultat de la commande…",
     empty: "Aucune interface Wi-Fi reconnue dans le texte collé",
@@ -56,6 +58,7 @@ const TEXT = {
     },
   },
   en: {
+    details: "Connection details",
     title: "Local network analysis",
     placeholder: "Paste the command output here…",
     empty: "No Wi-Fi interface found in the pasted text",
@@ -80,7 +83,7 @@ const TEXT = {
 
 // Rien de reconnu : soit la machine est en filaire (la sortie le dit), soit
 // le texte n'a rien à voir. Dans ce dernier cas, null, pour que l'étape
-// affiche son message au lieu d'un faux verdict « sain ».
+// affiche son message au lieu d'un faux verdict « sain ».
 export function analyzeWifi(raw) {
   const d = parseWifi(raw);
   if (d.radio == null && d.channel == null && d.signal == null) {
@@ -93,7 +96,7 @@ export function analyzeWifi(raw) {
 export const WIFI_COMMANDS = {
   windows: "netsh wlan show interfaces",
   mac: "system_profiler SPAirPortDataType",
-  // Sortie en anglais quelle que soit la langue du système, au format « terse ».
+  // Sortie en anglais quelle que soit la langue du système, au format « terse ».
   linux:
     "export LC_ALL=C ; nmcli -t -f TYPE,STATE dev ; nmcli -t -f IN-USE,SSID,CHAN,RATE,SIGNAL dev wifi",
 };
@@ -120,10 +123,10 @@ export function WifiResult({ parsed, download }) {
   const result = compareWithLine(parsed, download);
   const sev = SEVERITY[result.severity];
   return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color} tag={result.ssid}>
-        {SEVERITY_LABEL[lang][result.severity]}
-      </VerdictHead>
+    <>
+    {/* Comme le matériel : les valeurs dans une liste repliable, puis le
+        verdict. */}
+    <Fold title={t.details}>
       <StatGrid $cols={4} $border>
         <StatCell
           k={t.band}
@@ -142,10 +145,16 @@ export function WifiResult({ parsed, download }) {
           <StatCell k={t.measured} value={result.measured} unit="Mb/s" />
         )}
       </StatGrid>
-      <div style={{ paddingTop: 4 }}>
+    </Fold>
+    <Verdict $color={sev.color} gap={32} first={0}>
+      <VerdictHead color={sev.color} tag={result.ssid}>
+        {SEVERITY_LABEL[lang][result.severity]}
+      </VerdictHead>
+      <div>
         <Findings findings={result.findings} engine="wifi" />
       </div>
     </Verdict>
+    </>
   );
 }
 

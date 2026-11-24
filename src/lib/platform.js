@@ -30,7 +30,7 @@ const WINDOWS_11 = [
 ];
 const WINDOWS_10_END = "2025-10-14";
 
-// Une alerte « fin proche » quand il reste moins de trois mois.
+// Une alerte « fin proche » quand il reste moins de trois mois.
 const ENDING_DAYS = 90;
 
 const MONTHS = [
@@ -48,7 +48,7 @@ const MONTHS = [
   "décembre",
 ];
 
-/** « 2025-10-14 » → « 14 octobre 2025 ». */
+/** « 2025-10-14 » → « 14 octobre 2025 ». */
 export function dateFr(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   return `${d} ${MONTHS[m - 1]} ${y}`;
@@ -205,7 +205,7 @@ export function macSupport(os, today) {
 /**
  * Constats et contrôles passés pour la version, la batterie et le démarrage.
  * @param {ReturnType<typeof parsePlatform>} p
- * @param {string} today date du jour, « AAAA-MM-JJ »
+ * @param {string} today date du jour, « AAAA-MM-JJ »
  */
 export function platformRules(p, today) {
   const findings = [];
@@ -279,7 +279,7 @@ export function platformRules(p, today) {
         level: service || pct < 60 ? "problem" : "warning",
         id: "battery-worn",
         vars: { pct, cycles },
-        title: `Batterie usée : ${pct} % de sa capacité d'origine`,
+        title: `Batterie usée : ${pct} % de sa capacité d'origine`,
         detail:
           "Une batterie usée se vide plus vite et, sur certains portables, pousse le système à brider le processeur pour éviter une coupure",
         fix: "Faire remplacer la batterie par le fabricant ou un réparateur. En attendant, travailler branché sur secteur",
@@ -288,7 +288,7 @@ export function platformRules(p, today) {
       passed.push({
         id: "battery-ok",
         vars: { pct, cycles },
-        label: `Batterie à ${pct} % de sa capacité d'origine${cycles ? ` (${cycles} cycles)` : ""}`,
+        label: `Batterie à ${pct} % de sa capacité d'origine${cycles ? ` (${cycles} cycles)` : ""}`,
       });
     }
   }

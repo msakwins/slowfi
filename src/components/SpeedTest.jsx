@@ -22,7 +22,7 @@ try {
   // Stockage indisponible : rien à effacer.
 }
 
-// Les mentions de la note s'accordent avec « connexion » : elles sont
+// Les mentions de la note s'accordent avec « connexion » : elles sont
 // propres au speed test, les autres analyses nomment leurs niveaux elles-mêmes.
 const TEXT = {
   fr: {
@@ -134,11 +134,11 @@ const Gauge = styled.div`
   text-align: center;
 
   .k {
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: ${(p) => (p.$active ? "#22d3ee" : "#64748b")};
-    font-weight: 600;
+    font-weight: 500;
     transition: color 0.3s;
   }
 `;
@@ -252,7 +252,7 @@ const fillInverse = (v, worst) =>
  *   onDiagnostic?: () => void,     ouvre l'analyse du réseau local
  *   onMeasured?: (m: object) => void, transmet les mesures d'un test terminé
  *   onStart?: () => void,             appelé au lancement du test
- *   startLabel?: string,              texte du bouton de départ, à la place de « Tester la connexion »
+ *   startLabel?: string,              texte du bouton de départ, à la place de « Tester la connexion »
  * }} props
  */
 export default function SpeedTest({

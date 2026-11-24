@@ -26,7 +26,7 @@ const WORDS = {
 };
 
 /**
- * @param {string} title titre du résumé (« Slowfi — analyse du matériel »)
+ * @param {string} title titre du résumé (« Slowfi — analyse du matériel »)
  * @param {Array<{ name: string, engine: string, result: { severity: string, findings: Array, passed?: Array } }>} blocks
  * @param {"fr"|"en"} lang
  * @param {{ date?: Date, url?: string }} [opts]
@@ -52,7 +52,7 @@ export function summarizeBlocks(
     if (!result) continue;
     lines.push("", `${name}${sep}${LEVEL[lang][result.severity]}`);
     for (const raw of result.findings) {
-      // « Aucune anomalie détectée » n'apporte rien de plus que le niveau.
+      // « Aucune anomalie détectée » n'apporte rien de plus que le niveau.
       if (
         raw.id === "healthy" &&
         result.findings.length === 1 &&

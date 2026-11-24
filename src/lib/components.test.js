@@ -100,9 +100,9 @@ describe("diagnoseComponents", () => {
     expect(f).toBeDefined();
     expect(f.title).toContain("2133");
     expect(f.title).toContain("2666");
-    // Perte par rapport à la fréquence nominale : (2666 - 2133) / 2666 ≈ 20 %,
-    // et non 25 %, qui serait le gain rapporté à la fréquence appliquée.
-    expect(f.detail).toContain("20 %");
+    // Perte par rapport à la fréquence nominale : (2666 - 2133) / 2666 ≈ 20 %,
+    // et non 25 %, qui serait le gain rapporté à la fréquence appliquée.
+    expect(f.detail).toContain("20 %");
   });
 
   it("signale une barrette seule", () => {

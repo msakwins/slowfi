@@ -224,7 +224,7 @@ const MONTHS = [
 ];
 
 // Noms de fabricants tels qu'on les connaît, au lieu de la raison sociale
-// (« ASUSTeK COMPUTER INC. » → « ASUS »).
+// (« ASUSTeK COMPUTER INC. » → « ASUS »).
 const MAKERS = [
   [/asus/i, "ASUS"],
   [/micro-star|\bmsi\b/i, "MSI"],
@@ -248,7 +248,7 @@ export function shortMaker(maker) {
   );
 }
 
-/** « la page support de la carte mère ASUS TUF B360-PRO », selon ce qui est connu. */
+/** « la page support de la carte mère ASUS TUF B360-PRO », selon ce qui est connu. */
 function supportPage(machine) {
   if (!machine) return "la page support de la carte mère";
   const name = [machine.maker, machine.model].filter(Boolean).join(" ");
@@ -257,7 +257,7 @@ function supportPage(machine) {
     : `la page support du fabricant de l'ordinateur (${name})`;
 }
 
-/** « juillet 2026 », ou l'année seule si le mois est inconnu. */
+/** « juillet 2026 », ou l'année seule si le mois est inconnu. */
 function monthLabel(year, month) {
   return month ? `${MONTHS[month - 1]} ${year}` : String(year);
 }
@@ -300,7 +300,7 @@ export function diagnoseComponents(
       id: "ram-underclocked",
       vars: { configured, rated, loss },
       title: `Mémoire bridée (${configured} MHz au lieu de ${rated} MHz)`,
-      detail: `Mémoire utilisée sous sa fréquence nominale : environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
+      detail: `Mémoire utilisée sous sa fréquence nominale : environ ${loss} % de bande passante en moins. Sans profil XMP ou EXPO activé, la carte mère applique la fréquence de base`,
       fix: "Activer le profil XMP (Intel) ou EXPO/DOCP (AMD) dans le BIOS, puis relancer l'analyse pour vérifier la fréquence. Gratuit et réversible",
     });
   }
@@ -395,7 +395,7 @@ export function diagnoseComponents(
         key: "gpu-status",
         vars: { status: gpu.status, name: gpu.name },
         title: `État anormal de la carte graphique${name}`,
-        detail: `État signalé par Windows : « ${gpu.status} »`,
+        detail: `État signalé par Windows : « ${gpu.status} »`,
         fix: "Ouvrir le Gestionnaire de périphériques › Cartes graphiques, puis réinstaller le pilote depuis le site du constructeur",
       });
     }
@@ -500,13 +500,13 @@ export function diagnoseComponents(
       id: "cpu-limited",
       key: c.platform === "mac" ? "cpu-limited-mac" : "cpu-limited",
       vars: { pct: c.cpu.limit, name: c.cpu.name },
-      title: `Processeur bridé à ${c.cpu.limit} % de sa vitesse`,
+      title: `Processeur bridé à ${c.cpu.limit} % de sa vitesse`,
       detail:
         "Le processeur ne peut pas atteindre sa pleine vitesse : limite imposée par l'alimentation, la chauffe ou la batterie",
       fix:
         c.platform === "mac"
           ? "Brancher le Mac sur secteur, le poser sur une surface dure et dégagée, et fermer les applications gourmandes"
-          : "Brancher le portable sur secteur, choisir « Équilibré » ou « Performances optimales » dans Paramètres › Système › Alimentation, et dépoussiérer les aérations si le bridage persiste",
+          : "Brancher le portable sur secteur, choisir « Équilibré » ou « Performances optimales » dans Paramètres › Système › Alimentation, et dépoussiérer les aérations si le bridage persiste",
     });
   }
 

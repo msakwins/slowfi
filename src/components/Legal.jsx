@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Page « Confidentialité et mentions légales ». Dit précisément ce qui sort du
+// Page « Confidentialité et mentions légales ». Dit précisément ce qui sort du
 // navigateur (le test de débit, vers Cloudflare) et ce qui n'en sort pas (tout
 // ce qui est collé dans les analyses). À tenir à jour si un service tiers
 // (statistiques, polices, API) est ajouté un jour.
@@ -18,10 +18,10 @@ const Body = styled.div`
   h2 {
     margin: 40px 0 16px;
     font-size: 12px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-weight: 600;
-    color: #64748b;
+    font-weight: 500;
+    color: #94a3b8;
   }
   p {
     margin: 0;
@@ -84,13 +84,6 @@ function LegalEn() {
           every card of that model) is sent to Slowfi, which looks it up in the{" "}
           <strong>Microsoft Update Catalog</strong>. Nothing else from the text
           is sent, and nothing is stored
-        </p>
-        <p>
-          On request only, with the « Search the makers' sites » button: the
-          name and identifier of each AMD, Intel or Realtek component are sent
-          to <strong>Google Gemini</strong>, which reads the maker's driver
-          page. Google may use these requests to improve its services. Nothing
-          else is sent
         </p>
         <p>
           The suggested commands only read information: they change no settings
@@ -175,13 +168,6 @@ function LegalFr() {
           n'est transmis, et rien n'est conservé
         </p>
         <p>
-          Seulement à la demande, avec le bouton « Chercher sur les sites » : le
-          nom et l'identifiant de chaque composant AMD, Intel ou Realtek sont
-          envoyés à <strong>Google Gemini</strong>, qui lit la page de pilotes
-          du fabricant. Google peut se servir de ces demandes pour améliorer ses
-          services. Rien d'autre n'est transmis
-        </p>
-        <p>
           Les commandes proposées se contentent de lire des informations : elles
           ne modifient aucun réglage
         </p>
@@ -200,7 +186,7 @@ function LegalFr() {
           un remplacement avec un lien vers <strong>Amazon</strong>. En tant que
           Partenaire Amazon, Slowfi réalise un bénéfice sur les achats
           remplissant les conditions requises, sans surcoût. Le lien ne contient
-          que la recherche (par exemple « SSD SATA 1 To »), jamais de données de
+          que la recherche (par exemple « SSD SATA 1 To »), jamais de données de
           l'analyse. Les suggestions ne dépendent que de l'analyse
         </p>
 

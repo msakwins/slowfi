@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Après « vite build » : un fichier HTML par page et par langue, pour les
+// Après « vite build » : un fichier HTML par page et par langue, pour les
 // moteurs de recherche et les aperçus de liens. Chaque fichier reprend
 // dist/index.html avec son titre, sa description, son adresse officielle,
 // ses adresses dans l'autre langue (hreflang), ses données structurées et un
@@ -262,7 +262,7 @@ const template = fs.readFileSync(path.join(DIST, "index.html"), "utf8");
 for (const page of PAGES) {
   for (const lang of ["fr", "en"]) {
     const p = page[lang];
-    // « / » reste index.html ; « /en/app » devient en/app.html (cleanUrls).
+    // « / » reste index.html ; « /en/app » devient en/app.html (cleanUrls).
     const file = p === "/" ? "index.html" : `${p.slice(1)}.html`;
     const out = path.join(DIST, file);
     fs.mkdirSync(path.dirname(out), { recursive: true });

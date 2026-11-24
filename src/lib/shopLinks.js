@@ -4,13 +4,13 @@
 // recherches : rien ne change pour la personne qui clique.
 //
 // Identifiant à renseigner (variable d'environnement Vite, au build) :
-// - VITE_AMAZON_TAG : identifiant Amazon Partenaires (« slowfi-21 »)
+// - VITE_AMAZON_TAG : identifiant Amazon Partenaires (« slowfi-21 »)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const env = import.meta.env ?? {};
 export const AMAZON_TAG = env.VITE_AMAZON_TAG || "";
 
-/** Les liens rapportent-ils une commission ? (pour la mention « lien affilié ») */
+/** Les liens rapportent-ils une commission ? (pour la mention « lien affilié ») */
 export const AFFILIATE = Boolean(AMAZON_TAG);
 
 /**

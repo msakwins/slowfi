@@ -30,7 +30,7 @@ describe("améliorations possibles", () => {
     expect(ids(pc)).toEqual(["cpu", "system-bigger"]);
     const [cpu, disk] = recommendUpgrades(pc);
     expect(cpu.query).toBe("Core i7-9700");
-    expect(cpu.reason).toMatch(/BIOS/);
+    expect(cpu.checks.join(" ")).toMatch(/BIOS/);
     expect(disk.query).toBe("SSD NVMe M.2 1 To");
   });
 

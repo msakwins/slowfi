@@ -3,7 +3,7 @@
 // système, activité, périphériques, Ethernet) appelle la fonction qui le
 // concerne quand le texte collé ne vient ni de Windows ni de macOS.
 //
-// Les commandes proposées commencent par « export LC_ALL=C » : les outils
+// Les commandes proposées commencent par « export LC_ALL=C » : les outils
 // répondent alors en anglais, quelle que soit la langue du système, et les
 // motifs ci-dessous restent valables. Aucune ne demande les droits root.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,9 +18,9 @@ export function isLinux(raw) {
 
 // ── Wi-Fi : nmcli -t -f TYPE,STATE dev ; nmcli -t -f IN-USE,SSID,CHAN,RATE,SIGNAL dev wifi ──
 
-/** Réseau Wi-Fi utilisé (ligne marquée « * » de nmcli), ou null. */
+/** Réseau Wi-Fi utilisé (ligne marquée « * » de nmcli), ou null. */
 export function parseNmcli(raw) {
-  // En mode terse, les deux-points internes sont échappés : « \: ».
+  // En mode terse, les deux-points internes sont échappés : « \: ».
   const line = raw.split(/\r?\n/).find((l) => /^\*:/.test(l));
   if (!line) return null;
   const parts = line.split(/(?<!\\):/).map((p) => p.replace(/\\:/g, ":"));
@@ -107,7 +107,7 @@ export function parseDf(raw) {
 
 // ── Système ──
 
-/** Disque qui porte « / » : findmnt donne la partition, lsblk dit s'il tourne. */
+/** Disque qui porte « / » : findmnt donne la partition, lsblk dit s'il tourne. */
 function systemDisk(raw) {
   const src = raw.match(
     /^\/dev\/(nvme\d+n\d+|mmcblk\d+|[a-z]+)(?:p?\d+)?\s*$/m,
@@ -184,7 +184,7 @@ export function parseLinuxComponents(raw) {
       }
     : null;
 
-  // lspci : « VGA compatible controller: NVIDIA Corporation TU116 [GeForce GTX 1660 Ti] (rev a1) ».
+  // lspci : « VGA compatible controller: NVIDIA Corporation TU116 [GeForce GTX 1660 Ti] (rev a1) ».
   const gpus = [];
   for (const m of raw.matchAll(
     /(?:VGA compatible controller|3D controller|Display controller):\s*(.+)$/gm,

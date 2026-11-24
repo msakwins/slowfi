@@ -56,3 +56,19 @@ describe("AMD", () => {
     expect(isAmdGpu("PCI\\VEN_10DE&DEV_2182")).toBe(false);
   });
 });
+
+import { nvidiaDownload } from "./vendors.js";
+
+describe("lien direct NVIDIA", () => {
+  it("garde l'installateur officiel", () => {
+    const url =
+      "https://international-gfe.download.nvidia.com/Windows/621.40/621.40-desktop-win10-win11-64bit-international-dch-whql-g.exe";
+    expect(nvidiaDownload(url)).toBe(url);
+  });
+  it("refuse un autre domaine, http ou un autre fichier", () => {
+    expect(nvidiaDownload("https://nvidia.com.example.org/a.exe")).toBeNull();
+    expect(nvidiaDownload("http://download.nvidia.com/a.exe")).toBeNull();
+    expect(nvidiaDownload("https://download.nvidia.com/a.zip")).toBeNull();
+    expect(nvidiaDownload(undefined)).toBeNull();
+  });
+});

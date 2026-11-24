@@ -18,7 +18,7 @@ const TEXT = {
     on: (shop) => `Rechercher sur ${shop}`,
     affiliate:
       "Lien affilié : en tant que Partenaire Amazon, Slowfi réalise un bénéfice sur les achats remplissant les conditions requises, sans surcoût. Les suggestions ne dépendent que de l'analyse",
-    plain: "Suggestions faites seulement à partir de l'analyse",
+    plain: "Suggestions établies à partir de l'analyse",
   },
   en: {
     title: "Parts to replace",
@@ -27,17 +27,17 @@ const TEXT = {
     on: (shop) => `Search on ${shop}`,
     affiliate:
       "Affiliate link: as an Amazon Associate, Slowfi earns from qualifying purchases, at no extra cost. Suggestions depend only on the analysis",
-    plain: "Suggestions based only on the analysis",
+    plain: "Suggestions based on the analysis",
   },
 };
 
 const Head = styled.p`
   margin: 32px 0 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 const List = styled.ul`
@@ -47,7 +47,8 @@ const List = styled.ul`
   display: grid;
   gap: 12px;
 
-  li {
+  /* Le cadre : seulement la suggestion, pas les points de sa liste. */
+  > li {
     padding: 14px 16px;
     border-radius: 12px;
     border: 1px solid #1e293b;
@@ -67,6 +68,20 @@ const List = styled.ul`
   }
   .meta {
     color: #64748b;
+  }
+  /* À vérifier avant l'achat : une liste grise, sans cases. */
+  .checks {
+    margin: 10px 0 0;
+    padding: 0 0 0 18px;
+    list-style: disc;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #94a3b8;
+  }
+  .checks li {
+    padding: 0;
+    border: none;
+    background: none;
   }
   .links {
     display: flex;
@@ -101,13 +116,14 @@ const Note = styled.p`
  *   kind?: "parts"|"upgrades",
  * }} props
  */
-export default function PartsToBuy({ parts, kind = "parts" }) {
+export default function PartsToBuy({ parts, kind = "parts", bare = false }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   if (!parts?.length) return null;
   return (
     <>
-      <Head>{kind === "upgrades" ? t.upgrades : t.title}</Head>
+      {/* bare : l'intertitre est posé par le bloc parent (UpgradeSuggestions). */}
+      {!bare && <Head>{kind === "upgrades" ? t.upgrades : t.title}</Head>}
       <List>
         {parts.map((p) => (
           <li key={p.id}>
@@ -116,6 +132,13 @@ export default function PartsToBuy({ parts, kind = "parts" }) {
             {p.query && (
               <>
                 {p.price && <div className="meta">{t.budget(p.price)}</div>}
+                {p.checks?.length > 0 && (
+                  <ul className="checks">
+                    {p.checks.map((c) => (
+                      <li key={c}>{c}</li>
+                    ))}
+                  </ul>
+                )}
                 <div className="links">
                   {shopLinks(p.query).map((l) => (
                     <a

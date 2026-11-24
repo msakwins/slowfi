@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Briques de la saisie guidée : une étape (« où trouver l'information »), puis
+// Briques de la saisie guidée : une étape (« où trouver l'information »), puis
 // des champs courts, deux par ligne.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useId } from "react";
@@ -94,7 +94,7 @@ export function Field({ label, hint, children }) {
 
 /**
  * Champ numérique, sans flèches, qui accepte la virgule. L'exemple est
- * préfixé (« ex. 16 ») pour ne pas passer pour une valeur déjà remplie.
+ * préfixé (« ex. 16 ») pour ne pas passer pour une valeur déjà remplie.
  */
 export function NumberInput({ value, onChange, placeholder, ...rest }) {
   const eg = useLang().lang === "fr" ? "ex. " : "e.g. ";

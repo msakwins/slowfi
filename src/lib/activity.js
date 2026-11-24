@@ -2,8 +2,8 @@
 // Activité au moment de la commande : charge du processeur, mémoire utilisée,
 // et les programmes qui en consomment le plus.
 //
-// C'est un instantané : il répond à « pourquoi c'est lent maintenant », pas à
-// « est-ce lent en général ». Le suivi dans le temps attendra l'application
+// C'est un instantané : il répond à « pourquoi c'est lent maintenant », pas à
+// « est-ce lent en général ». Le suivi dans le temps attendra l'application
 // desktop.
 //
 // Windows : Win32_Processor (LoadPercentage), Win32_OperatingSystem (mémoire
@@ -59,13 +59,13 @@ export function parseActivity(blocks, raw) {
     if (linux) return linux;
   }
 
-  // macOS : « System-wide memory free percentage: 23% » (memory_pressure) et
-  // « CPU usage: 12.5% user, 8.1% sys, 79.3% idle » (top).
+  // macOS : « System-wide memory free percentage: 23% » (memory_pressure) et
+  // « CPU usage: 12.5% user, 8.1% sys, 79.3% idle » (top).
   const freePct = raw.match(/memory free percentage:\s*(\d+)\s*%/i);
   const usage = [...raw.matchAll(/CPU usage:.*?([\d.]+)%\s*idle/gi)].at(-1);
   if (!freePct && !usage) return null;
 
-  // Tableau de top : « COMMAND %CPU MEM », dernier échantillon seulement (le
+  // Tableau de top : « COMMAND %CPU MEM », dernier échantillon seulement (le
   // premier mesure mal le processeur).
   const top = [];
   const header = [...raw.matchAll(/^COMMAND\s+%CPU\s+MEM\s*$/gim)].at(-1);
@@ -93,7 +93,7 @@ export function parseActivity(blocks, raw) {
   };
 }
 
-/** Octets → « 1,2 Go » ou « 450 Mo ». */
+/** Octets → « 1,2 Go » ou « 450 Mo ». */
 export function formatBytes(bytes, lang = "fr") {
   const gb = bytes / 1024 ** 3;
   const n = (v) => (lang === "fr" ? String(v).replace(".", ",") : String(v));
@@ -121,7 +121,7 @@ export function diagnoseActivity(a) {
       level: "warning",
       id: "memory-full",
       vars: { pct: a.memoryPct, top: a.top.slice(0, 3) },
-      title: `Mémoire presque pleine (${a.memoryPct} % utilisés)`,
+      title: `Mémoire presque pleine (${a.memoryPct} % utilisés)`,
       detail: `Le système commence à écrire sur le disque à la place de la mémoire : tout ralentit.${heaviest ? ` Les plus gros consommateurs : ${heaviest}` : ""}`,
       fix: "Fermer les programmes inutilisés, en commençant par les plus gourmands. Si la mémoire reste pleine au quotidien, en ajouter",
     });
@@ -133,10 +133,10 @@ export function diagnoseActivity(a) {
       level: "warning",
       id: "cpu-busy",
       vars: { pct: a.cpuLoad },
-      title: `Processeur très sollicité (${a.cpuLoad} %)`,
+      title: `Processeur très sollicité (${a.cpuLoad} %)`,
       detail:
         "Au moment de la commande, le processeur tournait presque à plein : les autres programmes attendent leur tour",
-      fix: "Ouvrir le Gestionnaire des tâches (Ctrl + Maj + Échap), trier par « Processeur » et fermer le programme en tête s'il n'est pas utile",
+      fix: "Ouvrir le Gestionnaire des tâches (Ctrl + Maj + Échap), trier par « Processeur » et fermer le programme en tête s'il n'est pas utile",
     });
   }
 
@@ -152,14 +152,14 @@ export function diagnoseActivity(a) {
     passed.push({
       id: "memory-ok",
       vars: { pct: a.memoryPct },
-      label: `Mémoire utilisée à ${a.memoryPct} %`,
+      label: `Mémoire utilisée à ${a.memoryPct} %`,
     });
   }
   if (a.cpuLoad != null && a.cpuLoad < CPU_BUSY_PCT) {
     passed.push({
       id: "cpu-ok",
       vars: { pct: a.cpuLoad },
-      label: `Processeur occupé à ${a.cpuLoad} %`,
+      label: `Processeur occupé à ${a.cpuLoad} %`,
     });
   }
 

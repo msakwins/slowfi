@@ -27,7 +27,7 @@ const TEXT = {
     fans: "Ventilateurs",
     zone: "Carte mère (zone thermique)",
     gpuFan: (name) => `${name}`,
-    wearValue: (v) => `${v} % d'endurance consommée`,
+    wearValue: (v) => `${v} % d'endurance consommée`,
     hours: (h) => `${h.toLocaleString("fr-FR")} heures d'utilisation`,
     heat: (m, crit) =>
       crit > 0
@@ -37,7 +37,7 @@ const TEXT = {
           : "jamais au-dessus de sa température d'alerte",
     mediaErrors: (n) =>
       `${n} erreur${n > 1 ? "s" : ""} de lecture enregistrée${n > 1 ? "s" : ""}`,
-    spare: (p) => `réserve de cellules neuves à ${p} %`,
+    spare: (p) => `réserve de cellules neuves à ${p} %`,
     alerts: {
       spare: "le SSD signale une réserve presque épuisée",
       temperature: "le SSD signale une température trop haute",
@@ -161,7 +161,7 @@ const TEXT = {
   },
 };
 
-/** Durée en minutes, lisible : « 45 min », « 5 h », « 3 jours ». */
+/** Durée en minutes, lisible : « 45 min », « 5 h », « 3 jours ». */
 function duration(min, lang) {
   if (min < 60) return `${min} min`;
   const h = Math.round(min / 60);
@@ -189,11 +189,11 @@ const Section = styled.section``;
 
 const Group = styled.p`
   margin: 28px 0 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 const Rows = styled.ul`
@@ -220,6 +220,61 @@ const Rows = styled.ul`
     flex: none;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+`;
+
+// Une carte par composant : son nom, sa valeur en grand, une jauge à la
+// couleur de son niveau.
+const Cards = styled.ul`
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+
+  li {
+    padding: 14px 16px 16px;
+    border-radius: 14px;
+    border: 1px solid #1e293b;
+    background: #0b1220;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .name {
+    font-size: 13px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .value {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--level);
+  }
+  .gauge {
+    height: 6px;
+    border-radius: 6px;
+    background: #111a2e;
+    overflow: hidden;
+  }
+  .gauge div {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--level);
+    box-shadow: 0 0 10px var(--level);
+    transition: width 0.4s;
+  }
+  .sub {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
   }
 `;
 
@@ -382,7 +437,7 @@ export default function Sensors() {
   const wear = rows.filter((r) => r.kind === "wear");
   const fans = rows.filter((r) => ["gpuFan", "fan"].includes(r.kind));
 
-  // Zone ACPI de Windows (\_TZ.TZ00) : nommée « carte mère ».
+  // Zone ACPI de Windows (\_TZ.TZ00) : nommée « carte mère ».
   const name = (r) =>
     r.kind === "zone" && r.name.startsWith("\\")
       ? t.zone
@@ -406,6 +461,25 @@ export default function Sensors() {
     </li>
   );
 
+  // Carte : jauge remplie à pct (0 à 100).
+  const card = (r, value, pct, sub) => (
+    <li
+      key={`${r.kind}-${r.name}`}
+      style={{ "--level": SEVERITY[r.level]?.color ?? "#e2e8f0" }}
+    >
+      <span className="name" title={name(r)}>
+        {name(r)}
+      </span>
+      <span className="value">{value}</span>
+      {pct != null && (
+        <span className="gauge" aria-hidden="true">
+          <div style={{ width: `${Math.max(3, Math.min(100, pct))}%` }} />
+        </span>
+      )}
+      {sub && <span className="sub">{sub}</span>}
+    </li>
+  );
+
   return (
     <Section style={HARDWARE}>
       <Title>{t.title}</Title>
@@ -419,24 +493,29 @@ export default function Sensors() {
           {temps.length > 0 && (
             <>
               <Group>{t.temps}</Group>
-              <Rows>
-                {temps.map((r) => row(r, `${Math.round(r.value)} °C`))}
+              <Cards>
+                {/* Jauge sur 100 °C. */}
+                {temps.map((r) =>
+                  card(r, `${Math.round(r.value)} °C`, r.value),
+                )}
                 {pressureRow &&
-                  row(
+                  card(
                     pressureRow,
                     t.pressure[pressureRow.value] ?? pressureRow.value,
+                    null,
                   )}
-              </Rows>
+              </Cards>
             </>
           )}
           {wear.length > 0 && (
             <>
               <Group>{t.wear}</Group>
-              <Rows>
+              <Cards>
                 {wear.map((r) =>
-                  row(
+                  card(
                     r,
-                    `${r.value} %`,
+                    `${r.value} %`,
+                    r.value,
                     [
                       t.wearValue(r.value),
                       r.extra?.hours && t.hours(r.extra.hours),
@@ -454,7 +533,7 @@ export default function Sensors() {
                       .join(", "),
                   ),
                 )}
-              </Rows>
+              </Cards>
             </>
           )}
           {smartRows.length > 0 && (
@@ -477,14 +556,15 @@ export default function Sensors() {
           )}
           <Group>{t.fans}</Group>
           {fans.length > 0 && (
-            <Rows>
+            <Cards>
               {fans.map((r) =>
-                row(
+                card(
                   r,
-                  r.unit === "%" ? `${r.value} %` : `${r.value} ${r.unit}`,
+                  r.unit === "%" ? `${r.value} %` : `${r.value} ${r.unit}`,
+                  r.unit === "%" ? r.value : null,
                 ),
               )}
-            </Rows>
+            </Cards>
           )}
           {data.platform === "windows" && <Note>{t.noFans}</Note>}
         </>

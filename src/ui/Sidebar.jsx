@@ -3,13 +3,16 @@
 // par page, la page ouverte en surbrillance, son nom au survol. Sur
 // téléphone, elle passe en bas de l'écran.
 // ─────────────────────────────────────────────────────────────────────────────
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Link } from "./router.jsx";
 import { useText } from "./i18n.jsx";
 import { desktop } from "./desktop.js";
 
 export const SIDEBAR_WIDTH = 60;
+// Barre ouverte, avec le nom des pages à côté des icônes.
+export const SIDEBAR_OPEN = 240;
+const OPEN_KEY = "slowfi-sidebar-open";
 // En dessous de cette largeur (site seulement), la barre passe en bas.
 export const SIDEBAR_BREAK = 640;
 
@@ -23,6 +26,8 @@ const TEXT = {
     "/confidentialite": "Confidentialité",
     nav: "Navigation",
     brand: "Slowfi, accueil",
+    expand: "Afficher le nom des pages",
+    collapse: "Masquer le nom des pages",
   },
   en: {
     "/": "Home",
@@ -33,6 +38,8 @@ const TEXT = {
     "/confidentialite": "Privacy",
     nav: "Navigation",
     brand: "Slowfi, home",
+    expand: "Show page names",
+    collapse: "Hide page names",
   },
 };
 
@@ -84,20 +91,23 @@ const TOP = [
   ...(desktop ? ["/capteurs"] : []),
   ...(desktop ? [] : ["/application"]),
 ];
-const BOTTOM = ["/confidentialite"];
+// Confidentialité : liée depuis le pied de page du site, pas depuis la barre.
+const BOTTOM = [];
 
 const Bar = styled.nav`
   position: fixed;
   top: var(--top);
   bottom: 0;
   left: 0;
-  width: ${SIDEBAR_WIDTH}px;
+  width: var(--sidebar, ${SIDEBAR_WIDTH}px);
   z-index: 15;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 0 14px;
+  align-items: stretch;
+  overflow: hidden;
+  transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  gap: 8px;
+  padding: 12px 10px 16px;
   border-right: 1px solid #111a2e;
   background: #020617;
 
@@ -122,27 +132,51 @@ const Bar = styled.nav`
     &[data-web] .spacer {
       display: none;
     }
-    &[data-web] .tip {
+    &[data-web] .tip,
+    &[data-web] .toggle,
+    &[data-web] .label {
       display: none;
+    }
+    &[data-web] a {
+      width: 40px;
     }
   }
 `;
 
 const Item = styled(Link)`
   position: relative;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
+  flex: none;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 18px 0 10px;
   border-radius: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
   color: rgb(241 245 249 / 0.55);
   transition:
     background 0.15s,
     color 0.15s;
 
   svg {
+    flex: none;
     width: 20px;
     height: 20px;
+  }
+  /* Le nom de la page, visible quand la barre est ouverte. */
+  .label {
+    opacity: var(--labels, 0);
+    transition: opacity 0.15s;
+  }
+  .wordmark {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    color: #f1f5f9;
   }
   /* Le logo : sans fond au survol, un peu détaché des pages. */
   &.brand {
@@ -153,8 +187,8 @@ const Item = styled(Link)`
     background: none;
   }
   svg.logo {
-    width: 28px;
-    height: 18px;
+    width: 20px;
+    height: 13px;
     overflow: visible;
     filter: drop-shadow(0 0 4px rgb(34 211 238 / 0.55));
   }
@@ -187,7 +221,42 @@ const Item = styled(Link)`
   }
   &:hover .tip,
   &:focus-visible .tip {
-    opacity: 1;
+    opacity: calc(1 - var(--labels, 0));
+  }
+`;
+
+// Bouton d'ouverture, en bas de la barre.
+const Toggle = styled.button`
+  flex: none;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: rgb(241 245 249 / 0.4);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+
+  svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s;
+  }
+  &[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+  &:hover,
+  &:focus-visible {
+    color: #f1f5f9;
+    background: rgb(148 163 184 / 0.1);
+    outline: none;
   }
 `;
 
@@ -212,6 +281,26 @@ function LogoMark() {
 /** @param {{ path: string, top: number }} props */
 export default function Sidebar({ path, top }) {
   const t = useText(TEXT);
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(OPEN_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  // La largeur sert aussi à la page (Slowfi.jsx), qui se décale d'autant.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar",
+      `${open ? SIDEBAR_OPEN : SIDEBAR_WIDTH}px`,
+    );
+    document.documentElement.style.setProperty("--labels", open ? "1" : "0");
+    try {
+      localStorage.setItem(OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // Sans stockage, le choix vaut pour la visite en cours.
+    }
+  }, [open]);
   const item = (to) => (
     <Item
       key={to}
@@ -230,6 +319,9 @@ export default function Sidebar({ path, top }) {
       >
         {ICONS[to]}
       </svg>
+      <span className="label" aria-hidden="true">
+        {t[to]}
+      </span>
       <span className="tip" aria-hidden="true">
         {t[to]}
       </span>
@@ -244,10 +336,33 @@ export default function Sidebar({ path, top }) {
       {/* Le logo en tête, qui ramène aussi à l'accueil. */}
       <Item to="/" className="brand" aria-label={t.brand}>
         <LogoMark />
+        {/* Barre ouverte : le nom à côté du logo. */}
+        <span className="label wordmark" aria-hidden="true">
+          slowfi
+        </span>
       </Item>
       {TOP.map(item)}
       <div className="spacer" />
       {BOTTOM.map(item)}
+      <Toggle
+        type="button"
+        className="toggle"
+        aria-expanded={open}
+        aria-label={open ? t.collapse : t.expand}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m8 6 4 4-4 4" />
+        </svg>
+      </Toggle>
     </Bar>
   );
 }

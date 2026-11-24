@@ -115,7 +115,7 @@ export function diagnose(d) {
       level: "warning",
       id: "weak-signal",
       vars: { v: d.signal },
-      title: `Signal faible (${d.signal} %)`,
+      title: `Signal faible (${d.signal} %)`,
       detail:
         "Distance ou obstacles entre l'appareil et la box. Le débit diminue avec le signal",
       fix: "Réduire la distance à la box, la sortir d'un meuble fermé, ou ajouter un répéteur ou un point d'accès",
@@ -156,7 +156,7 @@ export function diagnose(d) {
 
 // ─── macOS ───────────────────────────────────────────────────────────────────
 
-/** « 5GHz », « 2,4 GHz », « 6 GHz » → libellé de bande normalisé. */
+/** « 5GHz », « 2,4 GHz », « 6 GHz » → libellé de bande normalisé. */
 function normalizeBand(text) {
   if (!text) return null;
   const m = text.match(/(2[.,]4|5|6)\s*GHz/i);
@@ -166,7 +166,7 @@ function normalizeBand(text) {
 
 /**
  * Extrait les champs utiles de `system_profiler SPAirPortDataType` (macOS).
- * Seule la section « Current Network Information » compte : la suite liste
+ * Seule la section « Current Network Information » compte : la suite liste
  * les réseaux voisins, avec les mêmes champs.
  *
  * Le signal y est en dBm ; il est converti dans l'échelle de Windows
@@ -203,7 +203,7 @@ export function parseAirport(raw) {
  * @param {string} raw
  */
 export function parseWifi(raw) {
-  // Linux : réseau utilisé, marqué « * » par nmcli.
+  // Linux : réseau utilisé, marqué « * » par nmcli.
   const nm = parseNmcli(raw);
   if (nm) return nm;
   if (/Current Network Information:|PHY Mode:/i.test(raw)) {
@@ -296,7 +296,7 @@ export function compareWithLine(wifi, download) {
     ...wifi,
     measured,
     severity,
-    // « Configuration saine » contredirait un Wi-Fi qui plafonne : seul ce
+    // « Configuration saine » contredirait un Wi-Fi qui plafonne : seul ce
     // cas la retire.
     findings: [
       finding,

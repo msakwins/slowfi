@@ -168,7 +168,7 @@ CycleCount : 412`,
       { today: TODAY },
     );
     expect(withCycles.passed.find((p) => p.id === "battery-ok").label).toBe(
-      "Batterie à 92 % de sa capacité d'origine (412 cycles)",
+      "Batterie à 92 % de sa capacité d'origine (412 cycles)",
     );
   });
 

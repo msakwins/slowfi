@@ -5,12 +5,12 @@
 // retomber le lien de 1 Gb/s à 100 Mb/s, sans message ni coupure : la ligne
 // reste plafonnée à ~95 Mb/s, quelle que soit l'offre souscrite.
 //
-// Windows : Get-NetAdapter (Format-List). macOS : ifconfig, ligne « media ».
+// Windows : Get-NetAdapter (Format-List). macOS : ifconfig, ligne « media ».
 // ─────────────────────────────────────────────────────────────────────────────
 import { parseBlocks, field } from "./powershell.js";
 import { parseSysNet } from "./linux.js";
 
-/** « 1 Gbps », « 100 Mbps », « 2.5 Gbps » → Mb/s. */
+/** « 1 Gbps », « 100 Mbps », « 2.5 Gbps » → Mb/s. */
 export function toMbps(text) {
   if (!text) return null;
   const m = String(text).match(/([\d.,]+)\s*([GMK])b(?:ps|it\/s|\/s)?/i);
@@ -44,7 +44,7 @@ export function parseNetAdapters(raw) {
 
 /**
  * Interfaces Ethernet actives d'un Mac, d'après `ifconfig` : la ligne
- * « media: autoselect (1000baseT <full-duplex>) » donne vitesse et duplex.
+ * « media: autoselect (1000baseT <full-duplex>) » donne vitesse et duplex.
  * @param {string} raw
  */
 export function parseIfconfig(raw) {
@@ -116,7 +116,7 @@ export function diagnoseEthernet(link, download) {
       title: "Liaison en semi-duplex",
       detail:
         "La carte ne peut pas envoyer et recevoir en même temps : débit réduit et latence irrégulière. Signe fréquent d'un câble ou d'un réglage forcé",
-      fix: "Dans les propriétés de la carte réseau (Gestionnaire de périphériques › Avancé), régler « Vitesse et duplex » sur « Négociation automatique », puis changer de câble si rien ne change",
+      fix: "Dans les propriétés de la carte réseau (Gestionnaire de périphériques › Avancé), régler « Vitesse et duplex » sur « Négociation automatique », puis changer de câble si rien ne change",
     });
   }
 

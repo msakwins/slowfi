@@ -64,7 +64,7 @@ const UL_CHUNK = 3e6; // taille envoyée par requête montante (petit = jalons f
 
 /**
  * Crée un signal d'abandon qui se déclenche automatiquement au bout de `ms`,
- * OU quand le signal externe (bouton « Arrêter ») se déclenche. Indispensable :
+ * OU quand le signal externe (bouton « Arrêter ») se déclenche. Indispensable :
  * sans échéance ferme, un flux qui se fige (connexion qui ne renvoie plus rien
  * mais ne se ferme pas) bloquerait `reader.read()` pour toujours et gèlerait
  * toute la mesure. On expose `timedOut()` pour distinguer la fin normale (temps

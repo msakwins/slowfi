@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Bouton « Copier le résumé » : place un texte dans le presse-papiers, avec
+// Bouton « Copier le résumé » : place un texte dans le presse-papiers, avec
 // un repli pour les navigateurs qui refusent l'accès direct.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from "react";

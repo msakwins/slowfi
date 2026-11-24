@@ -29,7 +29,7 @@ describe("résumé d'une analyse", () => {
     expect(lines[0]).toBe("Slowfi — analyse du matériel — 20/11/2026 17:30");
     expect(text).toContain("Système : À surveiller");
     expect(text).toContain("- Pas de redémarrage depuis 12 jours");
-    expect(text).toContain("  Correctif : Utiliser « Redémarrer »");
+    expect(text).toContain("  Correctif : Utiliser « Redémarrer »");
     expect(text).toContain(
       "Points vérifiés : Windows 11 25H2, suivi jusqu'au 12 octobre 2027 ; Windows sur un SSD",
     );
@@ -50,7 +50,7 @@ describe("résumé d'une analyse", () => {
     expect(text).not.toMatch(/undefined/);
   });
 
-  it("n'écrit pas « Aucune anomalie » quand la liste des contrôles passés le dit déjà", () => {
+  it("n'écrit pas « Aucune anomalie » quand la liste des contrôles passés le dit déjà", () => {
     const healthy = analyzeSystem(
       "SystemDisk : 0\nUptimeDays : 1\nPowerScheme : 381b4222-f694-41f0-9685-ff5bb260df2e",
       { today: "2026-11-20" },

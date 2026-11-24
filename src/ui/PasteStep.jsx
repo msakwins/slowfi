@@ -22,11 +22,18 @@ import Info from "./Info.jsx";
 const TEXT = {
   fr: {
     open: {
+      windows: "Coller cette commande dans le terminal, puis appuyer sur Entrée",
+      mac: "Coller cette commande dans le terminal, puis appuyer sur Entrée",
+      linux: "Coller cette commande dans le terminal, puis appuyer sur Entrée",
+    },
+    // Détails, dans la bulle « i » à côté de l'étape 1.
+    openHow: "Comment faire ?",
+    openHelp: {
       windows:
-        "Ouvrir le Terminal, PowerShell ou l'Invite de commandes depuis le menu Démarrer, y coller cette commande et appuyer sur Entrée. Le résultat est placé dans le presse-papiers",
-      mac: "Ouvrir le Terminal (Applications › Utilitaires), y coller cette commande et appuyer sur Entrée. Le résultat est placé dans le presse-papiers",
+        "Ouvrir le menu Démarrer, taper « PowerShell » puis appuyer sur Entrée. Dans la fenêtre qui s'ouvre, coller la commande avec Ctrl + V ou un clic droit, puis appuyer sur Entrée",
+      mac: "Ouvrir Spotlight avec ⌘ + Espace, taper « Terminal » puis appuyer sur Entrée. Dans la fenêtre qui s'ouvre, coller la commande avec ⌘ + V, puis appuyer sur Entrée",
       linux:
-        "Ouvrir un terminal (Ctrl + Alt + T sur Ubuntu), puis y coller cette commande",
+        "Ouvrir un terminal avec Ctrl + Alt + T (Ubuntu) ou depuis le menu des applications. Coller la commande avec Ctrl + Maj + V, puis appuyer sur Entrée",
     },
     system: "Système",
     method: "Façon de procéder",
@@ -51,11 +58,17 @@ const TEXT = {
   },
   en: {
     open: {
+      windows: "Paste this command into the terminal, then press Enter",
+      mac: "Paste this command into the terminal, then press Enter",
+      linux: "Paste this command into the terminal, then press Enter",
+    },
+    openHow: "How?",
+    openHelp: {
       windows:
-        "Open Terminal, PowerShell or Command Prompt from the Start menu, paste this command and press Enter. The result is placed in the clipboard",
-      mac: "Open Terminal (Applications › Utilities), paste this command and press Enter. The result is placed in the clipboard",
+        "Open the Start menu, type “PowerShell” and press Enter. In the window that opens, paste the command with Ctrl + V or a right-click, then press Enter",
+      mac: "Open Spotlight with ⌘ + Space, type “Terminal” and press Enter. In the window that opens, paste the command with ⌘ + V, then press Enter",
       linux:
-        "Open a terminal (Ctrl + Alt + T on Ubuntu), then paste this command",
+        "Open a terminal with Ctrl + Alt + T (Ubuntu) or from the applications menu. Paste the command with Ctrl + Shift + V, then press Enter",
     },
     system: "System",
     method: "How to proceed",
@@ -94,7 +107,7 @@ function detectSystem() {
     navigator.platform ||
     navigator.userAgent;
   if (/mac/i.test(p)) return "mac";
-  // Android se déclare aussi « Linux » : écarté, une commande n'y a pas de sens.
+  // Android se déclare aussi « Linux » : écarté, une commande n'y a pas de sens.
   if (/linux/i.test(p) && !/android/i.test(navigator.userAgent)) return "linux";
   return "windows";
 }
@@ -224,6 +237,8 @@ export default function PasteStep({
   manual: Manual,
   manualProps,
   onResult,
+  onRunning,
+  quiet,
   children,
 }) {
   const [system, setSystem] = useState(() => {
@@ -242,7 +257,7 @@ export default function PasteStep({
   const t = useText(TEXT);
 
   // Le résultat se déduit du texte collé : pas d'état à synchroniser, pas de
-  // bouton « Analyser ».
+  // bouton « Analyser ».
   const pasted = useMemo(
     () => (raw.trim() ? analyze(raw) : null),
     [raw, analyze],
@@ -257,6 +272,7 @@ export default function PasteStep({
 
   const run = async () => {
     setRunning(true);
+    onRunning?.(true);
     setFailed(false);
     try {
       const out = await desktop.run(appScript(system, command));
@@ -264,6 +280,7 @@ export default function PasteStep({
       setFailed(!out.trim());
     } finally {
       setRunning(false);
+      onRunning?.(false);
     }
   };
   // La commande change avec les analyses choisies : chaque nouvelle commande
@@ -293,7 +310,9 @@ export default function PasteStep({
       <>
         <Step>
           {running ? (
-            <Pending>{t.running}</Pending>
+            quiet ? null : (
+              <Pending>{t.running}</Pending>
+            )
           ) : (
             <Button onClick={run}>{t.rerun}</Button>
           )}
@@ -359,7 +378,10 @@ export default function PasteStep({
           <Step>
             <Label>
               <span className="n">1</span>
-              {t.open[system]}
+              <span>
+                {t.open[system]}{" "}
+                <Info label={t.openHow}>{t.openHelp[system]}</Info>
+              </span>
             </Label>
             <CommandBox>
               <Command ref={pre}>{command}</Command>

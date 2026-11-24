@@ -10,7 +10,7 @@
 // Windows : Win32_PnPEntity (Format-List). macOS : system_profiler, qui
 // liste les appareils sans état d'erreur.
 //
-// Un appareil peut aussi être « en bon état » pour Windows et ne pas marcher :
+// Un appareil peut aussi être « en bon état » pour Windows et ne pas marcher :
 // micro bloqué par la confidentialité, service audio arrêté, effet de Windows
 // (Voice Clarity) qui coupe la voix avec certains casques. Sous Windows, on lit
 // donc aussi les entrées et sorties audio dans le registre, l'accès au micro
@@ -22,7 +22,7 @@ import { isLinux, parseLinuxDevices } from "./linux.js";
 
 // Catégories affichées, dans l'ordre, et les classes Windows qui les
 // alimentent. AudioEndpoint donne les entrées et sorties telles que
-// l'utilisateur les connaît (« Casque », « Microphone ») ; MEDIA ne sert que
+// l'utilisateur les connaît (« Casque », « Microphone ») ; MEDIA ne sert que
 // s'il n'y en a aucune.
 export const GROUPS = [
   ["audio", ["AudioEndpoint"]],
@@ -85,7 +85,7 @@ export function parsePnp(raw) {
 /**
  * Appareils d'un Mac, d'après `system_profiler SPAudioDataType
  * SPBluetoothDataType SPCameraDataType SPDisplaysDataType`. Chaque section
- * nomme ses appareils sur une ligne « Nom: » plus indentée que son titre.
+ * nomme ses appareils sur une ligne « Nom: » plus indentée que son titre.
  * @param {string} raw
  */
 export function parseMacDevices(raw) {
@@ -93,7 +93,7 @@ export function parseMacDevices(raw) {
   let section = null;
   let sub = null;
   // Retrait des noms d'appareils dans la sous-section courante : les lignes
-  // plus indentées (« Properties: »…) appartiennent à l'appareil.
+  // plus indentées (« Properties: »…) appartiennent à l'appareil.
   let level = null;
   for (const line of raw.split(/\r?\n/)) {
     const m = line.match(/^(\s*)(\S[^:]*):\s*$/);
@@ -122,8 +122,8 @@ export function parseMacDevices(raw) {
       level = null;
       continue;
     }
-    // Un appareil : sous « Devices » (audio), « Connected » (Bluetooth),
-    // « Displays » (écrans), ou directement sous « Camera ».
+    // Un appareil : sous « Devices » (audio), « Connected » (Bluetooth),
+    // « Displays » (écrans), ou directement sous « Camera ».
     const wanted =
       (section === "audio" && sub === "Devices") ||
       (section === "bluetooth" && sub === "Connected") ||
@@ -140,10 +140,10 @@ export function parseMacDevices(raw) {
 
 const MMDEV =
   /MMDevices\\Audio\\(Capture|Render)\\(\{[0-9a-f-]{36}\})(\\\w+)?$/i;
-// Nom court (« Microphone ») et nom de l'appareil (« HyperX Cloud Alpha »).
+// Nom court (« Microphone ») et nom de l'appareil (« HyperX Cloud Alpha »).
 const KIND = "{a45c254e-df1c-4efd-8020-67d146a850e0},2";
 const MODEL = "{b3f8fa53-0004-438e-9003-51a46e139bfc},6";
-// PKEY_AudioEndpoint_Disable_SysFx : 1 = « Améliorations audio » désactivées.
+// PKEY_AudioEndpoint_Disable_SysFx : 1 = « Améliorations audio » désactivées.
 const SYSFX_OFF = "{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5";
 // Pack d'effets attaché à l'entrée ; VocaEffectPack est celui de Voice Clarity.
 const EFFECT_PACK = "{9e6136e0-57ab-4949-b57a-3627be142855},100";
@@ -180,7 +180,7 @@ export function parseAudioEndpoints(raw) {
       const kind = field(f, KIND);
       const model = field(f, MODEL);
       // Même forme que dans le Gestionnaire de périphériques :
-      // « Microphone (HyperX Cloud Alpha Wireless) ».
+      // « Microphone (HyperX Cloud Alpha Wireless) ».
       e.name = kind && model ? `${kind} (${model})` : (kind ?? model);
     } else if (sub === "fxproperties") {
       e.effects = field(f, SYSFX_OFF) !== "1";
@@ -191,7 +191,7 @@ export function parseAudioEndpoints(raw) {
 }
 
 /**
- * Accès au micro et à la caméra (Paramètres › Confidentialité). « Deny » sur
+ * Accès au micro et à la caméra (Paramètres › Confidentialité). « Deny » sur
  * l'ordinateur, pour l'utilisateur, ou pour les applications de bureau
  * (NonPackaged : Discord, Teams, Zoom, les jeux…).
  * @param {string} raw
@@ -275,7 +275,7 @@ function systemFindings(d) {
           "Sans ce service, les appareils Bluetooth ne se connectent plus",
         printer: "Sans ce service, plus rien ne s'imprime",
       }[def.group],
-      fix: `Touche Windows + R, taper services.msc, puis double-clic sur « ${def.label} » › Type de démarrage : Automatique › Démarrer`,
+      fix: `Touche Windows + R, taper services.msc, puis double-clic sur « ${def.label} » › Type de démarrage : Automatique › Démarrer`,
     });
   }
 
@@ -304,7 +304,7 @@ function systemFindings(d) {
         scope === "desktop"
           ? `Les applications de bureau (Discord, Teams, Zoom, les jeux…) n'ont pas le droit d'utiliser ${it} : ${looks} dans ces applications`
           : `Aucune application n'a le droit d'utiliser ${it} : ${looks} partout, alors que l'appareil fonctionne`,
-      fix: `Paramètres › Confidentialité et sécurité › ${mic ? "Microphone" : "Caméra"} : activer « Accès ${mic ? "au microphone" : "à la caméra"} »${scope === "desktop" ? ", puis « Autoriser les applications de bureau à accéder »" : ""}`,
+      fix: `Paramètres › Confidentialité et sécurité › ${mic ? "Microphone" : "Caméra"} : activer « Accès ${mic ? "au microphone" : "à la caméra"} »${scope === "desktop" ? ", puis « Autoriser les applications de bureau à accéder »" : ""}`,
     });
   }
 
@@ -426,7 +426,7 @@ export function diagnoseDevices(d) {
     });
   }
 
-  // Ce qui fonctionne, par catégorie : « Audio : Casque (HyperX…), … ».
+  // Ce qui fonctionne, par catégorie : « Audio : Casque (HyperX…), … ».
   const passed = [];
   for (const [group] of GROUPS) {
     const names = [

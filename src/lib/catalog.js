@@ -37,7 +37,7 @@ export function isLookupKey(key) {
   return typeof key === "string" && lookupKey(key) === key;
 }
 
-/** Compare deux versions « 32.0.15.6094 » : négatif si a < b. */
+/** Compare deux versions « 32.0.15.6094 » : négatif si a < b. */
 export function compareVersions(a, b) {
   const pa = String(a)
     .split(".")
@@ -59,7 +59,7 @@ const text = (html) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/** Date américaine du catalogue (7/21/2026) → « 2026-07-21 ». */
+/** Date américaine du catalogue (7/21/2026) → « 2026-07-21 ». */
 function isoDate(us) {
   const m = us.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (!m) return null;

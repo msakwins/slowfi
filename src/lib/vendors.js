@@ -30,8 +30,8 @@ export function nvidiaVersion(windowsVersion) {
 
 /**
  * Dernier pilote NVIDIA pour une puce, d'après le service de NVIDIA.
- * @param {string} device  identifiant de puce (« 2182 »)
- * @returns {Promise<{ source: "nvidia", name: string, version: string, date: string|null, url: string|null } | null>}
+ * @param {string} device  identifiant de puce (« 2182 »)
+ * @returns {Promise<{ source: "nvidia", name: string, version: string, date: string|null, url: string|null, download: string|null } | null>}
  */
 export async function nvidiaLatest(device) {
   const query = {
@@ -64,7 +64,25 @@ export async function nvidiaLatest(device) {
     version: a.Version,
     date: a.ReleaseDateTime?.slice(0, 10) ?? null,
     url: a.DetailsURL ?? null,
+    download: nvidiaDownload(a.DownloadURL),
   };
+}
+
+/**
+ * Lien direct vers l'installateur officiel, seulement s'il est bien chez
+ * NVIDIA (https, domaine nvidia.com, fichier .exe) ; sinon null.
+ */
+export function nvidiaDownload(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" &&
+      /(^|\.)nvidia\.com$/.test(u.hostname) &&
+      /\.exe$/i.test(u.pathname)
+      ? u.href
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 // Pages de pilotes, par fabricant (identifiant PCI ou USB) et par classe.

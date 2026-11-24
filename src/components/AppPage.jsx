@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Page « Application » : ce que l'application ajoute au site, le
+// Page « Application » : ce que l'application ajoute au site, le
 // téléchargement pour chaque système, et comment l'ouvrir la première fois.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
@@ -15,6 +15,10 @@ import {
   mainDownload,
 } from "../lib/download.js";
 
+// Fiche du Microsoft Store : sous Windows, le téléchargement principal
+// (paquet signé par Microsoft, sans avertissement à l'installation).
+const STORE = "https://apps.microsoft.com/detail/9pj85b7s6txc";
+
 const TEXT = {
   fr: {
     title: "Application",
@@ -28,6 +32,8 @@ const TEXT = {
     ],
     download: "Téléchargement",
     button: (os) => `Télécharger pour ${os}`,
+    store: "Télécharger sur le Microsoft Store",
+    direct: "Ou télécharger le fichier d'installation",
     others: "Aussi pour",
     and: "et",
     // Linux : deux formats, selon la distribution.
@@ -46,9 +52,9 @@ const TEXT = {
     unsigned:
       "Au premier lancement, Windows et macOS peuvent afficher un avertissement de sécurité",
     openWindows:
-      "Windows : dans la fenêtre « Windows a protégé votre ordinateur », cliquer sur « Informations complémentaires », puis « Exécuter quand même »",
+      "Windows, fichier d'installation : dans la fenêtre « Windows a protégé votre ordinateur », cliquer sur « Informations complémentaires », puis « Exécuter quand même ». Depuis le Microsoft Store, aucun avertissement",
     openMac:
-      "macOS : clic droit sur Slowfi dans le dossier Applications, puis « Ouvrir », et confirmer",
+      "macOS : clic droit sur Slowfi dans le dossier Applications, puis « Ouvrir », et confirmer",
     privacy: "Confidentialité",
     privacyText:
       "Aucune donnée personnelle n'est collectée",
@@ -65,6 +71,8 @@ const TEXT = {
     ],
     download: "Download",
     button: (os) => `Download for ${os}`,
+    store: "Download from the Microsoft Store",
+    direct: "Or download the installer file",
     others: "Also for",
     and: "and",
     appImage: "AppImage",
@@ -81,7 +89,7 @@ const TEXT = {
     unsigned:
       "On first launch, Windows and macOS may display a security warning",
     openWindows:
-      "Windows: in the “Windows protected your PC” window, click “More info”, then “Run anyway”",
+      "Windows, installer file: in the “Windows protected your PC” window, click “More info”, then “Run anyway”. From the Microsoft Store, no warning",
     openMac:
       "macOS: right-click Slowfi in the Applications folder, then “Open”, and confirm",
     privacy: "Privacy",
@@ -99,10 +107,10 @@ const Body = styled.div`
   h2 {
     margin: 40px 0 16px;
     font-size: 12px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    font-weight: 600;
-    color: #64748b;
+    font-weight: 500;
+    color: #94a3b8;
   }
   /* Le premier intertitre, juste sous l'introduction. */
   h2:first-child {
@@ -187,7 +195,7 @@ export default function AppPage() {
   // Les deux autres systèmes, s'ils ont un fichier.
   const others = ["windows", "mac", "linux"]
     .filter((k) => k !== os)
-    .map((k) => [k, mainDownload(files, k)])
+    .map((k) => [k, k === "windows" ? STORE : mainDownload(files, k)])
     .filter(([, url]) => url);
   const linux = (
     <>
@@ -210,7 +218,25 @@ export default function AppPage() {
         </ul>
 
         <h2>{t.download}</h2>
-        {main ? (
+        {os === "windows" ? (
+          <>
+            <Button
+              as="a"
+              $primary
+              href={STORE}
+              target="_blank"
+              rel="noreferrer"
+              style={{ textDecoration: "none", color: undefined }}
+            >
+              {t.store}
+            </Button>
+            {main && (
+              <p className="sub" style={{ marginTop: 14 }}>
+                <a href={main}>{t.direct}</a>
+              </p>
+            )}
+          </>
+        ) : main ? (
           <Button
             as="a"
             $primary

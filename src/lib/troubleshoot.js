@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// « Cet appareil ne marche pas » : l'utilisateur choisit un périphérique dans
+// « Cet appareil ne marche pas » : l'utilisateur choisit un périphérique dans
 // la liste, et on lui répond pour celui-là.
 //
 // Beaucoup de pannes ne laissent aucune trace dans le Gestionnaire de
@@ -83,7 +83,7 @@ function endpointFindings(e) {
       title: `Voice Clarity est activé sur ce micro`,
       detail:
         "Cet effet de Windows retire le bruit et l'écho. Avec certains casques et micros USB, il coupe la voix, la rend hachée ou la fait disparaître : c'est la cause la plus probable",
-      fix: "Paramètres › Système › Son › cliquer sur le micro › « Améliorations audio » : Désactivé. Puis refaire un essai dans l'application",
+      fix: "Paramètres › Système › Son › cliquer sur le micro › « Améliorations audio » : Désactivé. Puis refaire un essai dans l'application",
     });
   } else if (e.effects && mic) {
     // Sur une sortie, les améliorations sont activées presque partout :
@@ -97,7 +97,7 @@ function endpointFindings(e) {
       detail: mic
         ? "Les effets du pilote ou de Windows (réduction de bruit, gain automatique) coupent ou étouffent la voix avec certains micros"
         : "Les effets du pilote ou de Windows (son spatial, égaliseur) déforment le son ou le coupent avec certains casques et enceintes",
-      fix: `Paramètres › Système › Son › cliquer sur ${mic ? "le micro" : "la sortie"} › « Améliorations audio » : Désactivé, puis refaire un essai`,
+      fix: `Paramètres › Système › Son › cliquer sur ${mic ? "le micro" : "la sortie"} › « Améliorations audio » : Désactivé, puis refaire un essai`,
     });
   }
   return out;
@@ -116,7 +116,7 @@ export const TIPS = {
     ],
     [
       "mic-level",
-      "Paramètres › Système › Son › cliquer sur le micro : régler le volume d'entrée vers 80 et parler en regardant la jauge « Tester le micro »",
+      "Paramètres › Système › Son › cliquer sur le micro : régler le volume d'entrée vers 80 et parler en regardant la jauge « Tester le micro »",
     ],
     [
       "mic-exclusive",
@@ -142,7 +142,7 @@ export const TIPS = {
     ],
     [
       "out-bt",
-      "Casque Bluetooth : choisir l'entrée « Casque » ou « Stéréo » et non « Mains libres », qui donne un son de téléphone",
+      "Casque Bluetooth : choisir l'entrée « Casque » ou « Stéréo » et non « Mains libres », qui donne un son de téléphone",
     ],
     [
       "replug",
@@ -178,7 +178,7 @@ export const TIPS = {
     ],
     [
       "kb-filter",
-      "Touches lentes ou ignorées : Paramètres › Accessibilité › Clavier › désactiver « Touches filtres » et « Touches rémanentes »",
+      "Touches lentes ou ignorées : Paramètres › Accessibilité › Clavier › désactiver « Touches filtres » et « Touches rémanentes »",
     ],
   ],
   mouse: [
@@ -238,7 +238,7 @@ export const TIPS = {
     ],
     [
       "print-default",
-      "Vérifier que c'est l'imprimante choisie au moment d'imprimer, et qu'elle n'est pas « hors connexion »",
+      "Vérifier que c'est l'imprimante choisie au moment d'imprimer, et qu'elle n'est pas « hors connexion »",
     ],
     [
       "print-network",
@@ -334,7 +334,7 @@ export function troubleshoot(r, device) {
       id: "tip-out-effects",
       key: "tip-out-effects",
       title:
-        "Son déformé ou coupé : Paramètres › Système › Son › cliquer sur la sortie › « Améliorations audio » : Désactivé",
+        "Son déformé ou coupé : Paramètres › Système › Son › cliquer sur la sortie › « Améliorations audio » : Désactivé",
     });
   }
 

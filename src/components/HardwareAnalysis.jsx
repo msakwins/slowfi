@@ -10,7 +10,7 @@
 // macOS : `diskutil info /` pour le volume de démarrage, `system_profiler`
 // pour la mémoire. Pas de pilote ni de BIOS à contrôler : ils suivent macOS.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 import { diagnoseStorage } from "../lib/storage.js";
 import { analyzeComponents } from "../lib/components.js";
@@ -40,6 +40,17 @@ import { summarizeBlocks } from "../lib/report.js";
 import { parseInstalledDrivers, DRIVER_CLASSES } from "../lib/drivers.js";
 import DriverUpdates from "../ui/DriverUpdates.jsx";
 import PartsToBuy from "../ui/PartsToBuy.jsx";
+import Fold from "../ui/Fold.jsx";
+import UpgradeSuggestions from "../ui/UpgradeSuggestions.jsx";
+import { gpuScore } from "../lib/goals.js";
+
+// Carte graphique principale : la plus puissante connue (une carte dédiée
+// plutôt que les graphiques intégrés au processeur).
+const mainGpu = (gpus) =>
+  [...(gpus ?? [])]
+    .map((g) => g.name)
+    .filter(Boolean)
+    .sort((a, b) => (gpuScore(b) ?? 0) - (gpuScore(a) ?? 0))[0] ?? null;
 import { recommendParts } from "../lib/parts.js";
 import { recommendUpgrades } from "../lib/upgrades.js";
 import { localize } from "../lib/en.js";
@@ -113,11 +124,11 @@ const TEXT = {
     sticksN: (n) => `${n} barrette${n > 1 ? "s" : ""}`,
     coresN: (c, th) =>
       th && th !== c ? `${c} cœurs, ${th} threads` : `${c} cœurs`,
-    freeOf: (free, pct) => `${free} Go libres (${pct} %)`,
+    freeOf: (free, pct) => `${free} Go libres (${pct} %)`,
     busy: (cpu, mem) =>
       [
-        cpu != null && `Processeur à ${cpu} %`,
-        mem != null && `mémoire utilisée à ${mem} %`,
+        cpu != null && `Processeur à ${cpu} %`,
+        mem != null && `mémoire utilisée à ${mem} %`,
       ]
         .filter(Boolean)
         .join(", "),
@@ -184,11 +195,11 @@ const TEXT = {
     sticksN: (n) => `${n} stick${n > 1 ? "s" : ""}`,
     coresN: (c, th) =>
       th && th !== c ? `${c} cores, ${th} threads` : `${c} cores`,
-    freeOf: (free, pct) => `${free} GB free (${pct} %)`,
+    freeOf: (free, pct) => `${free} GB free (${pct} %)`,
     busy: (cpu, mem) =>
       [
-        cpu != null && `Processor at ${cpu} %`,
-        mem != null && `memory ${mem} % used`,
+        cpu != null && `Processor at ${cpu} %`,
+        mem != null && `memory ${mem} % used`,
       ]
         .filter(Boolean)
         .join(", "),
@@ -257,7 +268,7 @@ export const HARDWARE_READS = [
   // d'alimentation actif, réunis dans un seul bloc Format-List.
   "[pscustomobject]@{SystemDisk=(Get-Partition -DriveLetter C).DiskNumber; UptimeDays=[int]((Get-Date)-(Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalDays; PowerScheme=(powercfg /getactivescheme)} | Format-List",
   // Version de Windows (et mémoire totale et libre, pour l'activité), puis
-  // son nom commercial (« 22H2 »), absent de Win32_OperatingSystem.
+  // son nom commercial (« 22H2 »), absent de Win32_OperatingSystem.
   "Get-CimInstance Win32_OperatingSystem | Format-List Caption,BuildNumber,TotalVisibleMemorySize,FreePhysicalMemory",
   "Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' | Format-List DisplayVersion",
   // Ordinateur et carte mère : pour nommer la page où trouver le BIOS.
@@ -426,14 +437,13 @@ export function HardwareResults({
     <>
       {/* Ce qui a été lu, replié d'office : le verdict passe en premier à
           l'œil, la liste s'ouvre au besoin. */}
-      <InventoryFold title={t.detected}>
+      <Fold title={t.detected}>
         <Inventory data={{ volumes, c, s, a }} />
-      </InventoryFold>
+      </Fold>
       <Verdict $color={sev.color} gap={32} first={0}>
         <VerdictHead
           color={sev.color}
         >{`${t.hardware} — ${label[severity]}`}</VerdictHead>
-        <Section2>{t.results}</Section2>
         {findings.length ? (
           <Findings findings={findings} />
         ) : (
@@ -445,7 +455,15 @@ export function HardwareResults({
         {/* Les pièces en fin de vie (parts.js), puis ce qui freine la
             machine sans être en panne (upgrades.js). */}
         <PartsToBuy parts={parts} />
-        <PartsToBuy parts={upgrades} kind="upgrades" />
+        <UpgradeSuggestions
+          perf={upgrades}
+          data={{
+            gpu: mainGpu(c?.gpus),
+            cpu: c?.cpu,
+            memory: c?.memory,
+            laptop: c?.machine?.laptop ?? Boolean(s?.env?.battery),
+          }}
+        />
         <Passed items={passed} />
       </Verdict>
       <CopySummary
@@ -459,74 +477,16 @@ export function HardwareResults({
   );
 }
 
-const FoldHead = styled.button`
-  font: inherit;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  margin: 0 0 24px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
-
-  svg {
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  &[aria-expanded="true"] svg {
-    transform: rotate(180deg);
-  }
-  &:hover,
-  &:focus-visible {
-    color: var(--accent);
-    outline: none;
-  }
-`;
 
 /** Menu dépliant, fermé d'office. */
-function InventoryFold({ title, children }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div>
-      <FoldHead
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {title}
-        <svg
-          viewBox="0 0 16 16"
-          width="12"
-          height="12"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M4 6l4 4 4-4"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </FoldHead>
-      {open && <div style={{ margin: "-12px 0 28px" }}>{children}</div>}
-    </div>
-  );
-}
 
 export const Section2 = styled.p`
   margin: 32px 0 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 // Liste à deux colonnes : la partie à gauche, ce qui a été lu à droite.
@@ -656,8 +616,8 @@ function Inventory({ data: { volumes, c, s, a } }) {
       ),
     ]);
   }
-  // Carte graphique : le pilote en une phrase (« Pilote 621.24 de
-  // novembre 2026 »). Le lien vers le site du fabricant seulement si le
+  // Carte graphique : le pilote en une phrase (« Pilote 621.24 de
+  // novembre 2026 »). Le lien vers le site du fabricant seulement si le
   // pilote a plus d'un an ou si Windows signale une erreur.
   for (const g of c?.gpus ?? []) {
     const page = driverPage(g.name, lang);
@@ -719,7 +679,7 @@ function Inventory({ data: { volumes, c, s, a } }) {
       ),
     ]);
   }
-  if (s?.env?.battery) rows.push([t.battery, `${s.env.battery.pct} %`]);
+  if (s?.env?.battery) rows.push([t.battery, `${s.env.battery.pct} %`]);
   if (s?.env?.startup) {
     const names = s.env.startup.filter(Boolean);
     rows.push([

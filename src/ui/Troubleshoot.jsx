@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// « Un appareil ne marche pas ? » sous le verdict des périphériques : on
+// « Un appareil ne marche pas ? » sous le verdict des périphériques : on
 // choisit l'appareil, et on obtient ce que Slowfi a trouvé pour lui, puis les
 // vérifications à faire dans l'ordre.
 //
@@ -41,11 +41,11 @@ const Wrap = styled.div`
 
 const Head = styled.p`
   margin: 32px 0 0;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
 `;
 
 const Lead = styled.p`

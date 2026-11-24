@@ -25,7 +25,7 @@ const MONTHS_LONG_EN = [
   "December",
 ];
 
-/** « 2025-10-14 » → « 14 October 2025 ». */
+/** « 2025-10-14 » → « 14 October 2025 ». */
 function dateEn(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-").map(Number);
@@ -111,7 +111,7 @@ export const EN = {
       fix: "Split the 2.4 and 5 GHz SSIDs in the router settings, then connect explicitly to the 5 GHz network",
     }),
     "weak-signal": ({ v }) => ({
-      title: `Weak signal (${v} %)`,
+      title: `Weak signal (${v} %)`,
       detail:
         "Distance or obstacles between the device and the router. Speed drops with the signal",
       fix: "Move closer to the router, take it out of closed furniture, or add a repeater or access point",
@@ -131,13 +131,13 @@ export const EN = {
 
   components: {
     "cpu-limited": ({ pct }) => ({
-      title: `Processor held back to ${pct} % of its speed`,
+      title: `Processor held back to ${pct} % of its speed`,
       detail:
         "The processor cannot reach its full speed: a limit imposed by power, heat or the battery",
       fix: "Plug the laptop in, choose “Balanced” or “Best performance” in Settings › System › Power, and dust the vents if the throttling persists",
     }),
     "cpu-limited-mac": ({ pct }) => ({
-      title: `Processor held back to ${pct} % of its speed`,
+      title: `Processor held back to ${pct} % of its speed`,
       detail:
         "The processor cannot reach its full speed: a limit imposed by power, heat or the battery",
       fix: "Plug the Mac in, place it on a hard, clear surface, and quit demanding applications",
@@ -295,7 +295,7 @@ export const EN = {
       fix: "Update from System Settings › General › Software Update. If the Mac is no longer compatible, it no longer receives security fixes",
     }),
     "battery-worn": ({ pct }) => ({
-      title: `Worn battery: ${pct} % of its original capacity`,
+      title: `Worn battery: ${pct} % of its original capacity`,
       detail:
         "A worn battery drains faster and, on some laptops, makes the system throttle the processor to avoid a shutdown",
       fix: "Have the battery replaced by the maker or a repair shop. In the meantime, work plugged in",
@@ -583,7 +583,7 @@ export const EN = {
           ? "Graphics driver crashed once in 90 days"
           : `Graphics driver crashed ${count} times in 90 days`,
       detail: `Last crash on ${dayEn(last)}. A driver that keeps crashing often comes from a card running too hot, a damaged driver, or a card wearing out`,
-      fix: "Track the card temperature during a game (one-minute tracking in the app). Above 85 °C, dust off the card and its fans. Below that, reinstall the driver from the maker's website",
+      fix: "Track the card temperature during a game (one-minute tracking in the app). Above 85 °C, dust off the card and its fans. Below that, reinstall the driver from the maker's website",
     }),
     "hardware-errors": ({ count, last }) => ({
       title:
@@ -615,7 +615,7 @@ export const EN = {
   },
   activity: {
     "memory-full": ({ pct, top }) => ({
-      title: `Memory almost full (${pct} % used)`,
+      title: `Memory almost full (${pct} % used)`,
       detail: `The system starts writing to the drive instead of memory: everything slows down.${
         top?.length
           ? ` Biggest users: ${top.map((p) => `${p.name} (${formatBytesEn(p.bytes)})`).join(", ")}`
@@ -624,7 +624,7 @@ export const EN = {
       fix: "Close unused programs, starting with the heaviest. If memory stays full day to day, add more",
     }),
     "cpu-busy": ({ pct }) => ({
-      title: `Processor very busy (${pct} %)`,
+      title: `Processor very busy (${pct} %)`,
       detail:
         "When the command ran, the processor was almost at full load: other programs wait their turn",
       fix: "Open Task Manager (Ctrl + Shift + Esc), sort by “CPU” and close the top program if it is not needed",
@@ -640,13 +640,13 @@ export const EN = {
       fix: "Back up immediately (Time Machine or a copy to an external drive), then have the drive replaced",
     }),
     "disk-critical": ({ where, freeGB, pct }) => ({
-      title: `${where} full (${freeGB} GB free, ${pct} %)`,
+      title: `${where} full (${freeGB} GB free, ${pct} %)`,
       detail:
         "Not enough space for Windows to run: failed updates, blocked page file, risk of file system corruption",
       fix: "Move large folders (games, downloads, documents) to another drive, then empty the recycle bin",
     }),
     "disk-low": ({ where, freeGB, pct }) => ({
-      title: `${where} almost full (${freeGB} GB free, ${pct} %)`,
+      title: `${where} almost full (${freeGB} GB free, ${pct} %)`,
       detail:
         "Below 15 % free space, an SSD loses write speed and wears out faster",
       fix: "Aim for 20 % free space. Move game libraries and application caches first",
@@ -664,12 +664,12 @@ export const EN = {
     }),
     healthy: ({ where, freeGB, pct }) => ({
       title: `${where} in good health`,
-      detail: `${freeGB} GB free (${pct} %), integrity checked`,
+      detail: `${freeGB} GB free (${pct} %), integrity checked`,
     }),
   },
 };
 
-// Contrôles passés sans anomalie (liste « Vérifié »), par identifiant.
+// Contrôles passés sans anomalie (liste « Vérifié »), par identifiant.
 const MONTHS_EN = [
   "January",
   "February",
@@ -685,8 +685,8 @@ const MONTHS_EN = [
   "December",
 ];
 
-/** « July 2026 », or the year alone when the month is unknown. */
-/** « 2026-11-17 » → « 17 November ». */
+/** « July 2026 », or the year alone when the month is unknown. */
+/** « 2026-11-17 » → « 17 November ». */
 function dayEn(isoDate) {
   const [y, m, d] = String(isoDate).split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
@@ -722,15 +722,15 @@ export const PASSED_EN = {
       : `${label}, supported version`,
   "macos-supported": ({ label }) => `${label}, still supported by Apple`,
   "battery-ok": ({ pct, cycles }) =>
-    `Battery at ${pct} % of its original capacity${cycles ? ` (${cycles} cycles)` : ""}`,
+    `Battery at ${pct} % of its original capacity${cycles ? ` (${cycles} cycles)` : ""}`,
   "startup-ok": ({ n, names }) =>
     `${n} program${n > 1 ? "s" : ""} at startup${names ? `: ${names}` : ""}`,
   "cpu-full-speed": ({ name }) =>
     `Processor not throttled${name ? ` (${name})` : ""}`,
   "net-driver-ok": ({ year, month, name }) =>
     `Network driver from ${monthEn(year, month)} (${name})`,
-  "memory-ok": ({ pct }) => `Memory ${pct} % used`,
-  "cpu-ok": ({ pct }) => `Processor ${pct} % busy`,
+  "memory-ok": ({ pct }) => `Memory ${pct} % used`,
+  "cpu-ok": ({ pct }) => `Processor ${pct} % busy`,
   "device-group": ({ group, names }) => `${GROUPS_EN[group]}: ${names}`,
   "ram-speed": ({ mhz }) => `Memory at its rated frequency (${mhz} MHz)`,
   "ram-dual": ({ n }) => `Dual channel (${n} sticks)`,
@@ -749,7 +749,7 @@ export const PASSED_EN = {
       ? "Restarted less than a day ago"
       : `Restarted ${days} day${days > 1 ? "s" : ""} ago`,
   "power-ok": () => "Normal power mode",
-  "space-ok": ({ freeGB, pct }) => `${freeGB} GB free (${pct} %)`,
+  "space-ok": ({ freeGB, pct }) => `${freeGB} GB free (${pct} %)`,
   "fs-ok": () => "Healthy file system",
 };
 

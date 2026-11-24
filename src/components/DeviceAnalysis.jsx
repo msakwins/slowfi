@@ -6,6 +6,7 @@
 // puis tout appareil en erreur, quelle que soit sa catégorie. macOS ne
 // signale pas d'erreur de périphérique : la liste dit ce qui est reconnu.
 // ─────────────────────────────────────────────────────────────────────────────
+import Fold from "../ui/Fold.jsx";
 import React, { useEffect, useRef } from "react";
 import { analyzeDevices } from "../lib/devices.js";
 import {
@@ -32,7 +33,7 @@ const TEXT = {
     about:
       "Cette commande affiche la liste des périphériques et leur état. Elle ne modifie rien, et aucune donnée n'est collectée",
     head: "Périphériques",
-    detected: "Périphériques détectés",
+    detected: "Liste des périphériques détectés",
     results: "Résultats du diagnostic",
     groups: {
       audio: "Audio",
@@ -54,7 +55,7 @@ const TEXT = {
     about:
       "This command displays the list of devices and their status. It changes nothing, and no data is collected",
     head: "Devices",
-    detected: "Detected devices",
+    detected: "List of detected devices",
     results: "Diagnostic results",
     groups: {
       audio: "Audio",
@@ -75,7 +76,7 @@ const TEXT = {
 const CLASSES =
   "AudioEndpoint,Camera,Image,Keyboard,Mouse,Bluetooth,Monitor,Printer,MEDIA";
 const FIELDS = "Format-List Name,PNPClass,Status,ConfigManagerErrorCode";
-// Pas de « $ » dans la commande : collée dans PowerShell, la commande
+// Pas de « $ » dans la commande : collée dans PowerShell, la commande
 // extérieure le remplacerait avant de la transmettre.
 // Puis ce qui fait qu'un appareil reconnu ne marche pas quand même : état et
 // effets des entrées et sorties audio (Voice Clarity), accès au micro et à la
@@ -108,12 +109,10 @@ export function DeviceResult({ r }) {
 
   const sev = SEVERITY[r.severity];
   return (
-    <Verdict $color={sev.color} gap={32} first={0}>
-      <VerdictHead color={sev.color}>
-        {`${t.head} — ${SEVERITY_LABEL[lang][r.severity]}`}
-      </VerdictHead>
-      {/* D'abord ce qui est branché, par catégorie ; puis les résultats. */}
-      <Section2 style={{ marginTop: 8 }}>{t.detected}</Section2>
+    <>
+    {/* Comme le matériel : ce qui est branché, dans une liste repliable,
+        puis le verdict. */}
+    <Fold title={t.detected}>
       <Table>
         {[...GROUPS.map(([g]) => g), "other"].map((g) => {
           const items = r.devices.filter((x) => (x.group ?? "other") === g);
@@ -143,6 +142,11 @@ export function DeviceResult({ r }) {
           );
         })}
       </Table>
+    </Fold>
+    <Verdict $color={sev.color} gap={32} first={0}>
+      <VerdictHead color={sev.color}>
+        {`${t.head} — ${SEVERITY_LABEL[lang][r.severity]}`}
+      </VerdictHead>
       <Section2>{t.results}</Section2>
       <Findings findings={r.findings} engine="devices" />
       <Troubleshoot r={r} />
@@ -157,6 +161,7 @@ export function DeviceResult({ r }) {
         }
       />
     </Verdict>
+    </>
   );
 }
 

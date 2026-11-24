@@ -149,14 +149,18 @@ function createWindow() {
   const ours = (url) => url.startsWith(DEV_URL || ORIGIN);
 
   // Liens externes (pilotes, code source…) : dans le navigateur par défaut.
+  // Liens externes : pages web, et la seule page des Paramètres de Windows
+  // que l'application ouvre (mises à jour facultatives, pour les pilotes).
+  const external = (url) =>
+    /^https?:/.test(url) || url === "ms-settings:windowsupdate-optionalupdates";
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:/.test(url)) shell.openExternal(url);
+    if (external(url)) shell.openExternal(url);
     return { action: "deny" };
   });
   win.webContents.on("will-navigate", (event, url) => {
     if (!ours(url)) {
       event.preventDefault();
-      if (/^https?:/.test(url)) shell.openExternal(url);
+      if (external(url)) shell.openExternal(url);
     }
   });
 

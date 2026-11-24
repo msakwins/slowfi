@@ -25,7 +25,7 @@ const TEXT = {
             Paramètres › Réseau et Internet › Wi-Fi › Propriétés du matériel
           </span>{" "}
           (sous Windows 10 : cliquer sur le nom du réseau, puis descendre
-          jusqu'à « Propriétés »)
+          jusqu'à « Propriétés »)
         </>
       ),
       radio: "Protocole",
@@ -56,7 +56,7 @@ const TEXT = {
         </>
       ),
       radio: "Mode PHY",
-      band: "Bande (dans « Canal », entre parenthèses)",
+      band: "Bande (dans « Canal », entre parenthèses)",
       channel: "Canal (premier nombre)",
       rate: "Débit Tx",
       rssi: "RSSI",

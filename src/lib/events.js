@@ -24,8 +24,8 @@ const LINE = /^"([^"]+)","([^"]+)","(\d+)"\s*$/gm;
 const INCIDENT_GAP_MS = 10 * 60 * 1000;
 
 /**
- * Date écrite par PowerShell : « 29/10/2026 21:47:11 » (français, jour en
- * premier), « 10/29/2026 9:47:11 PM » (anglais, repérable à AM/PM).
+ * Date écrite par PowerShell : « 29/10/2026 21:47:11 » (français, jour en
+ * premier), « 10/29/2026 9:47:11 PM » (anglais, repérable à AM/PM).
  * @returns {Date|null}
  */
 export function parseEventDate(text) {
@@ -166,7 +166,7 @@ export function diagnoseEvents(e) {
           ? `Pilote graphique planté une fois en ${EVENT_DAYS} jours`
           : `Pilote graphique planté ${gpuN} fois en ${EVENT_DAYS} jours`,
       detail: `Dernier plantage le ${dayFr(last)}. Un pilote qui plante à répétition vient souvent d'une carte qui chauffe trop, d'un pilote abîmé, ou d'une carte qui s'use`,
-      fix: "Suivre la température de la carte pendant un jeu (suivi sur une minute de l'application). Au-delà de 85 °C, dépoussiérer la carte et ses ventilateurs. En dessous, réinstaller le pilote depuis le site du fabricant",
+      fix: "Suivre la température de la carte pendant un jeu (suivi sur une minute de l'application). Au-delà de 85 °C, dépoussiérer la carte et ses ventilateurs. En dessous, réinstaller le pilote depuis le site du fabricant",
     });
   } else {
     passed.push({

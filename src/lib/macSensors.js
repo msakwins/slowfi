@@ -2,11 +2,11 @@
 // Capteurs sous macOS (application desktop).
 //
 // - Santé des SSD, sans droits : system_profiler SPNVMeDataType
-//   SPSerialATADataType (« SMART Status: Verified »).
+//   SPSerialATADataType (« SMART Status: Verified »).
 // - Températures, ventilateurs, niveau de chauffe : powermetrics, qui exige
 //   le mot de passe administrateur (macOS l'affiche dans sa propre fenêtre).
-//   Les Mac Apple Silicon ne donnent que le niveau de chauffe (« Nominal »,
-//   « Fair », « Serious », « Critical ») ; les Mac Intel donnent aussi les
+//   Les Mac Apple Silicon ne donnent que le niveau de chauffe (« Nominal »,
+//   « Fair », « Serious », « Critical ») ; les Mac Intel donnent aussi les
 //   températures du processeur et de la puce graphique, et les ventilateurs.
 // ─────────────────────────────────────────────────────────────────────────────
 

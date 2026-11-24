@@ -362,7 +362,7 @@ describe("nouveaux constats en anglais", () => {
 });
 
 describe("niveau de chaque constat", () => {
-  it("tout constat autre que « healthy » porte un niveau", async () => {
+  it("tout constat autre que « healthy » porte un niveau", async () => {
     const ex = await import("./examples.js");
     const { analyzeComponents } = await import("./components.js");
     const { analyzeSystem } = await import("./system.js");
