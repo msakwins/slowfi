@@ -86,6 +86,8 @@ function setupUpdates() {
   ipcMain.handle("slowfi:update-state", () => state);
 
   if (!app.isPackaged || process.argv.includes("--smoke")) return;
+  // Microsoft Store : c'est le Store qui installe les mises à jour.
+  if (process.windowsStore) return;
   if (installedBySquirrel()) return setupSquirrelUpdates();
   // Paquet .deb : electron-updater ne peut pas le remplacer lui-même.
   if (process.platform === "linux" && !process.env.APPIMAGE) return;

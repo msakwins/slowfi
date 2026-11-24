@@ -217,6 +217,11 @@ export default function HistoryPanel({ res, download, page }) {
   const { lang } = useLang();
   const t = TEXT[lang];
   const [list, setList] = useState(loadHistory);
+  // Nombres à la façon de la langue (« 24,8 » en français).
+  const num = (v) =>
+    typeof v === "number"
+      ? v.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB")
+      : v;
   // Analyse ouverte dans la liste (par son heure), ou aucune.
   const [opened, setOpened] = useState(null);
   const saved = useRef(null);
@@ -284,13 +289,17 @@ export default function HistoryPanel({ res, download, page }) {
                   <span className="tag">{t.changed}</span>
                   <span>
                     {valueLabel(c.key, c, lang).label}
-                    {lang === "fr" ? " : " : ": "}
-                    {c.from}
+                    {valueLabel(c.key, c, lang).label.endsWith(":")
+                      ? " "
+                      : lang === "fr"
+                        ? " : "
+                        : ": "}
+                    {num(c.from)}
                     {c.unit && ` ${valueLabel(c.key, c, lang).unit}`}{" "}
                     <span className="to">
                       <Arrow />
                     </span>{" "}
-                    {c.to}
+                    {num(c.to)}
                     {c.unit && ` ${valueLabel(c.key, c, lang).unit}`}
                   </span>
                 </li>
@@ -355,7 +364,7 @@ export default function HistoryPanel({ res, download, page }) {
                         <span className="label">
                           {valueLabel(k, v, lang).label}
                         </span>
-                        {v.value}
+                        {num(v.value)}
                         {v.unit && ` ${valueLabel(k, v, lang).unit}`}
                       </p>
                     ))}

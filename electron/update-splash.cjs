@@ -2,7 +2,7 @@
 // Fenêtre de mise à jour, à l'image de l'animation d'installation
 // (render-splash.cjs) : carte sombre aux coins arrondis, logo qui se dessine,
 // barre aux trois couleurs, et une ligne de texte.
-// - avant l'installation d'une mise à jour : « Installation de la version … » ;
+// - avant l'installation d'une mise à jour : « Mise à jour en cours · version … » ;
 // - au premier lancement de la nouvelle version : « Version … installée ».
 // ─────────────────────────────────────────────────────────────────────────────
 const { app, BrowserWindow } = require("electron");
@@ -67,8 +67,8 @@ function showSplash(text) {
 function showInstalling(version) {
   return showSplash(
     fr()
-      ? `Installation de la version ${version}`
-      : `Installing version ${version}`,
+      ? `Mise à jour en cours · version ${version}`
+      : `Updating · version ${version}`,
   );
 }
 
@@ -90,7 +90,13 @@ function announceIfUpdated() {
   } catch {
     // Sans écriture possible, pas d'annonce : sans conséquence.
   }
-  if (!previous || previous === version) return;
+  // Sans fichier de version : vraie première installation, ou mise à jour
+  // depuis une version qui ne l'écrivait pas encore (avant 0.1.10). Dans ce
+  // second cas, l'updater a déjà laissé sa trace (.updaterId).
+  const fromOld =
+    !previous &&
+    fs.existsSync(path.join(app.getPath("userData"), ".updaterId"));
+  if ((!previous && !fromOld) || previous === version) return;
   const win = showSplash(
     fr() ? `Version ${version} installée` : `Version ${version} installed`,
   );

@@ -15,7 +15,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "app": "npm run build && electron .",
-    "app:dist": "npm run build && electron-builder --publish never"
+    "app:dist": "npm run build && electron-builder --publish never",
+    "store": "node scripts/store.mjs"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
@@ -107,6 +108,19 @@
       "iconUrl": "https://raw.githubusercontent.com/msakwins/slowfi/main/electron/icon.ico",
       "artifactName": "Slowfi-Setup.${ext}",
       "useAppIdAsId": false
+    },
+    "appx": {
+      "identityName": "Slowfi.Slowfi",
+      "publisher": "CN=EB8DC6BD-D885-4128-834E-A03D1E2A514E",
+      "publisherDisplayName": "Slowfi",
+      "applicationId": "Slowfi",
+      "displayName": "Slowfi",
+      "backgroundColor": "#020617",
+      "languages": [
+        "fr-FR",
+        "en-US"
+      ],
+      "artifactName": "Slowfi-Store.${ext}"
     }
   },
   "repository": {

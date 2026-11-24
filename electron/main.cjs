@@ -168,6 +168,27 @@ function createWindow() {
 
   win.loadURL(home);
   if (process.argv.includes("--smoke")) smokeTest(win);
+  // Bande-annonce du Microsoft Store (record-trailer.cjs, développement
+  // seulement).
+  if (process.env.SLOWFI_TRAILER && !app.isPackaged) {
+    win.webContents.once("did-finish-load", () =>
+      require("./record-trailer.cjs")(
+        win,
+        process.env.SLOWFI_TRAILER,
+        process.env.SLOWFI_TRAILER_LANG,
+      ).finally(() => app.exit(0)),
+    );
+  }
+  // Captures pour le Microsoft Store (store-shots.cjs, développement seulement).
+  if (process.env.SLOWFI_STORE_SHOTS && !app.isPackaged) {
+    win.webContents.once("did-finish-load", () =>
+      require("./store-shots.cjs")(
+        win,
+        process.env.SLOWFI_STORE_SHOTS,
+        process.env.SLOWFI_STORE_LANG,
+      ).finally(() => app.exit(0)),
+    );
+  }
   // Démo animée (record-demo.cjs, développement seulement).
   if (process.env.SLOWFI_RECORD && !app.isPackaged) {
     win.webContents.once("did-finish-load", () =>
@@ -395,7 +416,12 @@ const squirrelEvent = handleSquirrelEvent();
 if (!app.isPackaged) {
   const check =
     process.argv.includes("--smoke") ||
-    Boolean(process.env.SLOWFI_SHOT_START || process.env.SLOWFI_RECORD);
+    Boolean(
+      process.env.SLOWFI_SHOT_START ||
+        process.env.SLOWFI_RECORD ||
+        process.env.SLOWFI_STORE_SHOTS ||
+        process.env.SLOWFI_TRAILER,
+    );
   app.setPath(
     "userData",
     path.join(app.getPath("appData"), check ? "slowfi-check" : "slowfi-dev"),
