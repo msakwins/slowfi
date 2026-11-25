@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Title, Lead, Button, SEVERITY, Pending } from "../ui/theme.js";
+import { Title, Lead, Button, SEVERITY } from "../ui/theme.js";
 import { useText } from "../ui/i18n.jsx";
 import { desktop } from "../ui/desktop.js";
 import PartsToBuy from "../ui/PartsToBuy.jsx";
@@ -278,6 +278,16 @@ const Cards = styled.ul`
   }
 `;
 
+// Dernière lecture des capteurs, conservée sur cet ordinateur.
+const SENSORS_CACHE = "slowfi:sensors";
+function cachedSensors() {
+  try {
+    return JSON.parse(localStorage.getItem(SENSORS_CACHE)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 const Note = styled.p`
   margin: 10px 0 0;
   font-size: 13px;
@@ -382,15 +392,22 @@ function Slowdown({ samples, t }) {
 export default function Sensors() {
   const t = useText(TEXT);
   const { lang } = useLang();
-  const [data, setData] = useState(null);
+  // La dernière lecture s'affiche pendant la suivante : la page garde sa
+  // hauteur au lieu de pousser les boutons vers le bas.
+  const [data, setData] = useState(cachedSensors);
   const [adminBusy, setAdminBusy] = useState(false);
   const [samples, setSamples] = useState([]);
   const [tracking, setTracking] = useState(false);
   const stopRef = useRef(false);
 
   const read = async () => {
-    setData(null);
-    setData(await desktop.sensors());
+    const d = await desktop.sensors();
+    setData(d);
+    try {
+      localStorage.setItem(SENSORS_CACHE, JSON.stringify(d));
+    } catch {
+      // Sans stockage, la prochaine ouverture repartira des cartes vides.
+    }
   };
 
   useEffect(() => {
@@ -486,7 +503,52 @@ export default function Sensors() {
       <Lead>{t.lead}</Lead>
 
       {!data ? (
-        <Pending>{t.reading}</Pending>
+        // Première lecture : des cartes vides à la place des vraies, pour
+        // que la page ne grandisse pas à l'arrivée des valeurs.
+        <>
+          <Group>{t.temps}</Group>
+          <Cards aria-busy="true">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i}>
+                <span className="name">{i === 0 ? t.reading : " "}</span>
+                <span className="value">—</span>
+                <span className="gauge" aria-hidden="true" />
+              </li>
+            ))}
+          </Cards>
+          <Group>{t.wear}</Group>
+          <Cards aria-hidden="true">
+            {[0, 1].map((i) => (
+              <li key={i}>
+                <span className="name">{" "}</span>
+                <span className="value">—</span>
+                <span className="gauge" />
+                <span className="sub">
+                  {" "}
+                  <br />
+                  {" "}
+                  <br />
+                  {" "}
+                  <br />
+                  {" "}
+                </span>
+              </li>
+            ))}
+          </Cards>
+          <Group>{t.fans}</Group>
+          <Cards aria-hidden="true">
+            <li>
+              <span className="name">{" "}</span>
+              <span className="value">—</span>
+              <span className="gauge" />
+            </li>
+          </Cards>
+          <Note>
+            {" "}
+            <br />
+            {" "}
+          </Note>
+        </>
       ) : (
         <>
           {rows.length === 0 && <Note>{t.noSensors}</Note>}

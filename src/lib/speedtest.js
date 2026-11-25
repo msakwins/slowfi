@@ -59,7 +59,9 @@ const DL_STREAMS = 6; // connexions descendantes parallèles
 const UL_STREAMS = 5; // connexions montantes parallèles
 const DURATION = 8000; // durée de mesure par sens (ms)
 const WARMUP = 1500; // phase de démarrage ignorée (ms)
-const DL_CHUNK = 25e6; // taille demandée par requête descendante
+// Taille demandée par requête descendante. Au-delà de 10 Mo, Cloudflare
+// finit par refuser (429) les tests répétés depuis une même adresse.
+const DL_CHUNK = 5e6;
 const UL_CHUNK = 3e6; // taille envoyée par requête montante (petit = jalons fréquents)
 
 /**
@@ -140,7 +142,9 @@ export async function measureDownload({ signal: external, onProgress } = {}) {
   // Échéance externe (Stop) et non le minuteur → l'appelant doit s'arrêter.
   if (external?.aborted && !timedOut())
     throw new DOMException("aborted", "AbortError");
-  return measuring ? toMbps(mBytes, performance.now() - mStart) : 0;
+  // Aucun octet reçu : serveur injoignable ou refus, pas une ligne à 0.
+  if (!mBytes) throw new Error("download failed");
+  return toMbps(mBytes, performance.now() - mStart);
 }
 
 /**
