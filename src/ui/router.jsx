@@ -17,6 +17,7 @@ export const EN_PATHS = {
   "/application": "/en/app",
   "/diagnostic": "/en/diagnostic",
   "/historique": "/en/history",
+  "/depannage": "/en/troubleshooting",
   "/confidentialite": "/en/privacy",
 };
 const FR_PATHS = Object.fromEntries(

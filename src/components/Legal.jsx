@@ -10,7 +10,7 @@ import { Title, Lead } from "../ui/theme.js";
 import { useLang } from "../ui/i18n.jsx";
 
 const Body = styled.div`
-  color: #94a3b8;
+  color: #8fb3c4;
   font-size: 15px;
   line-height: 1.8;
   max-width: 62ch;
@@ -21,7 +21,7 @@ const Body = styled.div`
     letter-spacing: 0.1em;
     text-transform: uppercase;
     font-weight: 500;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   p {
     margin: 0;
@@ -35,7 +35,7 @@ const Body = styled.div`
     color: #67e8f9;
   }
   strong {
-    color: #e2e8f0;
+    color: #cdeef6;
     font-weight: 600;
   }
   a {

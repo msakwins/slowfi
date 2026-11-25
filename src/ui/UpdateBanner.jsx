@@ -40,7 +40,7 @@ const Bar = styled.div`
   background: #0b1220;
   box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
   font-size: 14px;
-  color: #e2e8f0;
+  color: #cdeef6;
 
   button,
   a {
@@ -61,7 +61,7 @@ const Bar = styled.div`
     color: #64748b;
   }
   .later:hover {
-    color: #94a3b8;
+    color: #8fb3c4;
   }
 `;
 

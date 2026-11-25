@@ -2,7 +2,7 @@
 // Briques d'UI partagées par toute l'application.
 // Un seul endroit pour la charte : fond, couleurs, boutons, titres.
 // ─────────────────────────────────────────────────────────────────────────────
-import styled, { createGlobalStyle, keyframes } from "styled-components";
+import styled, { createGlobalStyle, keyframes, css } from "styled-components";
 
 // Couleurs des niveaux de gravité, partagées par tous les verdicts. Les
 // libellés, traduits, sont dans i18n.jsx (SEVERITY_LABEL).
@@ -27,7 +27,7 @@ export const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
     background: #020617;
-    color: #e2e8f0;
+    color: #cdeef6;
     font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     /* Inter, légèrement aérée (choix « A2 »). */
@@ -63,7 +63,7 @@ export const Title = styled.h1`
   font-weight: 600;
   letter-spacing: 0;
   /* Même couleur sur toutes les pages : la couleur reste aux accents. */
-  color: #f1f5f9;
+  color: #e0fbff;
   margin: 0;
 `;
 
@@ -73,7 +73,7 @@ export const Subtitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0;
-  color: #f1f5f9;
+  color: #e0fbff;
 `;
 
 // Un <div> plutôt qu'un <p> : une introduction peut compter plusieurs
@@ -109,7 +109,7 @@ export const Pending = styled.p.attrs({ role: "status" })`
 `;
 
 export const Lead = styled.div`
-  color: #94a3b8;
+  color: #8fb3c4;
   line-height: 1.8;
   margin: 12px 0 28px;
   max-width: 62ch;
@@ -137,6 +137,52 @@ export const Lead = styled.div`
   }
 `;
 
+// Survol commun à tous les boutons : la couleur de la section s'allume
+// (texte vif, contour plein), et son halo grandit puis revient, doucement,
+// tant que le pointeur reste dessus. Le bouton lui-même ne bouge pas.
+export const breathe = keyframes`
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgb(var(--accent-rgb) / 0.45),
+      0 0 16px rgb(var(--accent-rgb) / 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgb(var(--accent-rgb) / 0.55),
+      0 0 22px rgb(var(--accent-rgb) / 0.7);
+  }
+`;
+const breatheNeon = keyframes`
+  0%, 100% {
+    box-shadow:
+      0 0 16px rgba(34, 211, 238, 0.5),
+      0 0 22px rgba(167, 139, 250, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(34, 211, 238, 0.65),
+      0 0 30px rgba(167, 139, 250, 0.6);
+  }
+`;
+export const glowHover = css`
+  &:hover:not(:disabled) {
+    color: var(--accent-light);
+    border-color: var(--accent);
+    /* Fond à peine teinté : proche de l'état normal. */
+    background: rgb(var(--accent-rgb) / 0.05);
+    /* Texte néon, comme une analyse choisie. */
+    text-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.6);
+    animation: ${breathe} 1.8s ease-in-out infinite;
+  }
+  /* Sans animation : le halo reste fixe. */
+  @media (prefers-reduced-motion: reduce) {
+    &:hover:not(:disabled) {
+      animation: none;
+      box-shadow: 0 0 18px rgb(var(--accent-rgb) / 0.6);
+    }
+  }
+`;
+
 export const Button = styled.button`
   font: inherit;
   font-weight: 600;
@@ -144,7 +190,9 @@ export const Button = styled.button`
   border-radius: 999px;
   cursor: pointer;
   background: transparent;
-  border: 1px solid;
+  /* Même épaisseur à l'écran que « Lancer le diagnostic » (2,5 px, affiché
+     2 px). */
+  border: 2px solid;
   transition:
     background 0.2s,
     border-color 0.2s,
@@ -164,15 +212,11 @@ export const Button = styled.button`
 
   /* Style « ghost » : contour fin, fond transparent. Le bouton principal se
      distingue par la couleur, pas par un aplat. */
-  color: ${(p) => (p.$primary ? "var(--accent)" : "#94a3b8")};
-  border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.45)" : "#1e293b")};
+  color: ${(p) => (p.$primary ? "var(--accent)" : "#8fb3c4")};
+  /* Contour bien visible au repos, le même partout. */
+  border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.75)" : "#334155")};
 
-  &:hover:not(:disabled) {
-    color: ${(p) => (p.$primary ? "var(--accent-light)" : "#e2e8f0")};
-    background: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.08)" : "rgba(148, 163, 184, 0.06)")};
-    border-color: ${(p) => (p.$primary ? "rgb(var(--accent-rgb) / 0.8)" : "#475569")};
-    box-shadow: ${(p) => (p.$primary ? "0 0 18px rgb(var(--accent-rgb) / 0.18)" : "none")};
-  }
+  ${glowHover}
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.25);
@@ -202,7 +246,7 @@ const neonTextFlow = keyframes`
   to { background-position: -133.333% 0; }
 `;
 
-// Titre du diagnostic approfondi : les trois couleurs du bouton, dans les
+// Titre du diagnostic complet : les trois couleurs du bouton, dans les
 // lettres, en larges plages qui glissent lentement.
 export const NeonText = styled.span`
   background: ${NEON};
@@ -224,10 +268,10 @@ export const NeonButton = styled.button`
   padding: 11px 26px;
   border-radius: 999px;
   cursor: pointer;
-  color: #f1f5f9;
+  color: #e0fbff;
   /* Contour aux trois couleurs : un dégradé sous un fond uni, découpé à la
      bordure. */
-  border: 2px solid transparent;
+  border: 2.5px solid transparent;
   background:
     linear-gradient(#020617, #020617) padding-box,
     ${NEON} border-box;
@@ -240,8 +284,13 @@ export const NeonButton = styled.button`
     animation: none;
   }
 
+  /* Survol : même respiration que les autres boutons, halo aux trois
+     couleurs. */
   &:hover:not(:disabled) {
-    background-image: linear-gradient(#0b1220, #0b1220), ${NEON};
+    background-image: linear-gradient(#060d1f, #060d1f), ${NEON};
+    animation:
+      ${neonFlow} 6s linear infinite,
+      ${breatheNeon} 1.8s ease-in-out infinite;
   }
   &:focus-visible {
     outline: none;
@@ -265,7 +314,7 @@ export const Ghost = styled.button`
   align-items: center;
   gap: 8px;
   &:hover {
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
 
   .arrow {
@@ -285,7 +334,7 @@ export const Textarea = styled.textarea`
   border: 1px solid #1e293b;
   border-radius: 12px;
   padding: 16px;
-  color: #cbd5e1;
+  color: #b6dbe6;
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 13px;
   line-height: 1.5;

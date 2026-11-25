@@ -29,7 +29,7 @@ const Word = styled.div`
   }
   letter-spacing: 0.09em;
   line-height: 1;
-  color: #f1f5f9;
+  color: #e0fbff;
   user-select: none;
 `;
 

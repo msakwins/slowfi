@@ -19,8 +19,9 @@ export const SIDEBAR_BREAK = 640;
 const TEXT = {
   fr: {
     "/": "Accueil",
-    "/diagnostic": "Diagnostic approfondi",
+    "/diagnostic": "Diagnostic complet",
     "/historique": "Historique",
+    "/depannage": "Dépannage",
     "/capteurs": "Capteurs",
     "/application": "Application",
     "/confidentialite": "Confidentialité",
@@ -31,8 +32,9 @@ const TEXT = {
   },
   en: {
     "/": "Home",
-    "/diagnostic": "In-depth diagnostic",
+    "/diagnostic": "Full diagnostic",
     "/historique": "History",
+    "/depannage": "Troubleshooting",
     "/capteurs": "Sensors",
     "/application": "App",
     "/confidentialite": "Privacy",
@@ -64,6 +66,10 @@ const ICONS = {
       <path d="M10 6.5V10l2.5 1.5" />
     </>
   ),
+  // Clé à molette : le dépannage.
+  "/depannage": (
+    <path d="M12.5 3.5a3.5 3.5 0 0 0-3.3 4.6L3.8 13.5a1.4 1.4 0 0 0 2 2l5.4-5.4a3.5 3.5 0 0 0 4.6-3.3l-2 2-1.8-.5-.5-1.8 2-2a3.5 3.5 0 0 0-1-.5Z" />
+  ),
   "/capteurs": (
     <>
       <path d="M8 11.5V4.5a2 2 0 1 1 4 0v7a3.5 3.5 0 1 1-4 0Z" />
@@ -87,6 +93,7 @@ const ICONS = {
 const TOP = [
   "/",
   "/diagnostic",
+  "/depannage",
   "/historique",
   ...(desktop ? ["/capteurs"] : []),
   ...(desktop ? [] : ["/application"]),
@@ -176,7 +183,7 @@ const Item = styled(Link)`
     font-size: 17px;
     font-weight: 700;
     letter-spacing: 0.09em;
-    color: #f1f5f9;
+    color: #e0fbff;
   }
   /* Le logo : sans fond au survol, un peu détaché des pages. */
   &.brand {
@@ -194,12 +201,12 @@ const Item = styled(Link)`
   }
   &:hover,
   &:focus-visible {
-    color: #f1f5f9;
+    color: #e0fbff;
     background: rgb(148 163 184 / 0.1);
     outline: none;
   }
   &[aria-current="page"] {
-    color: #f1f5f9;
+    color: #e0fbff;
     background: rgb(148 163 184 / 0.16);
   }
   /* Nom de la page au survol. */
@@ -211,7 +218,7 @@ const Item = styled(Link)`
     padding: 5px 10px;
     border-radius: 8px;
     background: #1e293b;
-    color: #f1f5f9;
+    color: #e0fbff;
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
@@ -254,7 +261,7 @@ const Toggle = styled.button`
   }
   &:hover,
   &:focus-visible {
-    color: #f1f5f9;
+    color: #e0fbff;
     background: rgb(148 163 184 / 0.1);
     outline: none;
   }

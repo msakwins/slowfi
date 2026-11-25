@@ -21,7 +21,7 @@ const FoldHead = styled.button`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   svg {
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);

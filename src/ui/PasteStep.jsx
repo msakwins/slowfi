@@ -141,7 +141,7 @@ const Label = styled.p`
   margin: 0 0 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #cbd5e1;
+  color: #b6dbe6;
 
   .n {
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;

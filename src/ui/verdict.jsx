@@ -149,17 +149,17 @@ const Stat = styled.div`
     font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #94a3b8;
+    color: #8fb3c4;
     font-weight: 500;
   }
   .v {
     font-family: ui-monospace, monospace;
     font-size: 20px;
-    color: #f1f5f9;
+    color: #e0fbff;
   }
   .u {
     font-size: 14px;
-    color: #94a3b8;
+    color: #8fb3c4;
     margin-left: 4px;
   }
   /* Valeur en toutes lettres (un nom de carte graphique) : plus petite, pour
@@ -197,11 +197,11 @@ const FindingCard = styled.div`
   h3 {
     margin: 0;
     font-size: 15px;
-    color: #f1f5f9;
+    color: #e0fbff;
   }
   .detail {
     font-size: 14px;
-    color: #94a3b8;
+    color: #8fb3c4;
     line-height: 1.6;
     margin: 6px 0 0;
   }
@@ -209,7 +209,7 @@ const FindingCard = styled.div`
     font-size: 14px;
     line-height: 1.6;
     margin: 10px 0 0;
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   .fix .arrow {
     color: var(--accent);
@@ -292,7 +292,7 @@ const PassedList = styled.div`
     letter-spacing: 0.1em;
     text-transform: uppercase;
     font-weight: 500;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   ul {
     margin: 0;
@@ -305,7 +305,7 @@ const PassedList = styled.div`
     padding: 3px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   svg {
     flex: none;

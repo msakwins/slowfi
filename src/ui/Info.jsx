@@ -38,7 +38,7 @@ const Trigger = styled.button`
   &:hover,
   &:focus-visible,
   &[aria-expanded="true"] {
-    color: #cbd5e1;
+    color: #b6dbe6;
     outline: none;
   }
 `;
@@ -55,7 +55,7 @@ const Bubble = styled.span`
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   font-size: 13px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #b6dbe6;
   text-align: left;
   animation: bubble-in 0.18s ease-out both;
 

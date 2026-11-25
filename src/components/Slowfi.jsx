@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect } from "react";
 import styled from "styled-components";
-import { GlobalStyle, Page } from "../ui/theme.js";
+import { GlobalStyle, Page, glowHover } from "../ui/theme.js";
 import Logo from "../ui/Logo.jsx";
 import { Link, usePath } from "../ui/router.jsx";
 import { LangSwitch, useLang } from "../ui/i18n.jsx";
@@ -21,6 +21,7 @@ import Sidebar, { SIDEBAR_WIDTH, SIDEBAR_BREAK } from "../ui/Sidebar.jsx";
 import Sensors from "./Sensors.jsx";
 import DiagnosticPage from "./DiagnosticPage.jsx";
 import HistoryPage from "./HistoryPage.jsx";
+import TroubleshootPage from "./TroubleshootPage.jsx";
 
 export { GlobalStyle };
 
@@ -32,6 +33,7 @@ const PAGES = {
   "/application": AppPage,
   "/diagnostic": DiagnosticPage,
   "/historique": HistoryPage,
+  "/depannage": TroubleshootPage,
   // Capteurs : page de l'application seulement, un navigateur ne lit pas
   // les sondes.
   ...(desktop ? { "/capteurs": Sensors } : {}),
@@ -44,8 +46,9 @@ const TEXT = {
       "/confidentialite": "Confidentialité et mentions légales — Slowfi",
       "/application": "Application — Slowfi",
       "/capteurs": "Capteurs — Slowfi",
-      "/diagnostic": "Diagnostic approfondi — Slowfi",
+      "/diagnostic": "Diagnostic complet — Slowfi",
       "/historique": "Historique — Slowfi",
+      "/depannage": "Dépannage — Slowfi",
     },
     // Pied de page : deux entrées de la page « Confidentialité ».
     nav: {
@@ -65,8 +68,9 @@ const TEXT = {
       "/confidentialite": "Privacy and legal notice — Slowfi",
       "/application": "App — Slowfi",
       "/capteurs": "Sensors — Slowfi",
-      "/diagnostic": "In-depth diagnostic — Slowfi",
+      "/diagnostic": "Full diagnostic — Slowfi",
       "/historique": "History — Slowfi",
+      "/depannage": "Troubleshooting — Slowfi",
     },
     nav: {
       "/confidentialite": "Privacy",
@@ -101,7 +105,7 @@ const DownloadLink = styled.a`
   font-weight: 600;
   padding: 7px 14px;
   border-radius: 999px;
-  border: 1px solid rgb(34 211 238 / 0.5);
+  border: 1.5px solid rgb(34 211 238 / 0.75);
   color: #67e8f9;
   text-decoration: none;
   white-space: nowrap;
@@ -123,11 +127,13 @@ const DownloadLink = styled.a`
     }
   }
 
-  &:hover,
+  --accent: #22d3ee;
+  --accent-light: #67e8f9;
+  --accent-rgb: 34 211 238;
+  ${glowHover}
   &:focus-visible {
-    border-color: #22d3ee;
-    background: rgb(34 211 238 / 0.1);
     outline: none;
+    box-shadow: 0 0 0 3px rgb(34 211 238 / 0.3);
   }
 `;
 
@@ -239,7 +245,7 @@ const Footer = styled.footer`
     outline: none;
   }
   a[aria-current="page"] {
-    color: #94a3b8;
+    color: #8fb3c4;
   }
 `;
 

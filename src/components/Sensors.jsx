@@ -193,7 +193,7 @@ const Group = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Rows = styled.ul`
@@ -209,7 +209,7 @@ const Rows = styled.ul`
     padding: 9px 0;
     border-top: 1px solid #111a2e;
     font-size: 14px;
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   .sub {
     display: block;
@@ -245,7 +245,7 @@ const Cards = styled.ul`
   }
   .name {
     font-size: 13px;
-    color: #94a3b8;
+    color: #8fb3c4;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -302,7 +302,7 @@ const Legend = styled.ul`
   display: grid;
   gap: 6px;
   font-size: 14px;
-  color: #e2e8f0;
+  color: #cdeef6;
 
   li::before {
     content: "";
@@ -454,7 +454,7 @@ export default function Sensors() {
       </span>
       <span
         className="value"
-        style={{ color: SEVERITY[r.level]?.color ?? "#e2e8f0" }}
+        style={{ color: SEVERITY[r.level]?.color ?? "#cdeef6" }}
       >
         {value}
       </span>
@@ -465,7 +465,7 @@ export default function Sensors() {
   const card = (r, value, pct, sub) => (
     <li
       key={`${r.kind}-${r.name}`}
-      style={{ "--level": SEVERITY[r.level]?.color ?? "#e2e8f0" }}
+      style={{ "--level": SEVERITY[r.level]?.color ?? "#cdeef6" }}
     >
       <span className="name" title={name(r)}>
         {name(r)}

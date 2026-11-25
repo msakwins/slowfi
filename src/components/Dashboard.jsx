@@ -71,7 +71,7 @@ const Card = styled.section`
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   .main {
     display: flex;
@@ -79,7 +79,7 @@ const Card = styled.section`
     gap: 10px;
     font-size: 18px;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #e0fbff;
   }
   .dot {
     width: 10px;
@@ -105,7 +105,7 @@ const Card = styled.section`
     justify-content: space-between;
     gap: 12px;
     font-size: 14px;
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   li span:first-child {
     white-space: nowrap;
@@ -208,7 +208,7 @@ export default function Dashboard() {
             {temps.map((r) => (
               <li key={`${r.kind}-${r.name}`}>
                 <span title={label(r)}>{label(r)}</span>
-                <b style={{ color: SEVERITY[r.level]?.color ?? "#e2e8f0" }}>
+                <b style={{ color: SEVERITY[r.level]?.color ?? "#cdeef6" }}>
                   {Math.round(r.value)} °C
                 </b>
               </li>

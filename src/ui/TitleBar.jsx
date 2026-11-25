@@ -60,7 +60,7 @@ const AppName = styled.div`
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   img {
     width: 18px;
@@ -93,7 +93,7 @@ const Dots = styled.div`
   button:hover,
   button:focus-visible {
     background: rgb(148 163 184 / 0.12);
-    color: #e2e8f0;
+    color: #cdeef6;
     outline: none;
   }
   .close:hover,

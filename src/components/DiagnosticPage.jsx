@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Page « Diagnostic » de l'application : le diagnostic approfondi, lancé
+// Page « Diagnostic » de l'application : le diagnostic complet, lancé
 // depuis le bouton de l'accueil avec les analyses choisies.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
@@ -8,8 +8,8 @@ import { useText } from "../ui/i18n.jsx";
 import CombinedAnalysis from "./CombinedAnalysis.jsx";
 
 const TEXT = {
-  fr: { title: "Diagnostic approfondi" },
-  en: { title: "In-depth diagnostic" },
+  fr: { title: "Diagnostic complet" },
+  en: { title: "Full diagnostic" },
 };
 
 export default function DiagnosticPage() {

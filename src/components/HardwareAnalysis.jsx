@@ -447,7 +447,7 @@ export function HardwareResults({
         {findings.length ? (
           <Findings findings={findings} />
         ) : (
-          <p style={{ margin: "12px 0 0", fontSize: 15, color: "#e2e8f0" }}>
+          <p style={{ margin: "12px 0 0", fontSize: 15, color: "#cdeef6" }}>
             {t.noIssue}
           </p>
         )}
@@ -486,7 +486,7 @@ export const Section2 = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 // Liste à deux colonnes : la partie à gauche, ce qui a été lu à droite.
@@ -508,10 +508,10 @@ export const Table = styled.dl`
     padding-right: 16px;
   }
   dd {
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   dd .sub {
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   dd a {
     display: inline-flex;
@@ -537,7 +537,7 @@ export const Table = styled.dl`
     flex: none;
     font-family: ui-monospace, monospace;
     font-size: 13px;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
 
   @media (max-width: 480px) {

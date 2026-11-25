@@ -108,7 +108,7 @@ const CopyIcon = styled.button`
     opacity: 1;
   }
   &:hover {
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   &:focus-visible {
     outline: none;
@@ -189,7 +189,7 @@ const Readout = styled.div`
     font-variant-numeric: tabular-nums;
     font-size: 21px;
     line-height: 1;
-    color: ${(p) => (p.$active ? "#22d3ee" : p.$filled ? "#f1f5f9" : "#334155")};
+    color: ${(p) => (p.$active ? "#22d3ee" : p.$filled ? "#e0fbff" : "#334155")};
     transition: color 0.3s;
   }
   .u {
@@ -250,6 +250,7 @@ const fillInverse = (v, worst) =>
 /**
  * @param {{
  *   onDiagnostic?: () => void,     ouvre l'analyse du réseau local
+ *   nextLabel?: string,            texte de ce bouton, à la place du libellé par défaut
  *   onMeasured?: (m: object) => void, transmet les mesures d'un test terminé
  *   onStart?: () => void,             appelé au lancement du test
  *   startLabel?: string,              texte du bouton de départ, à la place de « Tester la connexion »
@@ -257,6 +258,7 @@ const fillInverse = (v, worst) =>
  */
 export default function SpeedTest({
   onDiagnostic,
+  nextLabel,
   onMeasured,
   onStart,
   startLabel,
@@ -478,6 +480,19 @@ export default function SpeedTest({
                   {t.grade[result.grade]}
                 </VerdictHead>
                 <Findings findings={result.findings} engine="connection" />
+                {/* La suite, dans le panneau, sous les résultats. */}
+                {onDiagnostic && (
+                  <div style={{ marginTop: 20 }}>
+                    <Button
+                      $primary={result.severity === "ok"}
+                      onClick={onDiagnostic}
+                      style={{ fontSize: 13, padding: "7px 16px" }}
+                    >
+                      {nextLabel ?? t.next}
+                      <Arrow />
+                    </Button>
+                  </div>
+                )}
               </Verdict>
             )}
           </Box>
@@ -518,15 +533,6 @@ export default function SpeedTest({
         </Unfold>
       )}
 
-      {result && onDiagnostic && (
-        <Unfold gap={24} first={0.6}>
-          {/* Ligne saine : c'est la seule suite possible, donc le bouton principal. */}
-          <Button $primary={result.severity === "ok"} onClick={onDiagnostic}>
-            {t.next}
-            <Arrow />
-          </Button>
-        </Unfold>
-      )}
     </div>
   );
 }

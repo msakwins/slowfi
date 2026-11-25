@@ -42,7 +42,7 @@ const PAGES = [
           "Test de débit et de latence, analyse du Wi-Fi, de la box, des disques, de la mémoire, du processeur, de la carte graphique et des périphériques. Gratuit, sans compte",
         body: `<h1>Diagnostic de connexion et de matériel</h1>
 <p>Test de débit descendant et montant, de la latence et de la stabilité de la ligne, en Wi-Fi comme en Ethernet</p>
-<h2>Diagnostic approfondi</h2>
+<h2>Diagnostic complet</h2>
 <p>Contrôle du réseau local, du matériel et des périphériques : Wi-Fi, box et câblage, disques, mémoire, processeur, carte graphique, batterie, audio, caméra, Bluetooth et écrans</p>
 <h2>Application</h2>
 <p>Application gratuite pour Windows, macOS et Linux : analyses lancées directement, températures, usure des SSD et mises à jour des pilotes</p>`,
@@ -53,7 +53,7 @@ const PAGES = [
           "Speed and latency test, analysis of Wi-Fi, router, drives, memory, processor, graphics card and devices. Free, no account",
         body: `<h1>Connection and hardware diagnostics</h1>
 <p>Download and upload speed, latency and line stability test, over Wi-Fi or Ethernet</p>
-<h2>In-depth diagnostic</h2>
+<h2>Full diagnostic</h2>
 <p>Checks the local network, hardware and devices: Wi-Fi, router and cabling, drives, memory, processor, graphics card, battery, audio, camera, Bluetooth and displays</p>
 <h2>App</h2>
 <p>Free app for Windows, macOS and Linux: analyses run directly, temperatures, SSD wear and driver updates</p>`,
@@ -94,10 +94,10 @@ const PAGES = [
     en: "/en/diagnostic",
     text: {
       fr: {
-        title: "Diagnostic approfondi du PC et du réseau — Slowfi",
+        title: "Diagnostic complet du PC et du réseau — Slowfi",
         description:
           "Contrôle du Wi-Fi, de la box et du câblage, des disques, de la mémoire, du processeur, de la carte graphique, de la batterie et des appareils branchés",
-        body: `<h1>Diagnostic approfondi</h1>
+        body: `<h1>Diagnostic complet</h1>
 <p>Contrôle du réseau local, du matériel et des périphériques</p>
 <h2>Réseau local</h2>
 <p>Wi-Fi, box et câblage, comparés au débit mesuré</p>
@@ -107,10 +107,10 @@ const PAGES = [
 <p>Audio, caméra, clavier, souris, Bluetooth et écrans</p>`,
       },
       en: {
-        title: "In-depth PC and network diagnostic — Slowfi",
+        title: "Full PC and network diagnostic — Slowfi",
         description:
           "Checks Wi-Fi, router and cabling, drives, memory, processor, graphics card, battery and connected devices",
-        body: `<h1>In-depth diagnostic</h1>
+        body: `<h1>Full diagnostic</h1>
 <p>Checks the local network, hardware and devices</p>
 <h2>Local network</h2>
 <p>Wi-Fi, router and cabling, compared with the measured speed</p>
@@ -135,6 +135,38 @@ const PAGES = [
         title: "History — Slowfi",
         description: "Analyses saved on this device",
         body: `<h1>History</h1>`,
+      },
+    },
+  },
+  {
+    fr: "/depannage",
+    en: "/en/troubleshooting",
+    text: {
+      fr: {
+        title: "Dépannage du PC : clavier, son, Wi-Fi, lenteur — Slowfi",
+        description:
+          "Analyse ciblée d'un problème : clavier, souris, son, micro, caméra, Bluetooth, écran, imprimante, Wi-Fi, box, disque ou lenteur, avec les vérifications à faire",
+        body: `<h1>Dépannage</h1>
+<p>Choisir le problème : seule l'analyse qui le concerne est lancée</p>
+<h2>Réseau</h2>
+<p>Wi-Fi, box et Internet</p>
+<h2>Ordinateur</h2>
+<p>Lenteur, disque</p>
+<h2>Périphériques</h2>
+<p>Clavier, souris, son, micro, caméra, Bluetooth, écran, imprimante</p>`,
+      },
+      en: {
+        title: "PC troubleshooting: keyboard, sound, Wi-Fi, slowness — Slowfi",
+        description:
+          "Targeted analysis of one problem: keyboard, mouse, sound, microphone, camera, Bluetooth, display, printer, Wi-Fi, router, drive or slowness, with the checks to make",
+        body: `<h1>Troubleshooting</h1>
+<p>Choose the problem: only the analysis that concerns it runs</p>
+<h2>Network</h2>
+<p>Wi-Fi, router and Internet</p>
+<h2>Computer</h2>
+<p>Slowness, drive</p>
+<h2>Devices</h2>
+<p>Keyboard, mouse, sound, microphone, camera, Bluetooth, display, printer</p>`,
       },
     },
   },

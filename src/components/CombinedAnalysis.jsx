@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Diagnostic approfondi, sous le test de débit de l'accueil : choisir les
+// Diagnostic complet, sous le test de débit de l'accueil : choisir les
 // analyses (réseau local, matériel, périphériques), puis avancer étape par
 // étape — commande (ou saisie guidée), résultats. Une étape terminée se replie en une ligne de
 // résumé et la suivante s'ouvre.
@@ -17,7 +17,7 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import { useLang } from "../ui/i18n.jsx";
-import { Subtitle, NeonButton, Lead } from "../ui/theme.js";
+import { Subtitle, NeonButton, Lead, breathe } from "../ui/theme.js";
 import { diagnosticIntro } from "../lib/intro.js";
 import { Unfold } from "../ui/verdict.jsx";
 import PasteStep from "../ui/PasteStep.jsx";
@@ -71,7 +71,7 @@ const accentVars = (k) => ({
 
 const TEXT = {
   fr: {
-    pick: "À analyser",
+    pick: "Choisir les analyses à inclure",
     // Site, après le lancement : les boutons règlent la commande affichée.
     pickCommand: "Analyses incluses",
     labels: {
@@ -118,7 +118,7 @@ const TEXT = {
     missing: "Rien de reconnu pour cette analyse dans le texte collé",
   },
   en: {
-    pick: "What to check",
+    pick: "Choose the analyses to include",
     pickCommand: "Included analyses",
     labels: {
       network: "Local network",
@@ -174,7 +174,7 @@ const Chip = styled.button`
   border-radius: 999px;
   cursor: pointer;
   /* Non choisi : neutre, sans couleur. */
-  border: 1px solid #1e293b;
+  border: 1.5px solid #334155;
   background: transparent;
   color: #64748b;
   transition:
@@ -183,19 +183,30 @@ const Chip = styled.button`
     border-color 0.2s,
     box-shadow 0.2s;
 
+  /* Survol : la couleur de l'analyse, en plus discret que la sélection. */
   &:hover {
-    color: #cbd5e1;
-    border-color: #334155;
+    color: var(--accent-light);
+    border-color: rgb(var(--accent-rgb) / 0.6);
+    background: rgb(var(--accent-rgb) / 0.04);
+    animation: ${breathe} 1.8s ease-in-out infinite;
   }
   /* Choisi : néon de la section, contour vif et halo. */
   &[aria-pressed="true"] {
     color: var(--accent-light);
     background: rgb(var(--accent-rgb) / 0.14);
     border-color: var(--accent);
-    box-shadow:
-      0 0 0 1px rgb(var(--accent-rgb) / 0.35),
-      0 0 18px rgb(var(--accent-rgb) / 0.45);
     text-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.6);
+    /* Même halo vivant que les boutons au survol. */
+    animation: ${breathe} 1.8s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    &:hover {
+      animation: none;
+    }
+    &[aria-pressed="true"] {
+      box-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.55);
+    }
   }
   &:focus-visible {
     outline: none;
@@ -216,7 +227,7 @@ const Pick = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 // Une analyse dans les résultats : son nom, et sur la même ligne, à droite,
@@ -672,7 +683,7 @@ const Progress = styled.ul`
     min-width: 120px;
   }
   .state {
-    color: #94a3b8;
+    color: #8fb3c4;
     font-size: 14px;
   }
   @keyframes spin {
@@ -772,7 +783,7 @@ const StepButton = styled.button`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   .n {
     color: var(--accent);
@@ -783,7 +794,7 @@ const StepButton = styled.button`
     letter-spacing: 0;
     font-weight: 500;
     font-size: 13px;
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   .chev {
     flex: none;
@@ -856,7 +867,7 @@ const Launch = styled.ul`
   max-width: 62ch;
   font-size: 15px;
   line-height: 1.7;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   /* Pastille à la couleur de l’analyse. */
   li {
@@ -888,7 +899,7 @@ const Intros = styled.div`
     margin: 0;
     font-size: 15px;
     line-height: 1.7;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   p + p {
     margin-top: 8px;

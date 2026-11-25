@@ -99,7 +99,7 @@ const TEXT = {
 };
 
 const Body = styled.div`
-  color: #94a3b8;
+  color: #8fb3c4;
   font-size: 15px;
   line-height: 1.8;
   max-width: 62ch;
@@ -110,7 +110,7 @@ const Body = styled.div`
     letter-spacing: 0.1em;
     text-transform: uppercase;
     font-weight: 500;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   /* Le premier intertitre, juste sous l'introduction. */
   h2:first-child {
@@ -130,7 +130,7 @@ const Body = styled.div`
   li {
     position: relative;
     padding-left: 18px;
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   li::before {
     content: "";

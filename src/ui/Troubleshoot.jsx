@@ -45,14 +45,14 @@ const Head = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Lead = styled.p`
   margin: 8px 0 16px;
   font-size: 14px;
   line-height: 1.6;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Chips = styled.div`
@@ -71,7 +71,7 @@ const Chip = styled.button`
   cursor: pointer;
   border: 1px solid #1e293b;
   background: transparent;
-  color: #94a3b8;
+  color: #8fb3c4;
   max-width: 100%;
   overflow-wrap: anywhere;
   text-align: left;
@@ -81,7 +81,7 @@ const Chip = styled.button`
     border-color 0.2s;
 
   &:hover {
-    color: #cbd5e1;
+    color: #b6dbe6;
     border-color: #334155;
   }
   &[aria-pressed="true"] {
@@ -102,7 +102,7 @@ const Nothing = styled.p`
   margin: 0 0 8px;
   font-size: 14px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #b6dbe6;
 `;
 
 const Tips = styled.ol`
@@ -112,7 +112,7 @@ const Tips = styled.ol`
     padding: 4px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   li::marker {
     color: var(--accent);

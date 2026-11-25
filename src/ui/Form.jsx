@@ -18,7 +18,7 @@ export const Guide = styled.section`
     font-size: 14px;
     font-weight: 500;
     line-height: 1.6;
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   .n {
     flex: none;
@@ -48,7 +48,7 @@ const Box = styled.label`
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   .hint {
     color: #475569;
@@ -60,7 +60,7 @@ const Box = styled.label`
     font: inherit;
     font-size: 14px;
     padding: 10px 12px;
-    color: #e2e8f0;
+    color: #cdeef6;
     background: #0f172a;
     border: 1px solid #1e293b;
     border-radius: 10px;

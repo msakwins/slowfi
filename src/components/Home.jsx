@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // L'accueil : le test de débit (Wi-Fi ou Ethernet) en tête, lançable tout de
-// suite. Dessous, le diagnostic approfondi : réseau local, matériel et
+// suite. Dessous, le diagnostic complet : réseau local, matériel et
 // périphériques, à choisir avant de lancer la commande. Dans l'application,
 // un tableau de bord les précède (Dashboard.jsx).
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import styled from "styled-components";
 import { Title, Lead } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
@@ -14,14 +14,16 @@ import Dashboard from "./Dashboard.jsx";
 
 const TEXT = {
   fr: {
-    title: "Analyse de connexion",
+    title: "Analyse de la connexion",
     lead: "Mesure du débit descendant et montant, de la latence et de la stabilité de la ligne, en Wi-Fi comme en Ethernet",
-    allTitle: "Diagnostic approfondi",
+    allTitle: "Diagnostic complet",
+    toDiagnostic: "Rechercher des améliorations",
   },
   en: {
     title: "Connection analysis",
     lead: "Measures download and upload speed, latency and line stability, over Wi-Fi or Ethernet",
-    allTitle: "In-depth diagnostic",
+    allTitle: "Full diagnostic",
+    toDiagnostic: "Look for improvements",
   },
 };
 
@@ -33,27 +35,38 @@ const NETWORK = {
 };
 
 const Section = styled.section`
-  margin-top: 32px;
+  margin-top: 64px;
 `;
 
 export default function Home() {
   // Débit du dernier test, comparé ensuite à ce que le Wi-Fi peut porter.
   const [download, setDownload] = useState(null);
   const t = useText(TEXT);
+  const diagnostic = useRef(null);
 
   return (
     <>
       {/* Application : la dernière analyse et les températures, en tête. */}
       <Dashboard />
-      <section style={NETWORK}>
+      <section style={{ ...NETWORK, marginTop: 24 }}>
         <Title>{t.title}</Title>
         <Lead>{t.lead}</Lead>
         {/* Bouton bleu, à la couleur du titre ; le contour aux trois
-            couleurs reste réservé au diagnostic approfondi. */}
-        <SpeedTest onMeasured={(m) => setDownload(m.download)} />
+            couleurs reste réservé au diagnostic complet. */}
+        {/* Test terminé : un bouton mène au diagnostic complet, plus bas. */}
+        <SpeedTest
+          onMeasured={(m) => setDownload(m.download)}
+          nextLabel={t.toDiagnostic}
+          onDiagnostic={() =>
+            diagnostic.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            })
+          }
+        />
       </section>
 
-      <Section>
+      <Section ref={diagnostic} style={{ scrollMarginTop: 24 }}>
         {/* Même taille que le titre du test de débit. */}
         <Title as="h2">{t.allTitle}</Title>
         {/* Le bouton ouvre la page « Diagnostic ». */}

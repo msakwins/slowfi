@@ -45,7 +45,7 @@ const Head = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Pickers = styled.div`
@@ -58,7 +58,7 @@ const Pickers = styled.div`
 const None = styled.p`
   margin: 12px 0 0;
   font-size: 14px;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 function loadGoal() {

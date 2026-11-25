@@ -137,7 +137,7 @@ export const Segmented = styled.div`
       background 0.2s;
   }
   button:hover {
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   button[aria-pressed="true"] {
     color: var(--accent);

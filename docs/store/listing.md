@@ -13,7 +13,7 @@ Diagnostic de connexion, de matériel et de périphériques pour Windows.
 
 Test de connexion : débit descendant et montant, latence et stabilité de la ligne, en Wi-Fi comme en Ethernet.
 
-Diagnostic approfondi, lancé en un clic :
+Diagnostic complet, lancé en un clic :
 • Réseau local : qualité du signal Wi-Fi, bande utilisée, vitesse du lien, câblage Ethernet, comparés au débit mesuré
 • Matériel : système, disques et espace libre, santé des SSD, mémoire, processeur, carte graphique, BIOS et batterie
 • Périphériques : audio, caméra, clavier, souris, Bluetooth et écrans
@@ -54,7 +54,7 @@ Première version sur le Microsoft Store.
 
 ### Légendes des captures d'écran
 
-1. fr-1-accueil.png : Test de connexion et diagnostic approfondi
+1. fr-1-accueil.png : Test de connexion et diagnostic complet
 2. fr-2-diagnostic.png : Résultats du diagnostic matériel
 3. fr-3-capteurs.png : Températures, usure des SSD et ventilateurs
 4. fr-4-historique.png : Historique des analyses et changements entre deux diagnostics
@@ -79,7 +79,7 @@ Connection, hardware and device diagnostics for Windows.
 
 Connection test: download and upload speed, latency and line stability, over Wi-Fi or Ethernet.
 
-In-depth diagnostic, run in one click:
+Full diagnostic, run in one click:
 • Local network: Wi-Fi signal quality, band in use, link speed and Ethernet cabling, compared with the measured speed
 • Hardware: system, drives and free space, SSD health, memory, processor, graphics card, BIOS and battery
 • Devices: audio, camera, keyboard, mouse, Bluetooth and displays
@@ -120,7 +120,7 @@ First release on the Microsoft Store.
 
 ### Screenshot captions
 
-1. en-1-accueil.png: Connection test and in-depth diagnostic
+1. en-1-accueil.png: Connection test and full diagnostic
 2. en-2-diagnostic.png: Hardware diagnostic results
 3. en-3-capteurs.png: Temperatures, SSD wear and fans
 4. en-4-historique.png: Analysis history and changes between two diagnostics

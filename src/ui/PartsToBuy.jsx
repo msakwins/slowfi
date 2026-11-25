@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import styled from "styled-components";
+import { glowHover } from "./theme.js";
 import { useLang } from "./i18n.jsx";
 import { shopLinks, AFFILIATE } from "../lib/shopLinks.js";
 import { PRICES_DATE } from "../lib/parts.js";
@@ -37,7 +38,7 @@ const Head = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const List = styled.ul`
@@ -57,14 +58,14 @@ const List = styled.ul`
   .title {
     font-size: 15px;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   .reason,
   .meta {
     margin-top: 4px;
     font-size: 13px;
     line-height: 1.6;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   .meta {
     color: #64748b;
@@ -76,7 +77,7 @@ const List = styled.ul`
     list-style: disc;
     font-size: 13px;
     line-height: 1.7;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   .checks li {
     padding: 0;
@@ -94,12 +95,15 @@ const List = styled.ul`
     font-weight: 600;
     padding: 6px 14px;
     border-radius: 999px;
-    border: 1px solid rgb(var(--accent-rgb) / 0.45);
+    border: 1.5px solid rgb(var(--accent-rgb) / 0.75);
     color: var(--accent-light);
     text-decoration: none;
   }
-  .links a:hover {
-    background: rgb(var(--accent-rgb) / 0.12);
+  .links a {
+    display: inline-block;
+  }
+  .links a {
+    ${glowHover}
   }
 `;
 

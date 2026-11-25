@@ -79,14 +79,14 @@ const Head = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Line = styled.p`
   margin: 10px 0 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: #cdeef6;
 `;
 
 const Small = styled.p`
@@ -109,7 +109,7 @@ const Empty = styled.div`
     margin: 0;
     font-size: 15px;
     line-height: 1.7;
-    color: #94a3b8;
+    color: #8fb3c4;
   }
 `;
 
@@ -120,7 +120,7 @@ const Diff = styled.ul`
   display: grid;
   gap: 6px;
   font-size: 14px;
-  color: #e2e8f0;
+  color: #cdeef6;
 
   li {
     display: flex;
@@ -147,7 +147,7 @@ const Runs = styled.ul`
   padding: 0;
   list-style: none;
   font-size: 13px;
-  color: #94a3b8;
+  color: #8fb3c4;
 
   li {
     border-top: 1px solid #111a2e;
@@ -167,7 +167,7 @@ const Runs = styled.ul`
   }
   .run:hover,
   .run:focus-visible {
-    color: #e2e8f0;
+    color: #cdeef6;
     outline: none;
   }
   .chev {
@@ -190,7 +190,7 @@ const Runs = styled.ul`
     padding: 2px 0 14px 18px;
     display: grid;
     gap: 4px;
-    color: #cbd5e1;
+    color: #b6dbe6;
   }
   .detail p {
     margin: 0;
@@ -256,7 +256,7 @@ export default function HistoryPanel({ res, download, page }) {
   const tagColor = {
     fixed: SEVERITY.ok.color,
     added: SEVERITY.warning.color,
-    changed: "#94a3b8",
+    changed: "#8fb3c4",
   };
 
   const clearButton = list.length > 0 && (

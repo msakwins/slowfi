@@ -108,7 +108,7 @@ const Head = styled.p`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8fb3c4;
 `;
 
 const Intro = styled.p`
@@ -135,7 +135,7 @@ const List = styled.ul`
     line-height: 1.5;
   }
   .name {
-    color: #e2e8f0;
+    color: #cdeef6;
   }
   .sub {
     display: block;
@@ -156,7 +156,7 @@ const List = styled.ul`
     color: #fbbf24;
   }
   .info {
-    color: #94a3b8;
+    color: #8fb3c4;
   }
   .muted {
     color: #64748b;
