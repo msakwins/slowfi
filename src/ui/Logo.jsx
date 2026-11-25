@@ -17,9 +17,9 @@ const Word = styled.div`
   align-items: center;
   margin-bottom: 44px;
   font-size: clamp(34px, 5.6vw, 44px);
-  font-weight: 700;
-  /* Le logo garde sa police d'origine, distincte du texte (Inter). */
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  /* Le logo a sa propre police (Nunito), distincte du texte (Inter). */
+  font-family: "Nunito Variable", system-ui, -apple-system, sans-serif;
 
   /* Application : le nom est déjà dans la barre de titre, le logo se fait
      plus discret. */

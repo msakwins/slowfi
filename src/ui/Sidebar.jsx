@@ -29,6 +29,7 @@ const TEXT = {
     brand: "Slowfi, accueil",
     expand: "Afficher le nom des pages",
     collapse: "Masquer le nom des pages",
+    reduce: "Réduire",
   },
   en: {
     "/": "Home",
@@ -42,6 +43,7 @@ const TEXT = {
     brand: "Slowfi, home",
     expand: "Show page names",
     collapse: "Hide page names",
+    reduce: "Collapse",
   },
 };
 
@@ -179,9 +181,9 @@ const Item = styled(Link)`
     transition: opacity 0.15s;
   }
   .wordmark {
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Nunito Variable", system-ui, -apple-system, sans-serif;
     font-size: 17px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.09em;
     color: #e0fbff;
   }
@@ -258,6 +260,11 @@ const Toggle = styled.button`
   }
   &[aria-expanded="true"] svg {
     transform: rotate(180deg);
+  }
+  /* « Réduire », visible quand la barre est ouverte. */
+  .label {
+    opacity: var(--labels, 0);
+    transition: opacity 0.15s;
   }
   &:hover,
   &:focus-visible {
@@ -369,6 +376,9 @@ export default function Sidebar({ path, top }) {
         >
           <path d="m8 6 4 4-4 4" />
         </svg>
+        <span className="label" aria-hidden="true">
+          {t.reduce}
+        </span>
       </Toggle>
     </Bar>
   );

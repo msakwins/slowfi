@@ -1,7 +1,7 @@
 {
   "name": "slowfi",
   "private": true,
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Diagnostic de connexion, de matériel et de périphériques",
   "author": "Slowfi",
   "homepage": "https://www.slowfi.app",
@@ -129,6 +129,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
     "electron-updater": "^6.8.11"
   }
 }

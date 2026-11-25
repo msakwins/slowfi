@@ -35,7 +35,7 @@ const NETWORK = {
 };
 
 const Section = styled.section`
-  margin-top: 64px;
+  margin-top: 48px;
 `;
 
 export default function Home() {

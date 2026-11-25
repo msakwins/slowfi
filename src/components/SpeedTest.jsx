@@ -85,7 +85,13 @@ const Box = styled.div`
 const CopyRow = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: 6px;
+  /* Sans hauteur : l'icône déborde dans l'espace sous le panneau, qui reste
+     le même avec ou sans résultats. */
+  height: 0;
+
+  > button {
+    margin-top: 6px;
+  }
 `;
 
 // Cachée tant que le test n'est pas survolé ; toujours visible au clavier
