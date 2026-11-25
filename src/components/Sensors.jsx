@@ -15,6 +15,8 @@ import {
   disksNeedAdmin,
   seriesSummary,
   slowdownSummary,
+  cachedSensors,
+  saveSensors,
 } from "../lib/sensors.js";
 
 const TEXT = {
@@ -278,16 +280,6 @@ const Cards = styled.ul`
   }
 `;
 
-// Dernière lecture des capteurs, conservée sur cet ordinateur.
-const SENSORS_CACHE = "slowfi:sensors";
-function cachedSensors() {
-  try {
-    return JSON.parse(localStorage.getItem(SENSORS_CACHE)) ?? null;
-  } catch {
-    return null;
-  }
-}
-
 const Note = styled.p`
   margin: 10px 0 0;
   font-size: 13px;
@@ -403,11 +395,7 @@ export default function Sensors() {
   const read = async () => {
     const d = await desktop.sensors();
     setData(d);
-    try {
-      localStorage.setItem(SENSORS_CACHE, JSON.stringify(d));
-    } catch {
-      // Sans stockage, la prochaine ouverture repartira des cartes vides.
-    }
+    saveSensors(d);
   };
 
   useEffect(() => {

@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // L'accueil : le test de débit (Wi-Fi ou Ethernet) en tête, lançable tout de
 // suite. Dessous, le diagnostic complet : réseau local, matériel et
-// périphériques, à choisir avant de lancer la commande. Dans l'application,
-// un tableau de bord les précède (Dashboard.jsx).
+// périphériques, à choisir avant de lancer la commande.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useRef, useState } from "react";
 import styled from "styled-components";
@@ -10,7 +9,6 @@ import { Title, Lead } from "../ui/theme.js";
 import SpeedTest from "./SpeedTest.jsx";
 import CombinedAnalysis from "./CombinedAnalysis.jsx";
 import { useText } from "../ui/i18n.jsx";
-import Dashboard from "./Dashboard.jsx";
 
 const TEXT = {
   fr: {
@@ -46,8 +44,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Application : la dernière analyse et les températures, en tête. */}
-      <Dashboard />
       <section style={{ ...NETWORK, marginTop: 24 }}>
         <Title>{t.title}</Title>
         <Lead>{t.lead}</Lead>

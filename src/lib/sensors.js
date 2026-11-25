@@ -211,3 +211,23 @@ export function slowdownSummary(samples) {
   }
   return { thermal: Math.round(thermal), power: Math.round(power) };
 }
+
+// Dernière lecture des capteurs, conservée sur cet ordinateur : affichée
+// pendant la lecture suivante, pour que les pages ne changent pas de hauteur.
+const SENSORS_CACHE = "slowfi:sensors";
+
+export function cachedSensors() {
+  try {
+    return JSON.parse(localStorage.getItem(SENSORS_CACHE)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveSensors(data) {
+  try {
+    localStorage.setItem(SENSORS_CACHE, JSON.stringify(data));
+  } catch {
+    // Sans stockage, la prochaine ouverture repartira des cartes vides.
+  }
+}
